@@ -6,9 +6,13 @@ import Trade from './pages/Trade';
 import Company from './pages/Company';
 
 import Admin from './pages/Admin/Admin';
-import Companies from './pages/Admin/Companies';
-import Users from './pages/Admin/Users';
+// import CompaniesList from './pages/Admin/CompaniesList';
+// import Users from './pages/Admin/Users';
+// import EditCompanies from './pages/Admin/EditCompanies';
+import UsersList from './pages/Admin/Users';
 import EditCompanies from './pages/Admin/EditCompanies';
+
+
 
 function App() {
   return (
@@ -20,8 +24,8 @@ function App() {
         <Route path="/trade" element={<Trade />} />
         <Route path="/companies" element={<Company />} />
         <Route path="/admin" element={<Admin />} />
-        <Route path="/admin/companies" element={<Companies />} />
-        <Route path="/admin/users" element={<Users />} />
+        {/* <Route path="/admin/companies" element={<CompaniesList />} /> */}
+        <Route path="/admin/users" element={<UsersList />} />
         <Route path="/admin/edit-company" element={<EditCompanies />} />
       </Routes>
     </Router>

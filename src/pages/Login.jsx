@@ -65,9 +65,9 @@ export default function LoginPage() {
             style={
               role === "user"
                 ? {
-                    background: linear-gradient(to right, ${colors.mediumGreen}, ${colors.darkGreen}),
+                    background: `linear-gradient(to right, ${colors.mediumGreen}, ${colors.darkGreen})`,
                     color: "white",
-                    boxShadow: 0 6px 20px -5px ${colors.darkGreen}bb,
+                    boxShadow: `0 6px 20px -5px ${colors.darkGreen}bb`,
                     ...lato
                   }
                 : {
@@ -85,9 +85,9 @@ export default function LoginPage() {
             style={
               role === "admin"
                 ? {
-                    background: linear-gradient(to right, ${colors.mediumGreen}, ${colors.darkGreen}),
+                    background: `linear-gradient(to right, ${colors.mediumGreen}, ${colors.darkGreen})`,
                     color: "white",
-                    boxShadow: 0 6px 20px -5px ${colors.darkGreen}bb,
+                    boxShadow: `0 6px 20px -5px ${colors.darkGreen}bb`,
                     ...lato
                   }
                 : {
@@ -195,8 +195,8 @@ export default function LoginPage() {
             type="submit"
             className="w-full py-3 flex items-center justify-center gap-2 rounded-xl text-white font-semibold transform hover:scale-105 transition duration-300"
             style={{
-              background: linear-gradient(to right, ${colors.mediumGreen}, ${colors.darkGreen}),
-              boxShadow: 0 6px 20px -5px ${colors.darkGreen}bb,
+              background: `linear-gradient(to right, ${colors.mediumGreen}, ${colors.darkGreen})`,
+              boxShadow: `0 6px 20px -5px ${colors.darkGreen}bb`,
               ...lato
             }}
           >

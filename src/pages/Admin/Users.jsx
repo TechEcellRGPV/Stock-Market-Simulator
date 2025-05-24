@@ -2,17 +2,17 @@ import React, { useState } from "react";
 
 export default function UsersList() {
   // Start with empty users array
-  const [users, setUsers] = useState([]);
+  // const [users, setUsers] = useState([]);
 
-  // Example function to simulate adding a user
-  const addUser = () => {
-    const newUser = {
-      id: users.length + 1,
-      name: User ${users.length + 1},
-      email: user${users.length + 1}@example.com,
-    };
-    setUsers([...users, newUser]);
-  };
+  // // Example function to simulate adding a user
+  // const addUser = () => {
+  //   const newUser = {
+  //     id: users.length + 1,
+  //     name: User ${users.length + 1},
+  //     email: user${users.length + 1}@example.com,
+  //   };
+  //   setUsers([...users, newUser]);
+  // };
 
   return (
     <div
