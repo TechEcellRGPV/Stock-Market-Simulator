@@ -1,0 +1,132 @@
+<div>
+        <label className="block text-sm font-semibold text-green-800 mb-1">Company Name</label>
+        <input
+          type="text"
+          value={companyName}
+          onChange={(e) => setCompanyName(e.target.value)}
+          className="w-full border border-green-200 rounded-md px-4 py-2 bg-green-50/20 focus:outline-none focus:ring-2 focus:ring-green-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-green-800 mb-1">Trade Type</label>
+        <div className="flex space-x-10">
+          <label className="flex items-center text-green-700">
+            <input
+              type="radio"
+              value="Buy"
+              checked={tradeAction === 'Buy'}
+              onChange={() => setTradeAction('Buy')}
+              className="mr-2 text-green-600 accent-green-600"
+            />
+            Buy
+          </label>
+          <label className="flex items-center text-green-700">
+            <input
+              type="radio"
+              value="Sell"
+              checked={tradeAction === 'Sell'}
+              onChange={() => setTradeAction('Sell')}
+              className="mr-2 text-green-600 accent-green-600"
+            />
+            Sell
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-green-800 mb-1">Number of Shares</label>
+        <input
+          type="number"
+          value={shares}
+          onChange={(e) => setShares(Number(e.target.value))}
+          min={1}
+          className="w-full border border-green-200 rounded-md px-4 py-2 bg-green-50/20 focus:outline-none focus:ring-2 focus:ring-green-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-green-800 mb-1">Price per Share (USD)</label>
+        <input
+          type="number"
+          value={pricePerShare}
+          onChange={(e) => setPricePerShare(e.target.value)}
+          min={0}
+          step="0.01"
+          className="w-full border border-green-200 rounded-md px-4 py-2 bg-green-50/20 focus:outline-none focus:ring-2 focus:ring-green-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-green-800 mb-1">Total Amount (USD)</label>
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          min={0}
+          step="0.01"
+          className="w-full border border-green-200 rounded-md px-4 py-2 bg-green-50/20 focus:outline-none focus:ring-2 focus:ring-green-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-green-800 mb-1">
+          ECG Score: <span className="font-bold text-green-700">{ecgScore}</span>
+        </label>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={ecgScore}
+          onChange={(e) => setEcgScore(Number(e.target.value))}
+          className="
+            w-full h-2 appearance-none rounded-lg 
+            bg-gray-200 accent-green-600
+            [&::-webkit-slider-thumb]:appearance-none 
+            [&::-webkit-slider-thumb]:w-4 
+            [&::-webkit-slider-thumb]:h-4 
+            [&::-webkit-slider-thumb]:bg-green-600 
+            [&::-webkit-slider-thumb]:rounded-full
+            [&::-moz-range-thumb]:appearance-none
+            [&::-moz-range-thumb]:w-4 
+            [&::-moz-range-thumb]:h-4 
+            [&::-moz-range-thumb]:bg-green-600 
+            [&::-moz-range-thumb]:rounded-full
+          "
+          style={{
+            background: `linear-gradient(to right, #22c55e ${ecgScore}%, #e5e7eb ${ecgScore}%)`
+          }}
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>0 - Poor</span>
+          <span>50 - Average</span>
+          <span>100 - Excellent</span>
+        </div>
+      </div>
+
+      <div className="flex items-start mt-2">
+        <input
+          type="checkbox"
+          checked={agreed}
+          onChange={(e) => setAgreed(e.target.checked)}
+          className="mt-1 mr-2 border-green-400 text-green-600 focus:ring-green-500 accent-green-600"
+        />
+        <label className="text-sm text-green-800">
+          I agree to the <a href="#" className="underline text-green-700">Terms and Conditions</a>
+        </label>
+      </div>
+
+      <button
+        type="submit"
+        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-full shadow-sm transition-all"
+      >
+        Submit Trade
+      </button>
+    </form>
+
+
+    (to right, #FFFFFF, #F2EFBB)
