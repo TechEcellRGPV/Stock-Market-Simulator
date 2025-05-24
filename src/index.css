@@ -1,1 +1,46 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 58 63% 92%;    /* #f7f9dc */
+    --foreground: 200 50% 20%;   /* Dark blue-gray for main text */
+    --card: 58 63% 95%;          /* Slightly lighter than background */
+    --card-foreground: 200 50% 20%;
+    --popover: 58 63% 95%;
+    --popover-foreground: 200 50% 20%;
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 200 30% 85%;    /* Soft blue-gray */
+    --secondary-foreground: 200 50% 20%;
+    --accent: 25 70% 85%;        /* Warm accent */
+    --accent-foreground: 25 80% 25%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 58 30% 80%;        /* Muted border color */
+    --input: 58 30% 80%;
+    --ring: 142.1 76.2% 36.3%;
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 200 50% 15%;    /* Dark mode background */
+    --foreground: 58 40% 90%;     /* Light text for dark mode */
+    --card: 200 50% 20%;
+    --card-foreground: 58 40% 90%;
+    --popover: 200 50% 20%;
+    --popover-foreground: 58 40% 90%;
+    --primary: 142.1 70.6% 45.3%;
+    --primary-foreground: 144.9 80.4% 10%;
+    --secondary: 200 30% 30%;
+    --secondary-foreground: 58 40% 90%;
+    --accent: 25 70% 45%;
+    --accent-foreground: 25 80% 90%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 200 30% 25%;
+    --input: 200 30% 25%;
+    --ring: 142.4 71.8% 29.2%;
+  }
+}
