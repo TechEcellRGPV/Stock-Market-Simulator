@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 export default function CompaniesList() {
-  const [companies, setCompanies] = useState([
+  const [companies] = useState([
     {
       id: 1,
       name: "BMW",
@@ -81,7 +81,7 @@ export default function CompaniesList() {
             userSelect: "none",
           }}
         >
-          🏢 All Companies
+          All Companies
         </h2>
 
         <div style={{ overflowX: "auto" }}>

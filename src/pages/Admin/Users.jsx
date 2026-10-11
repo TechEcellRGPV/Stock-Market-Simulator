@@ -1,18 +1,17 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { UserX } from "lucide-react";
 
 export default function UsersList() {
-  // Start with empty users array
-  // const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState([]);
 
-  // // Example function to simulate adding a user
-  // const addUser = () => {
-  //   const newUser = {
-  //     id: users.length + 1,
-  //     name: User ${users.length + 1},
-  //     email: user${users.length + 1}@example.com,
-  //   };
-  //   setUsers([...users, newUser]);
-  // };
+  const addUser = () => {
+    const newUser = {
+      id: users.length + 1,
+      name: `User ${users.length + 1}`,
+      email: `user${users.length + 1}@example.com`,
+    };
+    setUsers([...users, newUser]);
+  };
 
   return (
     <div
@@ -49,7 +48,7 @@ export default function UsersList() {
             WebkitTextFillColor: "transparent",
           }}
         >
-          👥 All Users
+          All Users
         </h2>
 
         {users.length === 0 ? (
@@ -78,7 +77,7 @@ export default function UsersList() {
                 color: "#bbb",
               }}
             >
-              ❌
+              <UserX size={28} color="#888" />
             </div>
             <p style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}>
               No users found.

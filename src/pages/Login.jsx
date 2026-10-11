@@ -1,208 +1,370 @@
 import { useState } from "react";
-import { FaUser, FaUserShield, FaSignInAlt } from "react-icons/fa";
+import { useNavigate, Link } from "react-router-dom";
+import {
+  ArrowRight,
+  UserPlus,
+  LogIn,
+  AlertCircle,
+  CheckCircle,
+  Flag,
+  Lock,
+  Clock
+} from "lucide-react";
+import { useSimulation } from "../context/SimulationContext";
 
-// Add this to your index.html head:
-// <link href="https://fonts.googleapis.com/css2?family=Lato&family=Noto+Sans&display=swap" rel="stylesheet">
+/**
+ * @file Login.jsx
+ * @description Paddock Access & Authentication Gate for Imprenditore 5.0.
+ * Provides two primary interaction modes:
+ * 1. Create Team: Registers a new team on the event grid with initial starting capital
+ *    (guarded by the admin Registration Gate).
+ * 2. Join Team: Authenticates drivers into existing team sessions using team code/name and 4-digit PIN.
+ *
+ * Logged-in teams are held in the Paddock Waiting Lounge until flag-off.
+ *
+ * @returns {JSX.Element} Authentication portal or registration locked alert
+ */
+export default function Login() {
+  const navigate = useNavigate();
+  const { createTeam, joinTeam, raceState } = useSimulation();
 
-const colors = {
-  mediumGreen: "#82AA57",
-  darkGreen: "#618943"
-};
+  const [mode, setMode] = useState("create"); // "create" | "join"
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-const notoSans = { fontFamily: "'Noto Sans', sans-serif" };
-const lato = { fontFamily: "'Lato', sans-serif" };
-
-export default function LoginPage() {
-  const [role, setRole] = useState("user");
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    mobileNo: "",
-    enrollmentNo: "",
-    password: ""
+  // Create Team Form
+  const [createForm, setCreateForm] = useState({
+    teamName: "",
+    teamPin: "",
+    leaderName: "",
+    member2: "",
+    member3: "",
+    member4: ""
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  // Join Team Form
+  const [joinForm, setJoinForm] = useState({
+    teamIdentifier: "",
+    teamPin: "",
+    memberName: ""
+  });
 
-  const handleRoleChange = (newRole) => {
-    setRole(newRole);
-    setFormData({
-      name: "",
-      email: "",
-      mobileNo: "",
-      enrollmentNo: "",
-      password: ""
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleCreateSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitted Data:", formData);
+    setError("");
+    setSuccess("");
+
+    if (raceState.isRegistrationOpen === false) {
+      setError("Team Registration is currently locked by Race Control. Registration will open on event day.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const memberNames = [createForm.member2, createForm.member3, createForm.member4].filter(Boolean);
+      const team = await createTeam({
+        teamName: createForm.teamName,
+        teamPin: createForm.teamPin,
+        leaderName: createForm.leaderName,
+        memberNames
+      });
+
+      setSuccess(`Team ${team.teamName} registered! Team Code: ${team.teamCode}`);
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
+    } catch (err) {
+      setError(err?.message || "Failed to register team.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleJoinSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    setIsSubmitting(true);
+    try {
+      const team = await joinTeam({
+        teamIdentifier: joinForm.teamIdentifier,
+        teamPin: joinForm.teamPin,
+        memberName: joinForm.memberName
+      });
+
+      setSuccess(`Connected to ${team.teamName}! Entering cockpit...`);
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 800);
+    } catch (err) {
+      setError(err?.message || "Failed to join team.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div
-      className="flex items-center justify-center min-h-screen px-4"
-      style={{ backgroundColor: "#F9F7DC", ...lato }}
-    >
-      <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full max-w-md">
-        {/* Heading */}
-        <h1
-          className="text-2xl font-bold text-center mb-6"
-          style={{ ...notoSans, color: colors.darkGreen }}
-        >
-          Login Page
-        </h1>
+    <div className="min-h-screen bg-[#0A0D12] text-white flex flex-col justify-center items-center px-4 sm:px-6 py-10 font-sans">
+      {/* Header Link & Logos */}
+      <div className="mb-6 text-center max-w-md">
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <img src="/rgpv-logo.jpeg" alt="RGPV Bhopal" className="h-8 w-8 object-contain rounded-full bg-white p-0.5" />
+          <img src="/logo.png" alt="E-Cell RGPV" className="h-8 object-contain" />
+          <img src="/logo_D.png" alt="Imprenditore 5.0" className="h-8 object-contain" />
+        </div>
+        <Link to="/" className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-[#E10600] hover:text-[#FF4D4D] transition-colors">
+          <Flag className="w-3.5 h-3.5" />
+          <span>E-Cell RGPV : Imprenditore 5.0</span>
+        </Link>
+        <h2 className="text-2xl sm:text-3xl font-black uppercase italic tracking-tight text-white mt-1">
+          Paddock Entry
+        </h2>
+        <p className="text-xs text-slate-400 font-medium mt-1">
+          Register a new team or join an existing team session
+        </p>
+      </div>
 
-        {/* Role Buttons */}
-        <div className="flex mb-8 gap-4" style={lato}>
+      {/* Main Login Box */}
+      <div className="w-full max-w-md bg-[#121720] rounded-xl border border-[#232B3B] p-5 sm:p-7 shadow-sm">
+        {/* Mode Switch Tabs: 2 Tabs only */}
+        <div className="grid grid-cols-2 gap-1 bg-[#0A0D12] p-1 rounded-lg border border-[#1A202C] mb-5">
           <button
-            onClick={() => handleRoleChange("user")}
-            className="flex items-center justify-center gap-2 flex-1 py-2 rounded-full font-semibold transition-transform duration-300 hover:scale-105 text-sm sm:text-base"
-            style={
-              role === "user"
-                ? {
-                    background: `linear-gradient(to right, ${colors.mediumGreen}, ${colors.darkGreen})`,
-                    color: "white",
-                    boxShadow: `0 6px 20px -5px ${colors.darkGreen}bb`,
-                    ...lato
-                  }
-                : {
-                    backgroundColor: "#e5e7eb",
-                    color: "#374151",
-                    ...lato
-                  }
-            }
+            type="button"
+            onClick={() => { setMode("create"); setError(""); setSuccess(""); }}
+            className={`py-2 rounded text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
+              mode === "create"
+                ? "bg-[#E10600] text-white"
+                : "text-slate-400 hover:text-white"
+            }`}
           >
-            <FaUser /> User
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>Create Team</span>
           </button>
           <button
-            onClick={() => handleRoleChange("admin")}
-            className="flex items-center justify-center gap-2 flex-1 py-2 rounded-full font-semibold transition-transform duration-300 hover:scale-105 text-sm sm:text-base"
-            style={
-              role === "admin"
-                ? {
-                    background: `linear-gradient(to right, ${colors.mediumGreen}, ${colors.darkGreen})`,
-                    color: "white",
-                    boxShadow: `0 6px 20px -5px ${colors.darkGreen}bb`,
-                    ...lato
-                  }
-                : {
-                    backgroundColor: "#e5e7eb",
-                    color: "#374151",
-                    ...lato
-                  }
-            }
+            type="button"
+            onClick={() => { setMode("join"); setError(""); setSuccess(""); }}
+            className={`py-2 rounded text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
+              mode === "join"
+                ? "bg-[#10B981] text-slate-950 font-black"
+                : "text-slate-400 hover:text-white"
+            }`}
           >
-            <FaUserShield /> Admin
+            <LogIn className="w-3.5 h-3.5" />
+            <span>Join Team</span>
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6 text-sm sm:text-base" style={lato}>
-          {/* Name */}
-          <div>
-            <label className="block mb-2 font-semibold" style={{ color: colors.darkGreen, ...notoSans }}>
-              Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              placeholder="Enter your name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2"
-              style={{ borderColor: colors.darkGreen, ...lato }}
-              required
-            />
+        {/* Error / Success Alerts */}
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-[#E10600]/10 border border-[#E10600]/30 text-xs text-[#FF8080] flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#E10600]" />
+            <span>{error}</span>
           </div>
+        )}
 
-          {/* Additional Fields for User */}
-          {role === "user" && (
-            <>
-              <div>
-                <label className="block mb-2 font-semibold" style={{ color: colors.darkGreen, ...notoSans }}>
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2"
-                  style={{ borderColor: colors.darkGreen, ...lato }}
-                  required
-                />
+        {success && (
+          <div className="mb-4 p-3 rounded-lg bg-[#10B981]/10 border border-[#10B981]/30 text-xs text-[#10B981] flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 shrink-0 text-[#10B981]" />
+            <span>{success}</span>
+          </div>
+        )}
+
+        {/* Tab 1: Create Team */}
+        {mode === "create" && (
+          !raceState.isRegistrationOpen ? (
+            <div className="py-4 text-center space-y-4">
+              <div className="w-12 h-12 rounded-xl bg-[#E10600]/15 text-[#E10600] flex items-center justify-center mx-auto border border-[#E10600]/30">
+                <Lock className="w-6 h-6" />
               </div>
               <div>
-                <label className="block mb-2 font-semibold" style={{ color: colors.darkGreen, ...notoSans }}>
-                  Mobile Number
+                <h3 className="text-base font-black uppercase italic text-white">
+                  Registration Locked
+                </h3>
+                <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">
+                  Team registration is currently closed. The Race Director will open paddock registrations on the official event day.
+                </p>
+              </div>
+
+              {raceState.scheduledStartTime && (
+                <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#232B3B] text-[11px] text-[#EAB308] font-medium flex items-center justify-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 shrink-0" />
+                  <span>Starts: {raceState.scheduledStartTime}</span>
+                </div>
+              )}
+
+              <Link
+                to="/"
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-[#161B24] hover:bg-[#1D232E] text-slate-200 text-xs font-bold uppercase tracking-wider border border-[#232B3B] transition-colors"
+              >
+                <span>View Event Countdown On Home</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={handleCreateSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                  Team / Scuderia Name *
                 </label>
                 <input
                   type="text"
-                  name="mobileNo"
-                  placeholder="Enter your mobile number"
-                  value={formData.mobileNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2"
-                  style={{ borderColor: colors.darkGreen, ...lato }}
                   required
+                  placeholder="e.g. Apex Racing, Scuderia Alpha"
+                  value={createForm.teamName}
+                  onChange={(e) => setCreateForm({ ...createForm, teamName: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#E10600] text-xs text-white placeholder:text-slate-600 outline-none transition-colors"
                 />
               </div>
-              <div>
-                <label className="block mb-2 font-semibold" style={{ color: colors.darkGreen, ...notoSans }}>
-                  Enrollment Number
-                </label>
-                <input
-                  type="text"
-                  name="enrollmentNo"
-                  placeholder="Enter your enrollment number"
-                  value={formData.enrollmentNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2"
-                  style={{ borderColor: colors.darkGreen, ...lato }}
-                  required
-                />
-              </div>
-            </>
-          )}
 
-          {/* Admin Password Field */}
-          {role === "admin" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                    4-Digit Team PIN *
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={4}
+                    required
+                    placeholder="e.g. 4821"
+                    value={createForm.teamPin}
+                    onChange={(e) => setCreateForm({ ...createForm, teamPin: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#E10600] text-xs text-white placeholder:text-slate-600 outline-none tracking-widest font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                    Team Leader Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Rohan Sharma"
+                    value={createForm.leaderName}
+                    onChange={(e) => setCreateForm({ ...createForm, leaderName: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#E10600] text-xs text-white placeholder:text-slate-600 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  Teammate Names (Optional)
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Driver 2"
+                    value={createForm.member2}
+                    onChange={(e) => setCreateForm({ ...createForm, member2: e.target.value })}
+                    className="w-full px-2.5 py-2 rounded-lg bg-[#0A0D12] border border-[#232B3B] text-xs text-white placeholder:text-slate-600 outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Driver 3"
+                    value={createForm.member3}
+                    onChange={(e) => setCreateForm({ ...createForm, member3: e.target.value })}
+                    className="w-full px-2.5 py-2 rounded-lg bg-[#0A0D12] border border-[#232B3B] text-xs text-white placeholder:text-slate-600 outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Driver 4"
+                    value={createForm.member4}
+                    onChange={(e) => setCreateForm({ ...createForm, member4: e.target.value })}
+                    className="w-full px-2.5 py-2 rounded-lg bg-[#0A0D12] border border-[#232B3B] text-xs text-white placeholder:text-slate-600 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] text-[11px] text-slate-400">
+                <strong className="text-white font-bold">Rule:</strong> Initial wallet credit of <strong className="text-[#10B981]">₹{(raceState.defaultStartingCapital || 100000).toLocaleString("en-IN")}</strong> is issued immediately upon team registration.
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full py-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-sm ${
+                  isSubmitting
+                    ? "bg-[#1A202C] text-slate-500 cursor-not-allowed"
+                    : "bg-[#E10600] hover:bg-[#C50500] text-white"
+                }`}
+              >
+                <span>{isSubmitting ? "Registering Team..." : "Register Team & Enter Grid"}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
+          )
+        )}
+
+        {/* Tab 2: Join Team */}
+        {mode === "join" && (
+          <form onSubmit={handleJoinSubmit} className="space-y-4">
             <div>
-              <label className="block mb-2 font-semibold" style={{ color: colors.darkGreen, ...notoSans }}>
-                Password
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                Team Code or Registered Name *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. APEX-501 or Apex Racing"
+                value={joinForm.teamIdentifier}
+                onChange={(e) => setJoinForm({ ...joinForm, teamIdentifier: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#10B981] text-xs text-white placeholder:text-slate-600 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                4-Digit Team Security PIN *
               </label>
               <input
                 type="password"
-                name="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2"
-                style={{ borderColor: colors.darkGreen, ...lato }}
+                maxLength={4}
                 required
+                placeholder="Enter 4-digit PIN"
+                value={joinForm.teamPin}
+                onChange={(e) => setJoinForm({ ...joinForm, teamPin: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#10B981] text-xs text-white placeholder:text-slate-600 outline-none tracking-widest font-mono"
               />
             </div>
-          )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full py-3 flex items-center justify-center gap-2 rounded-xl text-white font-semibold transform hover:scale-105 transition duration-300"
-            style={{
-              background: `linear-gradient(to right, ${colors.mediumGreen}, ${colors.darkGreen})`,
-              boxShadow: `0 6px 20px -5px ${colors.darkGreen}bb`,
-              ...lato
-            }}
-          >
-            <FaSignInAlt /> Login as {role.charAt(0).toUpperCase() + role.slice(1)}
-          </button>
-        </form>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                Your Driver / Member Name *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Aarav Patel"
+                value={joinForm.memberName}
+                onChange={(e) => setJoinForm({ ...joinForm, memberName: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#10B981] text-xs text-white placeholder:text-slate-600 outline-none"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full py-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
+                isSubmitting
+                  ? "bg-[#1A202C] text-slate-500 cursor-not-allowed"
+                  : "bg-[#10B981] hover:bg-[#059669] text-slate-950"
+              }`}
+            >
+              <span>{isSubmitting ? "Connecting To Cockpit..." : "Connect To Cockpit"}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
+        )}
+      </div>
+
+      {/* Return to Home link */}
+      <div className="mt-6 text-center">
+        <Link to="/" className="text-xs text-slate-400 hover:text-slate-200 transition-colors uppercase tracking-wider font-bold">
+          Back to Event Home
+        </Link>
       </div>
     </div>
   );

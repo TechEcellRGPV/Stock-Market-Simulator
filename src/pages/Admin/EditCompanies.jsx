@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 export default function EditCompanyForm() {
-  // Example initial data — ideally you'd get this from props or fetch
+  // Example initial data - ideally you'd get this from props or fetch
   const [formData, setFormData] = useState({
     companyName: "Tech Solutions Inc.",
     sector: "Technology",
@@ -59,7 +59,7 @@ export default function EditCompanyForm() {
             WebkitTextFillColor: "transparent",
           }}
         >
-          ✏ Edit Company
+          Edit Company
         </h2>
 
         <form onSubmit={handleSubmit}>

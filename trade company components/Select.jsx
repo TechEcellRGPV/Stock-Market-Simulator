@@ -1,4 +1,5 @@
-import React, { useState, useContext, createContext } from "react";
+import { useState, useContext, createContext } from "react";
+import { ChevronDown } from "lucide-react";
 
 const SelectContext = createContext();
 
@@ -25,9 +26,7 @@ export function SelectTrigger({ children, className = "" }) {
       className={`border px-4 py-2 rounded-md bg-white text-sm w-full flex items-center justify-between ${className}`}
     >
       {children}
-      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path d="M19 9l-7 7-7-7" />
-      </svg>
+      <ChevronDown className="w-4 h-4 ml-2" />
     </button>
   );
 }
