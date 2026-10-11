@@ -11,6 +11,7 @@ import {
   Clock
 } from "lucide-react";
 import { useSimulation } from "../context/SimulationContext";
+import { useSEO } from "../hooks/useSEO";
 
 /**
  * @file Login.jsx
@@ -25,6 +26,11 @@ import { useSimulation } from "../context/SimulationContext";
  * @returns {JSX.Element} Authentication portal or registration locked alert
  */
 export default function Login() {
+  useSEO({
+    title: "Paddock Login & Team Registration",
+    description: "Enter the Paddock Lounge for Imprenditore 5.0. Register your collegiate trading team or enter your 4-digit PIN to access the cockpit."
+  });
+
   const navigate = useNavigate();
   const { createTeam, joinTeam, raceState } = useSimulation();
 
@@ -133,11 +139,10 @@ export default function Login() {
           <button
             type="button"
             onClick={() => { setMode("create"); setError(""); setSuccess(""); }}
-            className={`py-2 rounded text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
-              mode === "create"
+            className={`py-2 rounded text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${mode === "create"
                 ? "bg-[#E10600] text-white"
                 : "text-slate-400 hover:text-white"
-            }`}
+              }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Create Team</span>
@@ -145,11 +150,10 @@ export default function Login() {
           <button
             type="button"
             onClick={() => { setMode("join"); setError(""); setSuccess(""); }}
-            className={`py-2 rounded text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
-              mode === "join"
+            className={`py-2 rounded text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${mode === "join"
                 ? "bg-[#10B981] text-slate-950 font-black"
                 : "text-slate-400 hover:text-white"
-            }`}
+              }`}
           >
             <LogIn className="w-3.5 h-3.5" />
             <span>Join Team</span>
@@ -285,11 +289,10 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full py-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-sm ${
-                  isSubmitting
+                className={`w-full py-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-sm ${isSubmitting
                     ? "bg-[#1A202C] text-slate-500 cursor-not-allowed"
                     : "bg-[#E10600] hover:bg-[#C50500] text-white"
-                }`}
+                  }`}
               >
                 <span>{isSubmitting ? "Registering Team..." : "Register Team & Enter Grid"}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -347,11 +350,10 @@ export default function Login() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full py-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-                isSubmitting
+              className={`w-full py-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${isSubmitting
                   ? "bg-[#1A202C] text-slate-500 cursor-not-allowed"
                   : "bg-[#10B981] hover:bg-[#059669] text-slate-950"
-              }`}
+                }`}
             >
               <span>{isSubmitting ? "Connecting To Cockpit..." : "Connect To Cockpit"}</span>
               <ArrowRight className="w-4 h-4" />

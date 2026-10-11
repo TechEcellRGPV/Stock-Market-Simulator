@@ -12,6 +12,7 @@ import {
   Receipt
 } from "lucide-react";
 import { useSimulation } from "../context/SimulationContext";
+import { useSEO } from "../hooks/useSEO";
 
 /**
  * @file Trade.jsx
@@ -23,6 +24,11 @@ import { useSimulation } from "../context/SimulationContext";
  * @returns {JSX.Element} Trading floor viewport with reactive Convex subscriptions
  */
 export default function Trade() {
+  useSEO({
+    title: "Pit Stop Trading Floor",
+    description: "Live order execution terminal for Imprenditore 5.0. Trade 17 motorsport and mobility equities, track real-time telemetry, and view your order audit ledger."
+  });
+
   const [searchParams, setSearchParams] = useSearchParams();
   const { currentTeam, stocks, raceState, orders } = useSimulation();
 
@@ -99,23 +105,22 @@ export default function Trade() {
               {formatTime(raceState.lapTimeRemaining)}
             </span>
             <span
-              className={`font-black uppercase tracking-wider text-[10px] sm:text-[11px] ${
-                raceState.status === "GREEN_FLAG"
+              className={`font-black uppercase tracking-wider text-[10px] sm:text-[11px] ${raceState.status === "GREEN_FLAG"
                   ? "text-[#EAB308]"
                   : raceState.status === "SAFETY_CAR"
-                  ? "text-[#F59E0B]"
-                  : raceState.status === "CHECKERED_FLAG"
-                  ? "text-[#FF4D4D]"
-                  : "text-[#06B6D4]"
-              }`}
+                    ? "text-[#F59E0B]"
+                    : raceState.status === "CHECKERED_FLAG"
+                      ? "text-[#FF4D4D]"
+                      : "text-[#06B6D4]"
+                }`}
             >
               {raceState.status === "GREEN_FLAG"
                 ? `L${raceState.currentLap}`
                 : raceState.status === "SAFETY_CAR"
-                ? "PAUSED"
-                : raceState.status === "CHECKERED_FLAG"
-                ? "CLOSED"
-                : "WARMUP"}
+                  ? "PAUSED"
+                  : raceState.status === "CHECKERED_FLAG"
+                    ? "CLOSED"
+                    : "WARMUP"}
             </span>
           </div>
 
@@ -148,18 +153,16 @@ export default function Trade() {
                 key={stk.ticker}
                 type="button"
                 onClick={() => handleSelectTicker(stk.ticker)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-colors flex items-center gap-2 border ${
-                  isSelected
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-colors flex items-center gap-2 border ${isSelected
                     ? "bg-[#161B24] text-white border-[#E10600] shadow-sm"
                     : "bg-[#0A0D12] text-slate-400 hover:text-white border-[#1E2638] hover:border-slate-700"
-                }`}
+                  }`}
               >
                 <span>{stk.ticker}</span>
                 <span className="text-white">₹{stk.currentPrice.toFixed(1)}</span>
                 <span
-                  className={`text-[10px] inline-flex items-center ${
-                    isPositive ? "text-[#10B981]" : "text-[#E10600]"
-                  }`}
+                  className={`text-[10px] inline-flex items-center ${isPositive ? "text-[#10B981]" : "text-[#E10600]"
+                    }`}
                 >
                   {isPositive ? "+" : ""}
                   {stk.changePercent}%
@@ -259,7 +262,7 @@ export default function Trade() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[650px] text-left text-xs font-sans">
+              <table className="w-full min-w-162.5 text-left text-xs font-sans">
                 <thead>
                   <tr className="border-b border-[#232B3B] text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     <th className="pb-2.5">Type</th>
@@ -277,11 +280,10 @@ export default function Trade() {
                     <tr key={o.id || `${o.teamId}_${o.timestamp}`} className="hover:bg-[#161B24] transition-colors">
                       <td className="py-2.5">
                         <span
-                          className={`px-1.5 py-0.5 rounded font-black text-[10px] uppercase ${
-                            o.type === "BUY"
+                          className={`px-1.5 py-0.5 rounded font-black text-[10px] uppercase ${o.type === "BUY"
                               ? "bg-[#10B981]/15 text-[#10B981]"
                               : "bg-[#E10600]/15 text-[#E10600]"
-                          }`}
+                            }`}
                         >
                           {o.type}
                         </span>

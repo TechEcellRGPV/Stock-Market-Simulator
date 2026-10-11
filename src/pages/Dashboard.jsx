@@ -21,6 +21,7 @@ import CirculatingBanner from "../components/CirculatingBanner";
 import PortfolioPerformanceChart from "../components/PortfolioPerformanceChart";
 import PaddockWaitingLounge from "../components/PaddockWaitingLounge";
 import { useSimulation } from "../context/SimulationContext";
+import { useSEO } from "../hooks/useSEO";
 
 function subscribeToSeconds(callback) {
   const timer = setInterval(callback, 1000);
@@ -51,6 +52,11 @@ function getServerSnapshot() {
  * @returns {JSX.Element} Driver Cockpit terminal or Paddock Lounge
  */
 export default function Dashboard() {
+  useSEO({
+    title: "Driver Cockpit Telemetry",
+    description: "Personal Driver Cockpit for Imprenditore 5.0. Monitor real-time net worth, cash balance, sector allocation meters, valuation charts, and order ledgers."
+  });
+
   const navigate = useNavigate();
   const {
     currentTeam,
@@ -283,22 +289,21 @@ export default function Dashboard() {
             <span className="font-mono font-bold text-[#06B6D4] text-xs">
               {formatTime(raceState.lapTimeRemaining)}
             </span>
-            <span className={`font-black uppercase tracking-wider text-[11px] ${
-              isLive
-                ? "text-[#EAB308]"
-                : isPaused
+            <span className={`font-black uppercase tracking-wider text-[11px] ${isLive
+              ? "text-[#EAB308]"
+              : isPaused
                 ? "text-[#F59E0B]"
                 : isConcluded
-                ? "text-[#FF4D4D]"
-                : "text-[#06B6D4]"
-            }`}>
+                  ? "text-[#FF4D4D]"
+                  : "text-[#06B6D4]"
+              }`}>
               {isLive
                 ? `LAP ${raceState.currentLap}/5`
                 : isPaused
-                ? "PAUSED"
-                : isConcluded
-                ? "CONCLUDED"
-                : "WARMUP"}
+                  ? "PAUSED"
+                  : isConcluded
+                    ? "CONCLUDED"
+                    : "WARMUP"}
             </span>
           </div>
 
@@ -328,7 +333,7 @@ export default function Dashboard() {
 
         {/* Pre-Race Mission Control Hero (Desktop & Mobile) */}
         {isPreRace && (
-          <section className="bg-gradient-to-br from-[#0F1420] via-[#121824] to-[#0A0D14] rounded-2xl border border-[#232B3B] p-4 sm:p-6 shadow-xl relative overflow-hidden">
+          <section className="bg-linear-to-br from-[#0F1420] via-[#121824] to-[#0A0D14] rounded-2xl border border-[#232B3B] p-4 sm:p-6 shadow-xl relative overflow-hidden">
             {/* Background Ambient Glow */}
             <div className="absolute top-0 right-0 w-80 h-80 bg-[#06B6D4]/5 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-60 h-60 bg-[#E10600]/5 rounded-full blur-3xl pointer-events-none" />
@@ -366,25 +371,25 @@ export default function Dashboard() {
                       <span className="text-slate-400 font-normal">{formattedEventDate}</span>
                     </div>
                     <div className="grid grid-cols-4 gap-2 text-center">
-                      <div className="bg-[#121720] px-2.5 py-1.5 rounded-lg border border-slate-800/80 min-w-[52px]">
+                      <div className="bg-[#121720] px-2.5 py-1.5 rounded-lg border border-slate-800/80 min-w-13">
                         <div className="text-base sm:text-xl font-mono font-black text-white">
                           {countdown.days.toString().padStart(2, "0")}
                         </div>
                         <div className="text-[9px] uppercase font-bold text-slate-400">Days</div>
                       </div>
-                      <div className="bg-[#121720] px-2.5 py-1.5 rounded-lg border border-slate-800/80 min-w-[52px]">
+                      <div className="bg-[#121720] px-2.5 py-1.5 rounded-lg border border-slate-800/80 min-w-13">
                         <div className="text-base sm:text-xl font-mono font-black text-white">
                           {countdown.hours.toString().padStart(2, "0")}
                         </div>
                         <div className="text-[9px] uppercase font-bold text-slate-400">Hours</div>
                       </div>
-                      <div className="bg-[#121720] px-2.5 py-1.5 rounded-lg border border-slate-800/80 min-w-[52px]">
+                      <div className="bg-[#121720] px-2.5 py-1.5 rounded-lg border border-slate-800/80 min-w-13">
                         <div className="text-base sm:text-xl font-mono font-black text-[#EAB308]">
                           {countdown.minutes.toString().padStart(2, "0")}
                         </div>
                         <div className="text-[9px] uppercase font-bold text-slate-400">Mins</div>
                       </div>
-                      <div className="bg-[#121720] px-2.5 py-1.5 rounded-lg border border-slate-800/80 min-w-[52px]">
+                      <div className="bg-[#121720] px-2.5 py-1.5 rounded-lg border border-slate-800/80 min-w-13">
                         <div className="text-base sm:text-xl font-mono font-black text-[#06B6D4]">
                           {countdown.seconds.toString().padStart(2, "0")}
                         </div>
@@ -616,16 +621,14 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => setActiveTab("holdings")}
-                className={`pb-3 pt-2.5 text-xs sm:text-sm font-bold transition-colors relative flex items-center gap-1 sm:gap-1.5 shrink-0 ${
-                  activeTab === "holdings" ? "text-white" : "text-slate-400 hover:text-slate-200"
-                }`}
+                className={`pb-3 pt-2.5 text-xs sm:text-sm font-bold transition-colors relative flex items-center gap-1 sm:gap-1.5 shrink-0 ${activeTab === "holdings" ? "text-white" : "text-slate-400 hover:text-slate-200"
+                  }`}
               >
                 <span>Holdings</span>
-                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                  activeTab === "holdings"
-                    ? "bg-[#E10600]/20 text-[#FF8080] border border-[#E10600]/40"
-                    : "bg-slate-800 text-slate-400"
-                }`}>
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${activeTab === "holdings"
+                  ? "bg-[#E10600]/20 text-[#FF8080] border border-[#E10600]/40"
+                  : "bg-slate-800 text-slate-400"
+                  }`}>
                   {currentHoldings.length}
                 </span>
                 {activeTab === "holdings" && (
@@ -636,9 +639,8 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => setActiveTab("telemetry")}
-                className={`pb-3 pt-2.5 text-xs sm:text-sm font-bold transition-colors relative flex items-center gap-1 sm:gap-1.5 shrink-0 ${
-                  activeTab === "telemetry" ? "text-white" : "text-slate-400 hover:text-slate-200"
-                }`}
+                className={`pb-3 pt-2.5 text-xs sm:text-sm font-bold transition-colors relative flex items-center gap-1 sm:gap-1.5 shrink-0 ${activeTab === "telemetry" ? "text-white" : "text-slate-400 hover:text-slate-200"
+                  }`}
               >
                 <span>Chart</span>
                 {activeTab === "telemetry" && (
@@ -649,16 +651,14 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => setActiveTab("orders")}
-                className={`pb-3 pt-2.5 text-xs sm:text-sm font-bold transition-colors relative flex items-center gap-1 sm:gap-1.5 shrink-0 ${
-                  activeTab === "orders" ? "text-white" : "text-slate-400 hover:text-slate-200"
-                }`}
+                className={`pb-3 pt-2.5 text-xs sm:text-sm font-bold transition-colors relative flex items-center gap-1 sm:gap-1.5 shrink-0 ${activeTab === "orders" ? "text-white" : "text-slate-400 hover:text-slate-200"
+                  }`}
               >
                 <span>Orders</span>
-                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                  activeTab === "orders"
-                    ? "bg-[#EAB308]/20 text-[#EAB308] border border-[#EAB308]/40"
-                    : "bg-slate-800 text-slate-400"
-                }`}>
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${activeTab === "orders"
+                  ? "bg-[#EAB308]/20 text-[#EAB308] border border-[#EAB308]/40"
+                  : "bg-slate-800 text-slate-400"
+                  }`}>
                   {orders.length}
                 </span>
                 {activeTab === "orders" && (
@@ -669,9 +669,8 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => setActiveTab("scorecard")}
-                className={`pb-3 pt-2.5 text-xs sm:text-sm font-bold transition-colors relative flex items-center gap-1 sm:gap-1.5 shrink-0 ${
-                  activeTab === "scorecard" ? "text-white" : "text-slate-400 hover:text-slate-200"
-                }`}
+                className={`pb-3 pt-2.5 text-xs sm:text-sm font-bold transition-colors relative flex items-center gap-1 sm:gap-1.5 shrink-0 ${activeTab === "scorecard" ? "text-white" : "text-slate-400 hover:text-slate-200"
+                  }`}
               >
                 <span className="sm:hidden">Rules</span>
                 <span className="hidden sm:inline">50/30/20 Rules</span>
@@ -703,7 +702,7 @@ export default function Dashboard() {
             <div className="p-3 sm:p-6 w-full">
               {portfolioStats.holdingRows.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[650px] text-left text-xs font-sans">
+                  <table className="w-full min-w-162.5 text-left text-xs font-sans">
                     <thead>
                       <tr className="border-b border-[#232B3B] text-[11px] font-bold uppercase tracking-wider text-slate-400">
                         <th className="pb-2.5">Company</th>
@@ -876,7 +875,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <table className="w-full min-w-[650px] text-left text-xs font-sans">
+                <table className="w-full min-w-162.5 text-left text-xs font-sans">
                   <thead>
                     <tr className="border-b border-[#232B3B] text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       <th className="pb-2.5">Type</th>
@@ -893,9 +892,8 @@ export default function Dashboard() {
                     {orders.map((o) => (
                       <tr key={o.id} className="hover:bg-[#161B24] transition-colors">
                         <td className="py-2.5">
-                          <span className={`px-1.5 py-0.5 rounded font-black text-[10px] uppercase ${
-                            o.type === "BUY" ? "bg-[#10B981]/15 text-[#10B981]" : "bg-[#E10600]/15 text-[#E10600]"
-                          }`}>
+                          <span className={`px-1.5 py-0.5 rounded font-black text-[10px] uppercase ${o.type === "BUY" ? "bg-[#10B981]/15 text-[#10B981]" : "bg-[#E10600]/15 text-[#E10600]"
+                            }`}>
                             {o.type}
                           </span>
                         </td>

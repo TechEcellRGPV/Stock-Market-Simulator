@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useSimulation } from "../../context/SimulationContext";
 import EventCountdown from "../../components/EventCountdown";
+import { useSEO } from "../../hooks/useSEO";
 
 /**
  * @file Admin.jsx
@@ -40,6 +41,11 @@ import EventCountdown from "../../components/EventCountdown";
  * @returns {JSX.Element} Cryptographically locked admin console or control dashboard
  */
 export default function Admin() {
+  useSEO({
+    title: "Race Operations Command",
+    description: "Race Director Control Center for Imprenditore 5.0. Orchestrate competition laps, manage access gates, broadcast sector shocks, and monitor team grids."
+  });
+
   const navigate = useNavigate();
   const {
     isAdmin,
@@ -156,13 +162,13 @@ export default function Admin() {
     const d = new Date(targetDateInput);
     const dateDerived = !isNaN(d.getTime())
       ? d.toLocaleString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true
-        })
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      })
       : "";
 
     const isExplicitSummary =
@@ -413,9 +419,8 @@ export default function Admin() {
                     {raceState.isRegistrationOpen ? <Unlock className="w-4 h-4 text-[#10B981]" /> : <Lock className="w-4 h-4 text-[#E10600]" />}
                     <span>Team Registration Gate</span>
                   </span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                    raceState.isRegistrationOpen ? "bg-[#10B981]/20 text-[#10B981]" : "bg-[#E10600]/20 text-[#FF8080]"
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${raceState.isRegistrationOpen ? "bg-[#10B981]/20 text-[#10B981]" : "bg-[#E10600]/20 text-[#FF8080]"
+                    }`}>
                     {raceState.isRegistrationOpen ? "OPEN FOR REGISTRATION" : "LOCKED (CLOSED)"}
                   </span>
                 </div>
@@ -427,11 +432,10 @@ export default function Admin() {
               <button
                 type="button"
                 onClick={() => toggleRegistration(!raceState.isRegistrationOpen)}
-                className={`w-full py-2 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-                  raceState.isRegistrationOpen
+                className={`w-full py-2 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${raceState.isRegistrationOpen
                     ? "bg-[#E10600]/20 hover:bg-[#E10600] text-[#FF8080] hover:text-white border border-[#E10600]/40"
                     : "bg-[#10B981] hover:bg-[#059669] text-slate-950"
-                }`}
+                  }`}
               >
                 {raceState.isRegistrationOpen ? (
                   <>
@@ -455,9 +459,8 @@ export default function Admin() {
                     {raceState.isSimulationEntryOpen ? <Unlock className="w-4 h-4 text-[#06B6D4]" /> : <Lock className="w-4 h-4 text-slate-400" />}
                     <span>Simulation Cockpit Access</span>
                   </span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                    raceState.isSimulationEntryOpen ? "bg-[#06B6D4]/20 text-[#06B6D4]" : "bg-slate-800 text-slate-400"
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${raceState.isSimulationEntryOpen ? "bg-[#06B6D4]/20 text-[#06B6D4]" : "bg-slate-800 text-slate-400"
+                    }`}>
                     {raceState.isSimulationEntryOpen ? "PADDOCK ACCESS OPEN" : "PADDOCK LOCKED"}
                   </span>
                 </div>
@@ -469,11 +472,10 @@ export default function Admin() {
               <button
                 type="button"
                 onClick={() => toggleSimulationEntry(!raceState.isSimulationEntryOpen)}
-                className={`w-full py-2 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-                  raceState.isSimulationEntryOpen
+                className={`w-full py-2 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${raceState.isSimulationEntryOpen
                     ? "bg-[#F59E0B]/20 hover:bg-[#F59E0B] text-[#F59E0B] hover:text-slate-950 border border-[#F59E0B]/40"
                     : "bg-[#06B6D4] hover:bg-[#0891B2] text-slate-950"
-                }`}
+                  }`}
               >
                 {raceState.isSimulationEntryOpen ? (
                   <>
@@ -675,24 +677,23 @@ export default function Admin() {
               </span>
               <h2 className="text-xl font-black uppercase italic tracking-tight text-white flex items-center gap-2">
                 <span>Current State:</span>
-                <span className={`px-2.5 py-0.5 rounded text-xs font-black uppercase tracking-wider ${
-                  raceState.status === "GREEN_FLAG"
+                <span className={`px-2.5 py-0.5 rounded text-xs font-black uppercase tracking-wider ${raceState.status === "GREEN_FLAG"
                     ? "bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40"
                     : raceState.status === "SAFETY_CAR"
-                    ? "bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40"
-                    : raceState.status === "CHECKERED_FLAG"
-                    ? "bg-[#E10600]/20 text-[#FF4D4D] border border-[#E10600]/40"
-                    : "bg-[#06B6D4]/20 text-[#06B6D4] border border-[#06B6D4]/40"
-                }`}>
+                      ? "bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40"
+                      : raceState.status === "CHECKERED_FLAG"
+                        ? "bg-[#E10600]/20 text-[#FF4D4D] border border-[#E10600]/40"
+                        : "bg-[#06B6D4]/20 text-[#06B6D4] border border-[#06B6D4]/40"
+                  }`}>
                   {raceState.status === "GREEN_FLAG"
                     ? `RUNNING • LAP ${raceState.currentLap}/5`
                     : raceState.status === "SAFETY_CAR"
-                    ? "PAUSED • SAFETY CAR"
-                    : raceState.status === "CHECKERED_FLAG"
-                    ? "CONCLUDED • CHECKERED FLAG"
-                    : raceState.currentLap === 1
-                    ? "WARMUP • NOT STARTED"
-                    : `WARMUP • LAP ${raceState.currentLap} STAGED`}
+                      ? "PAUSED • SAFETY CAR"
+                      : raceState.status === "CHECKERED_FLAG"
+                        ? "CONCLUDED • CHECKERED FLAG"
+                        : raceState.currentLap === 1
+                          ? "WARMUP • NOT STARTED"
+                          : `WARMUP • LAP ${raceState.currentLap} STAGED`}
                 </span>
               </h2>
             </div>
@@ -716,32 +717,30 @@ export default function Admin() {
             {/* Start / Flag-Off */}
             <button
               onClick={() => startRace()}
-              className={`p-3.5 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-                raceState.status === "GREEN_FLAG"
+              className={`p-3.5 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${raceState.status === "GREEN_FLAG"
                   ? "bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/50 cursor-default"
                   : "bg-[#10B981] hover:bg-[#059669] text-slate-950 shadow-sm"
-              }`}
+                }`}
             >
               <Play className="w-4 h-4 fill-current" />
               <span>
                 {raceState.status === "GREEN_FLAG"
                   ? `Lap ${raceState.currentLap} Live`
                   : raceState.status === "SAFETY_CAR"
-                  ? "Resume Race (Green Flag)"
-                  : raceState.currentLap === 1
-                  ? "Flag-Off / Start Race"
-                  : `Flag-Off / Start Lap ${raceState.currentLap}`}
+                    ? "Resume Race (Green Flag)"
+                    : raceState.currentLap === 1
+                      ? "Flag-Off / Start Race"
+                      : `Flag-Off / Start Lap ${raceState.currentLap}`}
               </span>
             </button>
 
             {/* Pause (Safety Car) */}
             <button
               onClick={() => pauseRace("Track Clearance & Safety Car Protocol")}
-              className={`p-3.5 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-                raceState.status === "SAFETY_CAR"
+              className={`p-3.5 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${raceState.status === "SAFETY_CAR"
                   ? "bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/50 cursor-default"
                   : "bg-[#F59E0B] hover:bg-[#D97706] text-slate-950"
-              }`}
+                }`}
             >
               <Pause className="w-4 h-4 fill-current" />
               <span>Pause Race (Safety Car)</span>
@@ -754,11 +753,10 @@ export default function Admin() {
                   endRace();
                 }
               }}
-              className={`p-3.5 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-                raceState.status === "CHECKERED_FLAG"
+              className={`p-3.5 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${raceState.status === "CHECKERED_FLAG"
                   ? "bg-[#E10600]/20 text-[#FF4D4D] border border-[#E10600]/50 cursor-default"
                   : "bg-[#E10600] hover:bg-[#C50500] text-white"
-              }`}
+                }`}
             >
               <StopCircle className="w-4 h-4" />
               <span>Conclude Race (Checkered Flag)</span>
@@ -792,11 +790,10 @@ export default function Admin() {
                         : `Lap ${lap - 1} completed. Lap ${lap} staged in Warmup. Awaiting Flag-Off.`
                     )
                   }
-                  className={`p-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors border text-center ${
-                    raceState.currentLap === lap
+                  className={`p-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors border text-center ${raceState.currentLap === lap
                       ? "bg-[#E10600] text-white border-[#E10600]"
                       : "bg-[#0A0D12] text-slate-400 hover:text-white border-[#232B3B]"
-                  }`}
+                    }`}
                 >
                   <div className="text-sm font-mono mb-0.5">L{lap}</div>
                   <div>{lap === 1 ? "Stage Lap 1" : lap === 5 ? "Stage Lap 5" : `Stage Lap ${lap}`}</div>
@@ -999,7 +996,7 @@ export default function Admin() {
             </div>
           ) : (
             <div className="overflow-x-auto w-full">
-              <table className="w-full min-w-[600px] text-left text-xs font-sans">
+              <table className="w-full min-w-150 text-left text-xs font-sans">
                 <thead>
                   <tr className="border-b border-[#232B3B] text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     <th className="pb-2.5">Team & Code</th>
@@ -1064,9 +1061,8 @@ export default function Admin() {
                         )}
                       </td>
                       <td className="py-2.5 text-center">
-                        <span className={`px-2 py-0.5 rounded font-black text-[10px] uppercase ${
-                          t.status === "ACTIVE" ? "bg-[#10B981]/15 text-[#10B981]" : "bg-[#E10600]/15 text-[#E10600]"
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded font-black text-[10px] uppercase ${t.status === "ACTIVE" ? "bg-[#10B981]/15 text-[#10B981]" : "bg-[#E10600]/15 text-[#E10600]"
+                          }`}>
                           {t.status}
                         </span>
                       </td>
@@ -1078,11 +1074,10 @@ export default function Admin() {
                                 status: t.status === "ACTIVE" ? "DISQUALIFIED" : "ACTIVE"
                               })
                             }
-                            className={`px-2 py-1 rounded text-[10px] font-bold uppercase transition-colors border ${
-                              t.status === "ACTIVE"
+                            className={`px-2 py-1 rounded text-[10px] font-bold uppercase transition-colors border ${t.status === "ACTIVE"
                                 ? "bg-[#161B24] hover:bg-[#F59E0B]/20 text-slate-300 hover:text-[#F59E0B] border-[#232B3B]"
                                 : "bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40"
-                            }`}
+                              }`}
                           >
                             {t.status === "ACTIVE" ? "Disqualify" : "Re-activate"}
                           </button>

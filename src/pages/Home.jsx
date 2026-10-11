@@ -19,8 +19,14 @@ import {
 import CirculatingBanner from "../components/CirculatingBanner";
 import EventCountdown from "../components/EventCountdown";
 import { useSimulation } from "../context/SimulationContext";
+import { useSEO } from "../hooks/useSEO";
 
 export default function Home() {
+  useSEO({
+    title: "Formula 1 Stock Market Simulator",
+    description: "Official Stock Market Simulation (Motorsport Edition) presented by E-Cell RGPV for Imprenditore 5.0. Trade 17 scrips across 5 sectors with ₹1,00,000 mock capital."
+  });
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const { currentTeam, raceState } = useSimulation();
 
@@ -178,7 +184,7 @@ export default function Home() {
                 RGPV Bhopal
               </span>
             </div>
-            <div className="w-[1px] h-5 bg-[#232B3B]" />
+            <div className="w-px h-5 bg-[#232B3B]" />
             <div className="flex items-center gap-2">
               <img
                 src="/logo.png"
@@ -189,7 +195,7 @@ export default function Home() {
                 E-Cell RGPV
               </span>
             </div>
-            <div className="w-[1px] h-5 bg-[#232B3B]" />
+            <div className="w-px h-5 bg-[#232B3B]" />
             <div className="flex items-center gap-2">
               <img
                 src="/logo_D.png"
@@ -295,9 +301,8 @@ export default function Home() {
                 <button
                   key={idx}
                   onClick={() => setCurrentSlide(idx)}
-                  className={`h-1 flex-1 rounded-full transition-colors ${
-                    idx === currentSlide ? "bg-[#E10600]" : "bg-[#232B3B]"
-                  }`}
+                  className={`h-1 flex-1 rounded-full transition-colors ${idx === currentSlide ? "bg-[#E10600]" : "bg-[#232B3B]"
+                    }`}
                   aria-label={`Slide ${idx + 1}`}
                 />
               ))}

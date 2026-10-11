@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import CirculatingBanner from "../components/CirculatingBanner";
 import { useSimulation } from "../context/SimulationContext";
+import { useSEO } from "../hooks/useSEO";
 
 /**
  * @file Leaderboard.jsx
@@ -22,6 +23,11 @@ import { useSimulation } from "../context/SimulationContext";
  * @returns {JSX.Element} High-visibility leaderboard formatted for auditorium projection
  */
 export default function Leaderboard() {
+  useSEO({
+    title: "Pole Position Leaderboard",
+    description: "Live 50/30/20 Pole Position Standings for Imprenditore 5.0. Track team net worth, return percentages, sector diversification, and real-time rank positions."
+  });
+
   const { leaderboard, raceState, currentTeam } = useSimulation();
 
   // Extract top three teams for podium presentation
@@ -68,22 +74,21 @@ export default function Leaderboard() {
             <span className="font-mono font-bold text-[#06B6D4] text-[11px] sm:text-xs">
               {formatTime(raceState.lapTimeRemaining)}
             </span>
-            <span className={`font-black uppercase tracking-wider text-[10px] sm:text-[11px] ${
-              raceState.status === "GREEN_FLAG"
-                ? "text-[#EAB308]"
-                : raceState.status === "SAFETY_CAR"
+            <span className={`font-black uppercase tracking-wider text-[10px] sm:text-[11px] ${raceState.status === "GREEN_FLAG"
+              ? "text-[#EAB308]"
+              : raceState.status === "SAFETY_CAR"
                 ? "text-[#F59E0B]"
                 : raceState.status === "CHECKERED_FLAG"
-                ? "text-[#FF4D4D]"
-                : "text-[#06B6D4]"
-            }`}>
+                  ? "text-[#FF4D4D]"
+                  : "text-[#06B6D4]"
+              }`}>
               {raceState.status === "GREEN_FLAG"
                 ? `LAP ${raceState.currentLap}/5`
                 : raceState.status === "SAFETY_CAR"
-                ? "PAUSED"
-                : raceState.status === "CHECKERED_FLAG"
-                ? "CONCLUDED"
-                : "WARMUP"}
+                  ? "PAUSED"
+                  : raceState.status === "CHECKERED_FLAG"
+                    ? "CONCLUDED"
+                    : "WARMUP"}
             </span>
           </div>
 
@@ -229,7 +234,7 @@ export default function Leaderboard() {
                 No teams registered on the grid yet.
               </div>
             ) : (
-              <table className="w-full min-w-[650px] text-left text-xs font-sans">
+              <table className="w-full min-w-162.5 text-left text-xs font-sans">
                 <thead>
                   <tr className="border-b border-[#232B3B] text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     <th className="pb-2.5 text-center">Pos</th>

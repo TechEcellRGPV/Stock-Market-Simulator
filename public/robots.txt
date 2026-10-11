@@ -1,0 +1,18 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /leaderboard
+Allow: /companies
+Allow: /login
+Allow: /trade
+Allow: /dashboard
+
+# Disallow crawler indexing on administrative race operations routes
+Disallow: /admin
+Disallow: /admin/*
+
+# Host
+Host: https://stock-market-simulator-ecell.vercel.app
+
+# Sitemap
+Sitemap: https://stock-market-simulator-ecell.vercel.app/sitemap.xml
