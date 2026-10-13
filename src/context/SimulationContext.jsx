@@ -7,7 +7,7 @@ import {
   useMemo,
   useRef
 } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvexConnectionState } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { INITIAL_STOCKS as CANONICAL_INITIAL_STOCKS } from "../data/stocks";
 
@@ -46,6 +46,10 @@ const TAB_ID = typeof window !== "undefined" ? Math.random().toString(36).substr
 export function SimulationProvider({ children }) {
   const channelRef = useRef(null);
   const isRemoteUpdateRef = useRef(false);
+
+  // Live WebSocket Connection State Telemetry
+  const connectionState = useConvexConnectionState();
+  const isConnected = Boolean(connectionState?.isWebSocketConnected);
 
   // Convex Cloud Real-Time WebSocket Subscriptions
   const convexLiveGrid = useQuery(api.market.getLiveGrid, {});
@@ -253,6 +257,31 @@ export function SimulationProvider({ children }) {
         // channel closed or unsupported
       }
     }
+  }, []);
+
+  // Mobile Tab Resume Sentinel: Re-synchronize local state when returning from background apps
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        const savedTeam = localStorage.getItem("imprenditore_active_team");
+        if (savedTeam) {
+          try {
+            const parsed = JSON.parse(savedTeam);
+            if (parsed && parsed.teamCode) {
+              setCurrentTeam((prev) => {
+                if (!prev || prev.teamCode !== parsed.teamCode) return parsed;
+                return prev;
+              });
+            }
+          } catch {
+            // fallback
+          }
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
   // Synchronize with Convex Cloud Live Grid (Real-time WebSockets)
@@ -888,13 +917,37 @@ export function SimulationProvider({ children }) {
       // Execute on Convex backend if active
       const teamConvexId = currentTeam._id || currentTeam.id;
       if (teamConvexId && typeof teamConvexId === "string" && teamConvexId.length > 10) {
-        const res = await executeTradeMutation({
-          teamId: teamConvexId,
-          ticker,
-          type,
-          shares: shareCount,
-          executedBy: executedBy || currentTeam.leaderName
-        });
+        // Snapshot for atomic rollback if mutation fails
+        const prevTeamSnapshot = currentTeam;
+
+        // Optimistic pre-flight cash balance update for instantaneous mobile feedback
+        const optimisticCash = type === "BUY"
+          ? Math.max(0, Math.round((currentTeam.cashBalance - totalAmount) * 100) / 100)
+          : Math.round((currentTeam.cashBalance + totalAmount) * 100) / 100;
+
+        const optimisticTeam = { ...currentTeam, cashBalance: optimisticCash };
+        setCurrentTeam(optimisticTeam);
+        setTeams((prev) =>
+          prev.map((t) => (t.id === currentTeam.id || t._id === currentTeam._id ? optimisticTeam : t))
+        );
+
+        let res;
+        try {
+          res = await executeTradeMutation({
+            teamId: teamConvexId,
+            ticker,
+            type,
+            shares: shareCount,
+            executedBy: executedBy || currentTeam.leaderName
+          });
+        } catch (mutationErr) {
+          // Atomic rollback: restore exact pre-order team snapshot on rejection
+          setCurrentTeam(prevTeamSnapshot);
+          setTeams((prev) =>
+            prev.map((t) => (t.id === prevTeamSnapshot.id || t._id === prevTeamSnapshot._id ? prevTeamSnapshot : t))
+          );
+          throw mutationErr;
+        }
 
         if (res && typeof res.remainingCash === "number") {
           const updatedTeam = { ...currentTeam, cashBalance: res.remainingCash };
@@ -1684,6 +1737,9 @@ export function SimulationProvider({ children }) {
   }, [raceState, broadcastSync, resetGridMutation]);
 
   const value = {
+    isConnected,
+    isWebSocketConnected: isConnected,
+    connectionState,
     stocks,
     teams,
     currentTeam,

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useSimulation } from "../context/SimulationContext";
 import { useSEO } from "../hooks/useSEO";
+import { useScreenWakeLock } from "../hooks/useScreenWakeLock";
 
 /**
  * @file Trade.jsx
@@ -31,6 +32,9 @@ export default function Trade() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const { currentTeam, stocks, raceState, orders } = useSimulation();
+
+  // Mobile Screen Wake Lock: Keeps trading terminal active during live laps
+  useScreenWakeLock(raceState?.status === "GREEN_FLAG");
 
   const queryTicker = searchParams.get("ticker");
 

@@ -26,7 +26,7 @@ import { useSimulation } from "../src/context/SimulationContext";
  */
 export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }) {
   const [searchParams] = useSearchParams();
-  const { stocks, currentTeam, currentHoldings, executeTrade, raceState } = useSimulation();
+  const { stocks, currentTeam, currentHoldings, executeTrade, raceState, isConnected } = useSimulation();
 
   const queryTicker = searchParams.get("ticker");
 
@@ -125,6 +125,12 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    // Guard 0: Verify active WebSocket telemetry connection
+    if (isConnected === false) {
+      setError("Cannot route order while telemetry link is offline. Please wait for reconnection.");
+      return;
+    }
 
     // Guard 1: Verify authenticated team session
     if (!currentTeam) {
@@ -425,9 +431,9 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
         {/* Execute Button */}
         <button
           type="submit"
-          disabled={isSubmitting || raceState.status !== "GREEN_FLAG"}
+          disabled={isSubmitting || raceState.status !== "GREEN_FLAG" || !isConnected}
           className={`w-full py-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-            raceState.status !== "GREEN_FLAG"
+            !isConnected || raceState.status !== "GREEN_FLAG"
               ? "bg-[#1A202C] text-slate-500 border border-[#232B3B] cursor-not-allowed"
               : orderType === "BUY"
               ? "bg-[#10B981] hover:bg-[#059669] text-slate-950 shadow-sm"
@@ -436,13 +442,17 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
         >
           <Zap className="w-3.5 h-3.5" />
           <span>
-            {raceState.status === "GRID_WARMUP" && "Trading Locked (Pre-Race Warmup)"}
-            {raceState.status === "SAFETY_CAR" && "Trading Paused (Safety Car)"}
-            {raceState.status === "CHECKERED_FLAG" && "Market Closed (Checkered Flag)"}
-            {raceState.status === "GREEN_FLAG" &&
-              (orderType === "BUY"
-                ? `Execute Buy: ₹${totalCost.toLocaleString("en-IN")}`
-                : `Execute Sell: ₹${totalCost.toLocaleString("en-IN")}`)}
+            {!isConnected
+              ? "Telemetry Offline (Reconnecting...)"
+              : raceState.status === "GRID_WARMUP"
+              ? "Trading Locked (Pre-Race Warmup)"
+              : raceState.status === "SAFETY_CAR"
+              ? "Trading Paused (Safety Car)"
+              : raceState.status === "CHECKERED_FLAG"
+              ? "Market Closed (Checkered Flag)"
+              : orderType === "BUY"
+              ? `Execute Buy: ₹${totalCost.toLocaleString("en-IN")}`
+              : `Execute Sell: ₹${totalCost.toLocaleString("en-IN")}`}
           </span>
         </button>
       </form>

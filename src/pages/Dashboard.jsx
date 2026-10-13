@@ -22,6 +22,7 @@ import PortfolioPerformanceChart from "../components/PortfolioPerformanceChart";
 import PaddockWaitingLounge from "../components/PaddockWaitingLounge";
 import { useSimulation } from "../context/SimulationContext";
 import { useSEO } from "../hooks/useSEO";
+import { useScreenWakeLock } from "../hooks/useScreenWakeLock";
 
 function subscribeToSeconds(callback) {
   const timer = setInterval(callback, 1000);
@@ -67,6 +68,9 @@ export default function Dashboard() {
     leaderboard,
     logout
   } = useSimulation();
+
+  // Mobile Screen Wake Lock: Keeps display active during live race flag-off
+  useScreenWakeLock(raceState?.status === "GREEN_FLAG");
 
   const [activeTab, setActiveTab] = useState("holdings"); // "holdings" | "telemetry" | "orders" | "scorecard"
 

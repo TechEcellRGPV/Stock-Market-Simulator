@@ -1,6 +1,7 @@
 import { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { SimulationProvider } from "./context/SimulationContext";
+import MobileConnectionSentinel from "./components/MobileConnectionSentinel";
 
 // Route-level code splitting via React.lazy for optimized bundle loading, INP, and LCP
 const Home = lazy(() => import("./pages/Home"));
@@ -28,6 +29,7 @@ function RouteLoadingFallback() {
 function App() {
   return (
     <SimulationProvider>
+      <MobileConnectionSentinel />
       <Router>
         <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
