@@ -122,7 +122,7 @@ export default function CirculatingBanner() {
         tagColor: "bg-[#EAB308] text-slate-950",
         content: countdownText
           ? `Flag-Off: ${formattedEventDate} (${countdownText})`
-          : `Flag-Off scheduled for: ${formattedEventDate}. Paddock warmup in progress.`,
+          : `Flag-Off scheduled for: ${formattedEventDate}. Pre-round warmup in progress.`,
         linkText: "View Schedule",
         linkTo: "/"
       });
@@ -134,7 +134,7 @@ export default function CirculatingBanner() {
         tag: raceState.isRegistrationOpen ? "REGISTRATION OPEN" : "REGISTRATION LOCKED",
         tagColor: raceState.isRegistrationOpen ? "bg-[#10B981] text-slate-950" : "bg-[#E10600] text-white",
         content: raceState.isRegistrationOpen
-          ? "Team Registration is currently OPEN on the paddock grid."
+          ? "Team Registration is currently OPEN on the team roster."
           : "Team Registration is currently LOCKED by Race Control. Check countdown clock.",
         linkText: raceState.isRegistrationOpen ? "Register Team" : "View Countdown",
         linkTo: raceState.isRegistrationOpen ? "/login" : "/"
@@ -155,10 +155,10 @@ export default function CirculatingBanner() {
       items.push({
         id: "warmup_state",
         icon: Flag,
-        tag: "RACE NOT STARTED",
+        tag: "ROUND NOT STARTED",
         tagColor: "bg-[#06B6D4] text-slate-950",
-        content: "The race will start upon Race Director Flag-Off. Paddock warmup in progress.",
-        linkText: "Explore Grid",
+        content: "The round will start upon Race Director Flag-Off. Pre-round warmup in progress.",
+        linkText: "Explore Companies",
         linkTo: "/companies"
       });
     }
@@ -170,8 +170,8 @@ export default function CirculatingBanner() {
         icon: Flame,
         tag: `LAP ${raceState.currentLap}/5 LIVE`,
         tagColor: "bg-[#10B981] text-slate-950 font-black",
-        content: raceState.activeNews || "Green Flag: Order matching is active! Execute trades in the Pit Stop.",
-        linkText: "Pit Stop Trade",
+        content: raceState.activeNews || "Green Flag: Order matching is active! Execute trades on the trading screen.",
+        linkText: "Trade Now",
         linkTo: "/trade"
       });
 
@@ -196,7 +196,7 @@ export default function CirculatingBanner() {
         tag: "SAFETY CAR PAUSED",
         tagColor: "bg-[#F59E0B] text-slate-950",
         content: raceState.activeNews || "Race temporarily paused by Race Director. Order matching and timers frozen.",
-        linkText: "Grid Standings",
+        linkText: "Leaderboard",
         linkTo: "/leaderboard"
       });
     }
@@ -209,7 +209,7 @@ export default function CirculatingBanner() {
         tag: "CHECKERED FLAG CONCLUDED",
         tagColor: "bg-[#E10600] text-white",
         content: "Simulation concluded! All trading closed and final podium standings locked.",
-        linkText: "View Podium",
+        linkText: "View Rankings",
         linkTo: "/leaderboard"
       });
     }
@@ -236,7 +236,7 @@ export default function CirculatingBanner() {
           tag,
           tagColor,
           content: `${sectorPrefix}${evt.title}: ${evt.description}`,
-          linkText: "Pit Stop Trade",
+          linkText: "Trade Now",
           linkTo: "/trade"
         });
       });

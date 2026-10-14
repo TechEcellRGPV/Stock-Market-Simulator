@@ -44,8 +44,8 @@ const FALLBACK_15_GRID = [
  */
 export default function Login() {
   useSEO({
-    title: "Paddock Login & Team Registration",
-    description: "Enter the Paddock Lounge for Imprenditore 5.0. Authenticate your 3-member team roster or enter your 4-digit PIN."
+    title: "Team Login & Registration",
+    description: "Login for Imprenditore 5.0. Authenticate your 3-member team roster or enter your 4-digit PIN."
   });
 
   const navigate = useNavigate();
@@ -108,8 +108,8 @@ export default function Login() {
         role: loginForm.role
       });
 
-      const roleLabel = loginForm.role === "LEADER" ? "Team Leader (Bidding Access)" : "Team Member (Spectator Mode)";
-      setSuccess(`Connected to ${team.teamName} as ${roleLabel}! Entering cockpit...`);
+      const roleLabel = loginForm.role === "LEADER" ? "Team Leader (Can Trade & Bid)" : "Team Member (View Only)";
+      setSuccess(`Connected to ${team.teamName} as ${roleLabel}! Entering dashboard...`);
       setTimeout(() => {
         navigate("/dashboard");
       }, 700);
@@ -136,7 +136,7 @@ export default function Login() {
     }
 
     if (!registerForm.leaderName.trim() || !registerForm.member2.trim() || !registerForm.member3.trim()) {
-      setError("Each team requires exactly 3 distinct members: Team Leader, Member 2 (Strategist), and Member 3 (Telemetry Analyst).");
+      setError("Each team requires exactly 3 distinct members: Team Leader, Member 2, and Member 3.");
       return;
     }
 
@@ -175,10 +175,10 @@ export default function Login() {
           <span>E-Cell RGPV : Imprenditore 5.0</span>
         </Link>
         <h2 className="text-2xl sm:text-3xl font-black uppercase italic tracking-tight text-white mt-1">
-          Paddock Entry
+          Team Login &amp; Registration
         </h2>
         <p className="text-xs text-slate-400 font-medium mt-1">
-          15 Canonical Teams : Exactly 3 Members per Team
+          15 Teams : Exactly 3 Members per Team
         </p>
       </div>
 
@@ -233,7 +233,7 @@ export default function Login() {
             {/* Team Grid Selector */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                Select Your Grid Team (1 of 15) *
+                Select Your Team (1 of 15) *
               </label>
               <select
                 value={loginForm.teamCode}
@@ -256,7 +256,7 @@ export default function Login() {
             {/* Role Selection Toggle */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                Authentication Role *
+                Login Role *
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -273,7 +273,7 @@ export default function Login() {
                     <span>Team Leader</span>
                   </div>
                   <div className="text-[10px] text-slate-400 leading-tight">
-                    Exclusive Bidding Access (1 active login session)
+                    Can Trade &amp; Bid (Only 1 active login per team)
                   </div>
                 </button>
 
@@ -291,7 +291,7 @@ export default function Login() {
                     <span>Team Member</span>
                   </div>
                   <div className="text-[10px] text-slate-400 leading-tight">
-                    Spectator View-Only (Telemetry, charts, orders)
+                    View Only (Portfolio, charts &amp; leaderboard)
                   </div>
                 </button>
               </div>
@@ -300,12 +300,12 @@ export default function Login() {
             {/* Member Name */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                {loginForm.role === "LEADER" ? "Team Leader Driver Name *" : "Teammate Name (Strategist / Telemetry) *"}
+                {loginForm.role === "LEADER" ? "Team Leader Name *" : "Team Member Name *"}
               </label>
               <input
                 type="text"
                 required
-                placeholder={loginForm.role === "LEADER" ? "Enter designated Team Leader name" : "Enter your member name"}
+                placeholder={loginForm.role === "LEADER" ? "Enter Team Leader name" : "Enter your member name"}
                 value={loginForm.memberName}
                 onChange={(e) => setLoginForm({ ...loginForm, memberName: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#10B981] text-xs text-white placeholder:text-slate-600 outline-none"
@@ -331,11 +331,11 @@ export default function Login() {
             <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] text-[11px] text-slate-400">
               {loginForm.role === "LEADER" ? (
                 <span>
-                  <strong className="text-[#FF4D4D] font-bold">Leader Privilege:</strong> Only the Team Leader can submit market orders and bids. Only 1 active leader device session is allowed.
+                  <strong className="text-[#FF4D4D] font-bold">Leader Access:</strong> Only the Team Leader can submit market orders and bids. Only 1 active leader device session is allowed.
                 </span>
               ) : (
                 <span>
-                  <strong className="text-[#10B981] font-bold">Spectator Mode:</strong> Members 2 &amp; 3 have real-time live access to portfolio valuation, telemetry charts, order ledger, and competition leaderboard.
+                  <strong className="text-[#10B981] font-bold">View Only Mode:</strong> Teammates have real-time live access to portfolio valuation, charts, order history, and competition leaderboard.
                 </span>
               )}
             </div>
@@ -351,7 +351,7 @@ export default function Login() {
                     : "bg-[#10B981] hover:bg-[#059669] text-slate-950 font-black"
               }`}
             >
-              <span>{isSubmitting ? "Connecting to Paddock..." : loginForm.role === "LEADER" ? "Enter Cockpit as Leader" : "Enter Cockpit in Spectator Mode"}</span>
+              <span>{isSubmitting ? "Connecting..." : loginForm.role === "LEADER" ? "Enter Dashboard as Leader" : "Enter Dashboard as Member"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
@@ -393,7 +393,7 @@ export default function Login() {
               {/* Select Allocated Grid Slot */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                  Select Allocated Grid Slot (1 of 15) *
+                  Select Team (1 of 15) *
                 </label>
                 <select
                   value={registerForm.teamCode}
@@ -433,7 +433,7 @@ export default function Login() {
 
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Member 1: Team Leader (Driver Lead - Bidding Access) *
+                    Member 1: Team Leader (Can Trade &amp; Bid) *
                   </label>
                   <input
                     type="text"
@@ -447,12 +447,12 @@ export default function Login() {
 
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Member 2: Strategist (Spectator Mode) *
+                    Member 2: Team Member (View Only) *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Full Name (Strategist)"
+                    placeholder="Full Name (Member 2)"
                     value={registerForm.member2}
                     onChange={(e) => setRegisterForm({ ...registerForm, member2: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg bg-[#121720] border border-[#232B3B] focus:border-[#E10600] text-xs text-white placeholder:text-slate-600 outline-none"
@@ -461,12 +461,12 @@ export default function Login() {
 
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Member 3: Telemetry Analyst (Spectator Mode) *
+                    Member 3: Team Member (View Only) *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Full Name (Telemetry Analyst)"
+                    placeholder="Full Name (Member 3)"
                     value={registerForm.member3}
                     onChange={(e) => setRegisterForm({ ...registerForm, member3: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg bg-[#121720] border border-[#232B3B] focus:border-[#E10600] text-xs text-white placeholder:text-slate-600 outline-none"

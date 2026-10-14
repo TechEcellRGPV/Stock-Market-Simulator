@@ -362,8 +362,8 @@ export default function Admin() {
     setEditTeamName(team.teamName || "");
     setEditTeamPin(team.teamPin || "");
     setEditLeaderName(team.leaderName || "");
-    setEditMember2(team.member2 || (team.members && team.members[1]) || "Strategist Lead");
-    setEditMember3(team.member3 || (team.members && team.members[2]) || "Telemetry Lead");
+    setEditMember2(team.member2 || (team.members && team.members[1]) || "Member 2");
+    setEditMember3(team.member3 || (team.members && team.members[2]) || "Member 3");
     setRosterNotice("");
   };
 
@@ -1377,9 +1377,9 @@ export default function Admin() {
                   <tr className="border-b border-[#232B3B] text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     <th className="pb-2.5">Slot & Code</th>
                     <th className="pb-2.5">Team Name & PIN</th>
-                    <th className="pb-2.5">Member 1: Driver Lead (Bidding)</th>
-                    <th className="pb-2.5">Member 2: Strategist</th>
-                    <th className="pb-2.5">Member 3: Telemetry</th>
+                    <th className="pb-2.5">Member 1: Team Leader</th>
+                    <th className="pb-2.5">Member 2</th>
+                    <th className="pb-2.5">Member 3</th>
                     <th className="pb-2.5 text-right">Cash Balance</th>
                     <th className="pb-2.5 text-center">Leader Session</th>
                     <th className="pb-2.5 text-center">Actions</th>
@@ -1402,10 +1402,10 @@ export default function Admin() {
                         </div>
                       </td>
                       <td className="py-2.5 text-slate-400">
-                        {t.member2 || (t.members && t.members[1]) || "Strategist Lead"}
+                        {t.member2 || (t.members && t.members[1]) || "Member 2"}
                       </td>
                       <td className="py-2.5 text-slate-400">
-                        {t.member3 || (t.members && t.members[2]) || "Telemetry Lead"}
+                        {t.member3 || (t.members && t.members[2]) || "Member 3"}
                       </td>
                       <td className="py-2.5 text-right font-mono font-bold text-white">
                         {editingTeamId === (t.id || t._id) ? (
@@ -1582,7 +1582,7 @@ export default function Admin() {
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">
-                      Member 1: Team Leader (Driver Lead - Bidding Access)
+                      Member 1: Team Leader (Can Trade &amp; Bid)
                     </label>
                     <input
                       type="text"
@@ -1595,7 +1595,7 @@ export default function Admin() {
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">
-                      Member 2: Strategist (Spectator Mode)
+                      Member 2: Team Member (View Only)
                     </label>
                     <input
                       type="text"
@@ -1608,7 +1608,7 @@ export default function Admin() {
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">
-                      Member 3: Telemetry Analyst (Spectator Mode)
+                      Member 3: Team Member (View Only)
                     </label>
                     <input
                       type="text"

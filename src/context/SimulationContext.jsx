@@ -70,6 +70,7 @@ export function SimulationProvider({ children }) {
   const resetGridMutation = useMutation(api.market.resetGrid);
   const createTeamMutation = useMutation(api.teams.createTeam);
   const joinTeamMutation = useMutation(api.teams.joinTeam);
+  const logoutTeamLeaderMutation = useMutation(api.teams.logoutTeamLeader);
   const seedCanonical15TeamsMutation = useMutation(api.teams.seedCanonical15Teams);
   const registerTeamSlotMutation = useMutation(api.teams.registerTeamSlot);
   const adminUpdateTeamMembersMutation = useMutation(api.teams.adminUpdateTeamMembers);
@@ -917,9 +918,23 @@ export function SimulationProvider({ children }) {
   );
 
   // Auth: Logout
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    if (currentTeam) {
+      try {
+        const teamConvexId = currentTeam._id || currentTeam.id;
+        if (teamConvexId && currentTeam.sessionId) {
+          await logoutTeamLeaderMutation({
+            teamId: teamConvexId,
+            sessionId: currentTeam.sessionId
+          });
+        }
+      } catch (err) {
+        console.warn("Leader logout release notice:", err);
+      }
+    }
     setCurrentTeam(null);
-  }, []);
+    localStorage.removeItem("imprenditore_active_team");
+  }, [currentTeam, logoutTeamLeaderMutation]);
 
   // Admin Auth (3-Hour Persistent Session)
   const adminLogin = useCallback((passcode) => {

@@ -56,7 +56,7 @@ export default function CompanyDirectory() {
               E-Cell RGPV : Imprenditore 5.0
             </div>
             <h1 className="text-lg font-black uppercase italic tracking-tight text-white">
-              Grid Telemetry & Companies
+              Market Companies &amp; Sectors
             </h1>
           </div>
         </div>
@@ -70,7 +70,7 @@ export default function CompanyDirectory() {
               to="/dashboard"
               className="px-3 py-1.5 rounded bg-[#161B24] hover:bg-[#1D232E] border border-[#232B3B] text-xs font-bold text-slate-300 hover:text-white transition-colors"
             >
-              Cockpit ({currentTeam.teamName})
+              Dashboard ({currentTeam.teamName})
             </Link>
           ) : (
             <Link
@@ -194,7 +194,7 @@ export default function CompanyDirectory() {
                     className="px-3 py-1.5 rounded bg-[#E10600] hover:bg-[#C50500] text-white font-black text-[10px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm"
                   >
                     <Zap className="w-3 h-3" />
-                    <span>Pit Stop</span>
+                    <span>Trade</span>
                   </Link>
                 </div>
               </motion.div>

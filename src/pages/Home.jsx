@@ -136,7 +136,7 @@ export default function Home() {
           <Link
             to="/leaderboard"
             className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-[#EAB308] hover:bg-[#EAB308]/10 transition-colors border border-[#EAB308]/30 flex items-center gap-1.5 shrink-0"
-            title="Pole Position Leaderboard"
+            title="Competition Leaderboard"
           >
             <Trophy className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Ranks</span>
@@ -163,7 +163,7 @@ export default function Home() {
               className="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-black uppercase tracking-wider bg-[#E10600] hover:bg-[#C50500] text-white transition-colors flex items-center gap-1.5 shrink-0"
             >
               <Users className="w-3.5 h-3.5 shrink-0" />
-              <span>Enter Grid</span>
+              <span>Team Login</span>
             </Link>
           )}
         </nav>
@@ -248,7 +248,7 @@ export default function Home() {
                 to="/login"
                 className="w-full sm:w-auto px-7 py-3.5 rounded-lg bg-[#E10600] hover:bg-[#C50500] text-white font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-sm"
               >
-                <span>Join As Team / Driver</span>
+                <span>Join As Team</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             )}
@@ -257,7 +257,7 @@ export default function Home() {
               className="w-full sm:w-auto px-7 py-3.5 rounded-lg bg-[#161B24] hover:bg-[#1D232E] text-white font-bold text-xs uppercase tracking-wider transition-colors border border-[#232B3B] flex items-center justify-center gap-2"
             >
               <TrendingUp className="w-4 h-4 text-[#10B981]" />
-              <span>Explore Stock Telemetry</span>
+              <span>Browse Stocks &amp; Sectors</span>
             </Link>
           </div>
 

@@ -82,121 +82,121 @@ export const CANONICAL_15_TEAMS = [
     teamCode: "RBR-01",
     teamName: "Oracle Red Bull Racing",
     teamPin: "1001",
-    leaderName: "Driver Lead 01",
-    member2: "Strategist 01",
-    member3: "Telemetry 01",
+    leaderName: "Team Leader 01",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "FER-02",
     teamName: "Scuderia Ferrari HP",
     teamPin: "1002",
-    leaderName: "Driver Lead 02",
-    member2: "Strategist 02",
-    member3: "Telemetry 02",
+    leaderName: "Team Leader 02",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "MER-03",
     teamName: "Mercedes-AMG Petronas",
     teamPin: "1003",
-    leaderName: "Driver Lead 03",
-    member2: "Strategist 03",
-    member3: "Telemetry 03",
+    leaderName: "Team Leader 03",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "MCL-04",
     teamName: "McLaren Formula 1 Team",
     teamPin: "1004",
-    leaderName: "Driver Lead 04",
-    member2: "Strategist 04",
-    member3: "Telemetry 04",
+    leaderName: "Team Leader 04",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "AST-05",
     teamName: "Aston Martin Aramco",
     teamPin: "1005",
-    leaderName: "Driver Lead 05",
-    member2: "Strategist 05",
-    member3: "Telemetry 05",
+    leaderName: "Team Leader 05",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "ALP-06",
     teamName: "BWT Alpine Motorsport",
     teamPin: "1006",
-    leaderName: "Driver Lead 06",
-    member2: "Strategist 06",
-    member3: "Telemetry 06",
+    leaderName: "Team Leader 06",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "WIL-07",
     teamName: "Williams Racing",
     teamPin: "1007",
-    leaderName: "Driver Lead 07",
-    member2: "Strategist 07",
-    member3: "Telemetry 07",
+    leaderName: "Team Leader 07",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "SAU-08",
     teamName: "Stake F1 Kick Sauber",
     teamPin: "1008",
-    leaderName: "Driver Lead 08",
-    member2: "Strategist 08",
-    member3: "Telemetry 08",
+    leaderName: "Team Leader 08",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "VCB-09",
     teamName: "Visa Cash App RB",
     teamPin: "1009",
-    leaderName: "Driver Lead 09",
-    member2: "Strategist 09",
-    member3: "Telemetry 09",
+    leaderName: "Team Leader 09",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "HAA-10",
     teamName: "MoneyGram Haas F1 Team",
     teamPin: "1010",
-    leaderName: "Driver Lead 10",
-    member2: "Strategist 10",
-    member3: "Telemetry 10",
+    leaderName: "Team Leader 10",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "POR-11",
     teamName: "Porsche Motorsport Formula",
     teamPin: "1011",
-    leaderName: "Driver Lead 11",
-    member2: "Strategist 11",
-    member3: "Telemetry 11",
+    leaderName: "Team Leader 11",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "AUD-12",
     teamName: "Audi Sport Racing",
     teamPin: "1012",
-    leaderName: "Driver Lead 12",
-    member2: "Strategist 12",
-    member3: "Telemetry 12",
+    leaderName: "Team Leader 12",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "BMW-13",
     teamName: "BMW M Motorsport",
     teamPin: "1013",
-    leaderName: "Driver Lead 13",
-    member2: "Strategist 13",
-    member3: "Telemetry 13",
+    leaderName: "Team Leader 13",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "TOY-14",
     teamName: "Toyota Gazoo Racing",
     teamPin: "1014",
-    leaderName: "Driver Lead 14",
-    member2: "Strategist 14",
-    member3: "Telemetry 14",
+    leaderName: "Team Leader 14",
+    member2: "Member 2",
+    member3: "Member 3",
   },
   {
     teamCode: "KOE-15",
     teamName: "Koenigsegg Racing Dynamics",
     teamPin: "1015",
-    leaderName: "Driver Lead 15",
-    member2: "Strategist 15",
-    member3: "Telemetry 15",
+    leaderName: "Team Leader 15",
+    member2: "Member 2",
+    member3: "Member 3",
   },
 ];
 
@@ -484,14 +484,30 @@ export const joinTeam = mutation({
       if (
         cleanLeader &&
         !cleanLeader.startsWith("driver lead") &&
+        !cleanLeader.startsWith("team leader") &&
         cleanMember !== cleanLeader
       ) {
         throw new Error(
-          `Designated Team Leader is ${team.leaderName}. Please choose 'Team Member (Spectator Mode)' if you are not the Team Leader.`,
+          `Only ${team.leaderName} can log in as Team Leader. If you are a teammate, please select 'Team Member (View Only)'.`,
         );
       }
 
-      // Enforce single active leader login session
+      // Strict Single Leader Login Check:
+      // If a leader is already active on another device within the last 30 minutes, block this login!
+      const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+      const isAnotherLeaderActive =
+        team.activeLeaderSessionId &&
+        team.lastLeaderLoginAt &&
+        now - team.lastLeaderLoginAt < SESSION_TIMEOUT_MS &&
+        team.activeLeaderSessionId !== sessionId;
+
+      if (isAnotherLeaderActive) {
+        throw new Error(
+          `A Team Leader is already logged in for ${team.teamName} on another device. Only one leader can be logged in at a time. Please login as 'Team Member (View Only)', or ask your leader to log out.`,
+        );
+      }
+
+      // Record active leader session
       await ctx.db.patch(team._id, {
         activeLeaderSessionId: sessionId,
         lastLeaderLoginAt: now,
@@ -521,6 +537,27 @@ export const joinTeam = mutation({
       activeLeaderSessionId:
         requestedRole === "LEADER" ? sessionId : team.activeLeaderSessionId,
     };
+  },
+});
+
+// Mutation: Team Leader Logout (releases active leader session lock)
+export const logoutTeamLeader = mutation({
+  args: {
+    teamId: v.id("teams"),
+    sessionId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const team = await ctx.db.get(args.teamId);
+    if (!team) return { success: false };
+
+    if (!args.sessionId || team.activeLeaderSessionId === args.sessionId) {
+      await ctx.db.patch(args.teamId, {
+        activeLeaderSessionId: undefined,
+        lastLeaderLoginAt: undefined,
+      });
+    }
+
+    return { success: true };
   },
 });
 

@@ -24,8 +24,8 @@ import { useSEO } from "../hooks/useSEO";
  */
 export default function Leaderboard() {
   useSEO({
-    title: "Pole Position Leaderboard",
-    description: "Live 50/30/20 Pole Position Standings for Imprenditore 5.0. Track team net worth, return percentages, sector diversification, and real-time rank positions."
+    title: "Competition Leaderboard",
+    description: "Live 50/30/20 Competition Standings for Imprenditore 5.0. Track team net worth, return percentages, sector diversification, and real-time rank positions."
   });
 
   const { leaderboard, raceState, currentTeam } = useSimulation();
@@ -61,7 +61,7 @@ export default function Leaderboard() {
               E-Cell RGPV : Imprenditore 5.0
             </div>
             <h1 className="text-xs sm:text-base font-black uppercase italic tracking-tight text-white flex items-center gap-1.5 truncate">
-              <span>Pole Position Leaderboard</span>
+              <span>Competition Leaderboard</span>
               <Trophy className="w-3.5 h-3.5 text-[#EAB308] shrink-0" />
             </h1>
           </div>
@@ -97,7 +97,7 @@ export default function Leaderboard() {
             className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded bg-[#E10600] hover:bg-[#C50500] text-white text-[11px] sm:text-xs font-black uppercase tracking-wider transition-colors flex items-center gap-1 shrink-0"
           >
             <ArrowLeft className="w-3 h-3 shrink-0" />
-            <span>{currentTeam ? "Cockpit" : "Login"}</span>
+            <span>{currentTeam ? "Dashboard" : "Login"}</span>
           </Link>
         </div>
       </header>
@@ -121,7 +121,7 @@ export default function Leaderboard() {
                 </div>
                 <div className="text-[10px] font-mono text-slate-500">{top3[1].teamCode}</div>
                 <h3 className="text-lg font-black text-white truncate">{top3[1].teamName}</h3>
-                <div className="text-xs text-slate-400 mb-3">Lead: {top3[1].leaderName}</div>
+                <div className="text-xs text-slate-400 mb-3">Leader: {top3[1].leaderName}</div>
 
                 <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] mb-3">
                   <div className="text-[10px] uppercase font-bold text-slate-400">Total Score</div>
@@ -139,7 +139,7 @@ export default function Leaderboard() {
               </motion.div>
             )}
 
-            {/* 1st Place - Pole Position */}
+            {/* 1st Place - Podium */}
             {top3[0] && (
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
@@ -154,11 +154,11 @@ export default function Leaderboard() {
                 </div>
                 <div className="text-[10px] font-mono text-slate-500">{top3[0].teamCode}</div>
                 <h3 className="text-xl sm:text-2xl font-black text-white truncate">{top3[0].teamName}</h3>
-                <div className="text-xs text-[#EAB308] font-bold mb-4">Lead: {top3[0].leaderName}</div>
+                <div className="text-xs text-[#EAB308] font-bold mb-4">Leader: {top3[0].leaderName}</div>
 
                 <div className="p-3.5 rounded-lg bg-[#0A0D12] border border-[#EAB308]/30 mb-3">
                   <div className="text-[10px] uppercase font-black tracking-wider text-[#EAB308]">
-                    Pole Position Score
+                    First Place Score
                   </div>
                   <div className="text-3xl font-black font-mono text-[#EAB308]">
                     {top3[0].totalScore} <span className="text-xs text-slate-400 font-sans font-bold">/ 100 pts</span>
@@ -193,7 +193,7 @@ export default function Leaderboard() {
                 </div>
                 <div className="text-[10px] font-mono text-slate-500">{top3[2].teamCode}</div>
                 <h3 className="text-lg font-black text-white truncate">{top3[2].teamName}</h3>
-                <div className="text-xs text-slate-400 mb-3">Lead: {top3[2].leaderName}</div>
+                <div className="text-xs text-slate-400 mb-3">Leader: {top3[2].leaderName}</div>
 
                 <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] mb-3">
                   <div className="text-[10px] uppercase font-bold text-slate-400">Total Score</div>
@@ -218,7 +218,7 @@ export default function Leaderboard() {
           <div className="px-4 sm:px-6 py-3.5 border-b border-[#232B3B] flex items-center justify-between">
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-300 flex items-center gap-2">
               <Trophy className="w-4 h-4 text-[#EAB308]" />
-              <span>Full Grid Standings ({leaderboard.length} Teams)</span>
+              <span>Team Rankings ({leaderboard.length} Teams)</span>
             </h3>
             <span className="text-[11px] text-slate-500 font-mono">
               Live Standings
@@ -238,8 +238,8 @@ export default function Leaderboard() {
                 <thead>
                   <tr className="border-b border-[#232B3B] text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     <th className="pb-2.5 text-center">Pos</th>
-                    <th className="pb-2.5">Team & Code</th>
-                    <th className="pb-2.5">Driver Lead</th>
+                    <th className="pb-2.5">Team &amp; Code</th>
+                    <th className="pb-2.5">Team Leader</th>
                     <th className="pb-2.5 text-right">Portfolio Value</th>
                     <th className="pb-2.5 text-right">Return %</th>
                     <th className="pb-2.5 text-center">Sectors</th>

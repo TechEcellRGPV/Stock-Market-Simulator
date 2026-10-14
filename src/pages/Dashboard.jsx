@@ -54,8 +54,8 @@ function getServerSnapshot() {
  */
 export default function Dashboard() {
   useSEO({
-    title: "Driver Cockpit Telemetry",
-    description: "Personal Driver Cockpit for Imprenditore 5.0. Monitor real-time net worth, cash balance, sector allocation meters, valuation charts, and order ledgers."
+    title: "Team Trading Dashboard",
+    description: "Team Trading Dashboard for Imprenditore 5.0. Monitor real-time net worth, cash balance, sector allocation meters, valuation charts, and order ledgers."
   });
 
   const navigate = useNavigate();
@@ -278,7 +278,7 @@ export default function Dashboard() {
             />
           </Link>
           <div>
-            <span className="text-slate-400 text-[11px] font-bold uppercase mr-1.5">Cockpit:</span>
+            <span className="text-slate-400 text-[11px] font-bold uppercase mr-1.5">Team:</span>
             <strong className="text-white uppercase tracking-wider">{currentTeam.teamName}</strong>
             <span className="ml-2 px-2 py-0.5 rounded bg-[#1A202C] text-slate-300 text-[10px] font-mono border border-[#2A3447]">
               {currentTeam.teamCode}
@@ -321,7 +321,7 @@ export default function Dashboard() {
           <button
             onClick={handleLogout}
             className="p-1.5 rounded bg-[#161B24] hover:bg-[#E10600]/20 text-slate-400 hover:text-[#FF4D4D] transition-colors border border-[#232B3B]"
-            title="Leave Cockpit"
+            title="Logout"
           >
             <LogOut className="w-3.5 h-3.5" />
           </button>
@@ -834,7 +834,7 @@ export default function Dashboard() {
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#E10600] hover:bg-[#C50500] text-white font-bold text-xs uppercase tracking-wider transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Open Trading Cockpit</span>
+                      <span>Open Trading Screen</span>
                     </Link>
                     <Link
                       to="/companies"

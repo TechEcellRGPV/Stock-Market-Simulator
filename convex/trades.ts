@@ -97,7 +97,7 @@ export const executeTrade = mutation({
     }
     if (raceState && raceState.isSimulationEntryOpen === false) {
       throw new Error(
-        "Cockpit access is currently locked by Race Control.",
+        "Trading floor access is currently locked by Race Control.",
       );
     }
 
@@ -117,9 +117,14 @@ export const executeTrade = mutation({
     const caller = (args.executedBy || "").trim().toLowerCase();
     const leader = (team.leaderName || "").trim().toLowerCase();
 
-    if (leader && !leader.startsWith("driver lead") && caller !== leader) {
+    if (
+      leader &&
+      !leader.startsWith("driver lead") &&
+      !leader.startsWith("team leader") &&
+      caller !== leader
+    ) {
       throw new Error(
-        `Order rejected: Only the designated Team Leader (${team.leaderName}) is authorized to execute trades. Other members have spectator view-only access.`,
+        `Order rejected: Only the designated Team Leader (${team.leaderName}) is authorized to execute trades. Other team members have view-only access.`,
       );
     }
 
@@ -130,7 +135,7 @@ export const executeTrade = mutation({
       args.sessionId !== team.activeLeaderSessionId
     ) {
       throw new Error(
-        "Leader session expired: Another session has logged in as Team Leader.",
+        "Leader session expired: Another device has logged in as Team Leader.",
       );
     }
 

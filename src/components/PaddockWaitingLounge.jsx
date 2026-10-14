@@ -239,11 +239,11 @@ export default function PaddockWaitingLounge({
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[10px] font-mono text-slate-400 mr-1 flex items-center gap-1">
                   <Users className="w-3 h-3 text-slate-400" />
-                  <span>Crew:</span>
+                  <span>Team:</span>
                 </span>
                 {currentTeam.leaderName && (
                   <span className="px-2 py-0.5 rounded-md bg-[#141A26] text-slate-200 text-[10px] font-medium border border-slate-800">
-                    Lead: <strong className="text-white">{currentTeam.leaderName}</strong>
+                    Leader: <strong className="text-white">{currentTeam.leaderName}</strong>
                   </span>
                 )}
                 {Array.isArray(currentTeam.members) &&

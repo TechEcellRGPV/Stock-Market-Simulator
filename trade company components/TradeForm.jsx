@@ -141,7 +141,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
     // Guard 1.5: Verify Team Leader bidding authorization
     if (currentTeam.userRole === "MEMBER") {
       setError(
-        `Spectator Mode: Only the designated Team Leader (${currentTeam.leaderName}) can execute trades.`
+        `View Only Mode: Only the designated Team Leader (${currentTeam.leaderName}) can execute trades.`
       );
       return;
     }
@@ -211,16 +211,16 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
           <Zap className="w-5 h-5" />
         </div>
         <h3 className="text-base font-black uppercase italic tracking-wide text-white mb-1.5">
-          Pit Stop Authentication Required
+          Login Required to Trade
         </h3>
         <p className="text-xs text-slate-400 mb-5 leading-relaxed">
-          You must be logged into an active team session to execute trades.
+          You must be logged in as a Team Leader to execute stock orders.
         </p>
         <Link
           to="/login"
           className="block w-full py-2.5 rounded-lg bg-[#E10600] hover:bg-[#C50500] text-white text-xs font-black uppercase tracking-wider transition-colors"
         >
-          Enter Paddock Login
+          Go to Team Login
         </Link>
       </div>
     );
@@ -228,7 +228,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
 
   return (
     <div className="w-full p-4 sm:p-5 rounded-xl bg-[#121720] border border-[#232B3B] font-sans flex flex-col justify-between">
-      {/* Pit Stop Order Header */}
+      {/* Order Header */}
       <div className="flex items-center justify-between pb-3.5 border-b border-[#1E2638] mb-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded bg-[#E10600] flex items-center justify-center text-white font-black text-xs shrink-0">
@@ -236,10 +236,10 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-black uppercase italic tracking-tight text-white">
-              Pit Stop Execution
+              Buy &amp; Sell Shares
             </h2>
             <div className="text-[11px] text-slate-400 font-medium">
-              Lap {raceState.currentLap}/5 • {raceState.status === "GREEN_FLAG" ? "Market Live" : "Market Paused"}
+              Round {raceState.currentLap}/5 • {raceState.status === "GREEN_FLAG" ? "Market Live" : "Market Paused"}
             </div>
           </div>
         </div>
@@ -247,7 +247,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
         <div className="text-right">
           <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1 justify-end">
             <Wallet className="w-3 h-3 text-[#10B981]" />
-            <span>Cash Fuel</span>
+            <span>Available Cash</span>
           </div>
           <div className="text-sm font-black font-mono text-[#10B981]">
             ₹{availableCash.toLocaleString("en-IN")}
@@ -413,22 +413,22 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
           </div>
         </div>
 
-        {/* Spectator Mode Banner */}
+        {/* View Only Mode Banner for Team Members */}
         {currentTeam?.userRole === "MEMBER" && (
           <div className="p-3 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/30 text-xs text-[#EAB308] flex items-start gap-2.5">
             <ShieldAlert className="w-4 h-4 shrink-0 text-[#EAB308] mt-0.5" />
             <div>
               <div className="font-bold uppercase tracking-wider text-[#FACC15]">
-                Spectator Access Active
+                Team Member (View Only Mode)
               </div>
               <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
-                You are authenticated as <strong className="text-white">{currentTeam.currentMemberName || "Team Member"}</strong>. In accordance with competition rules, only the designated Team Leader (<strong className="text-white">{currentTeam.leaderName}</strong>) can place bids and execute market orders.
+                You are logged in as <strong className="text-white">{currentTeam.currentMemberName || "Team Member"}</strong>. In accordance with competition rules, only the designated Team Leader (<strong className="text-white">{currentTeam.leaderName}</strong>) can place bids and execute trades.
               </p>
             </div>
           </div>
         )}
 
-        {/* Race State Alert Banner */}
+        {/* Market State Alert Banner */}
         {raceState.status !== "GREEN_FLAG" && (
           <div
             className={`p-2.5 rounded-lg border text-[11px] font-bold flex items-center gap-2 ${
@@ -442,11 +442,11 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
             <ShieldAlert className="w-4 h-4 shrink-0" />
             <span>
               {raceState.status === "GRID_WARMUP" &&
-                "Paddock Warmup: Market orders open upon Race Director Green Flag."}
+                "Warmup: Trading opens when the round starts."}
               {raceState.status === "SAFETY_CAR" &&
-                "Safety Car: Simulation paused. Order execution frozen."}
+                "Trading Paused: Order execution temporarily frozen by Admin."}
               {raceState.status === "CHECKERED_FLAG" &&
-                "Checkered Flag: Simulation concluded. Final trading closed."}
+                "Market Closed: Simulation concluded. Final trading ended."}
             </span>
           </div>
         )}
@@ -466,15 +466,15 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
           <Zap className="w-3.5 h-3.5" />
           <span>
             {currentTeam?.userRole === "MEMBER"
-              ? "Spectator Mode (Order Execution Locked)"
+              ? "View Only Mode (Leader Executes Orders)"
               : !isConnected
-              ? "Telemetry Offline (Reconnecting...)"
+              ? "Offline (Reconnecting...)"
               : raceState.status === "GRID_WARMUP"
-              ? "Trading Locked (Pre-Race Warmup)"
+              ? "Trading Locked (Pre-Round Warmup)"
               : raceState.status === "SAFETY_CAR"
-              ? "Trading Paused (Safety Car)"
+              ? "Trading Paused (Admin Pause)"
               : raceState.status === "CHECKERED_FLAG"
-              ? "Market Closed (Checkered Flag)"
+              ? "Market Closed (Competition Ended)"
               : orderType === "BUY"
               ? `Execute Buy: ₹${totalCost.toLocaleString("en-IN")}`
               : `Execute Sell: ₹${totalCost.toLocaleString("en-IN")}`}

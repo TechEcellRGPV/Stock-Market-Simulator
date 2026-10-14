@@ -26,8 +26,8 @@ import { useScreenWakeLock } from "../hooks/useScreenWakeLock";
  */
 export default function Trade() {
   useSEO({
-    title: "Pit Stop Trading Floor",
-    description: "Live order execution terminal for Imprenditore 5.0. Trade 17 motorsport and mobility equities, track real-time telemetry, and view your order audit ledger."
+    title: "Live Trading Screen",
+    description: "Live order execution terminal for Imprenditore 5.0. Trade 17 equities across 5 sectors, track real-time prices, and view your order history."
   });
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -92,10 +92,10 @@ export default function Trade() {
           </Link>
           <div className="min-w-0">
             <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#E10600] truncate">
-              Pit Stop Trading Floor
+              Live Trading Screen
             </div>
             <h1 className="text-xs sm:text-base font-black uppercase italic tracking-tight text-white truncate flex items-center gap-1.5">
-              <span>Order Execution & Telemetry</span>
+              <span>Live Orders &amp; Stock Chart</span>
               <Activity className="w-3.5 h-3.5 text-[#06B6D4] shrink-0" />
             </h1>
           </div>
@@ -133,7 +133,7 @@ export default function Trade() {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#161B24] hover:bg-[#1D232E] text-xs font-bold text-slate-300 hover:text-white border border-[#232B3B] transition-colors shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{currentTeam ? "Cockpit" : "Home"}</span>
+            <span className="hidden sm:inline">{currentTeam ? "Dashboard" : "Home"}</span>
           </Link>
         </div>
       </header>
@@ -146,7 +146,7 @@ export default function Trade() {
         <div className="flex items-center gap-2 min-w-max">
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 mr-1 flex items-center gap-1">
             <Zap className="w-3 h-3 text-[#EAB308]" />
-            <span>Grid:</span>
+            <span>Stocks:</span>
           </span>
           {stocks.map((stk) => {
             const isSelected = stk.ticker === activeStock.ticker;
@@ -190,7 +190,7 @@ export default function Trade() {
               <div className="flex items-center gap-2 border-b border-[#1E2638] pb-2.5">
                 <Info className="w-4 h-4 text-[#06B6D4]" />
                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-300">
-                  Company Telemetry & Profile
+                  Company Details &amp; Day Range
                 </h3>
               </div>
 
@@ -226,12 +226,12 @@ export default function Trade() {
 
               <p className="text-xs text-slate-300 leading-relaxed">
                 {activeStock.description ||
-                  `${activeStock.name} operates in the ${activeStock.sector} sector, delivering mission-critical motorsport components, telemetry algorithms, or advanced sustainable propulsion systems.`}
+                  `${activeStock.name} operates in the ${activeStock.sector} sector.`}
               </p>
             </div>
           </div>
 
-          {/* Right Column: Pit Stop Execution Form */}
+          {/* Right Column: Order Execution Form */}
           <div className="lg:col-span-5">
             <TradeForm
               selectedTicker={activeStock.ticker}
@@ -240,29 +240,29 @@ export default function Trade() {
           </div>
         </div>
 
-        {/* Past Pit Stop Executions / Orders Ledger */}
+        {/* Order History */}
         <div className="mt-8 p-4 sm:p-5 rounded-xl bg-[#121720] border border-[#232B3B]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3.5 border-b border-[#1E2638] mb-4">
             <div className="flex items-center gap-2">
               <Receipt className="w-4 h-4 text-[#06B6D4]" />
               <h2 className="text-sm font-black uppercase italic tracking-wide text-white">
-                Recent Pit Stop Executions ({orders ? orders.length : 0})
+                Order History ({orders ? orders.length : 0})
               </h2>
             </div>
             {currentTeam && (
               <span className="text-xs text-slate-400 font-mono">
-                Active Session: <strong className="text-white">{currentTeam.teamName}</strong> ({currentTeam.teamCode})
+                Active Team: <strong className="text-white">{currentTeam.teamName}</strong> ({currentTeam.teamCode})
               </span>
             )}
           </div>
 
           {!currentTeam ? (
             <div className="py-8 text-center text-xs text-slate-500">
-              Please log in to your team session to view your order execution ledger.
+              Please log in to your team to view your order history.
             </div>
           ) : !orders || orders.length === 0 ? (
             <div className="py-8 text-center text-xs text-slate-500 font-mono">
-              No pit stop trade executions recorded yet for this session.
+              No orders executed yet in this session.
             </div>
           ) : (
             <div className="overflow-x-auto">
