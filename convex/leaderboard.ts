@@ -94,6 +94,8 @@ export const getLeaderboard = query({
       // Total Combined Score (out of 100)
       const totalScore =
         Math.round((portfolioScore + strategyScore + executionScore) * 10) / 10;
+      const netProfit =
+        Math.round((totalPortfolioValue - startingCapital) * 100) / 100;
 
       leaderboard.push({
         teamId: team._id,
@@ -104,6 +106,7 @@ export const getLeaderboard = query({
         cashBalance: team.cashBalance,
         holdingsValue,
         totalPortfolioValue,
+        netProfit,
         returnPercent,
         portfolioScore,
         strategyScore,
@@ -115,12 +118,12 @@ export const getLeaderboard = query({
       });
     }
 
-    // Sort descending by totalScore (or totalPortfolioValue as tie-breaker)
+    // Sort descending strictly by profit (totalPortfolioValue)
     leaderboard.sort((a, b) => {
-      if (b.totalScore !== a.totalScore) {
-        return b.totalScore - a.totalScore;
+      if (b.totalPortfolioValue !== a.totalPortfolioValue) {
+        return b.totalPortfolioValue - a.totalPortfolioValue;
       }
-      return b.totalPortfolioValue - a.totalPortfolioValue;
+      return b.returnPercent - a.returnPercent;
     });
 
     // Add 1-indexed ranks

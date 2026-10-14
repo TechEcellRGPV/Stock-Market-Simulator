@@ -298,7 +298,7 @@ export default function PaddockWaitingLounge({
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <span>50/30/20 Rules</span>
+              <span>Competition Rules</span>
               {activeTab === "rules" && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#E10600] rounded-full" />
               )}
@@ -368,7 +368,7 @@ export default function PaddockWaitingLounge({
           </div>
         )}
 
-        {/* Tab 2: 50/30/20 Official Rulebook */}
+        {/* Tab 2: Official Competition Rulebook */}
         {activeTab === "rules" && (
           <div className="space-y-3.5">
             <div className="p-3.5 rounded-xl bg-[#0E131D] border border-slate-800">
@@ -376,32 +376,32 @@ export default function PaddockWaitingLounge({
                 Official Imprenditore 5.0 Scoring
               </div>
               <div className="text-xs text-slate-300 mt-0.5 leading-relaxed">
-                Rankings are determined by a balanced 3-factor evaluation model:
+                Rankings and winner positions are evaluated strictly on Net Profit generated across the competition:
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <div className="p-3.5 rounded-xl bg-[#0E131D] border border-[#10B981]/30">
-                <div className="text-xl font-black font-mono text-[#10B981]">50%</div>
-                <div className="text-xs font-bold text-white uppercase mt-0.5">Portfolio Value</div>
+                <div className="text-xl font-black font-mono text-[#10B981]">Net Profit</div>
+                <div className="text-xs font-bold text-white uppercase mt-0.5">Primary Ranking Metric</div>
                 <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                  Final cash balance plus the current market valuation of your active stock holdings.
+                  Net Profit = (Cash Balance + Stock Holdings Value) - ₹1,00,000 Starting Capital.
                 </p>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[#0E131D] border border-[#06B6D4]/30">
-                <div className="text-xl font-black font-mono text-[#06B6D4]">30%</div>
-                <div className="text-xs font-bold text-white uppercase mt-0.5">Trading Activity</div>
+                <div className="text-xl font-black font-mono text-[#06B6D4]">Return %</div>
+                <div className="text-xs font-bold text-white uppercase mt-0.5">Portfolio Growth</div>
                 <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                  Order execution frequency and active tactical responses to breaking news bulletins.
+                  Percentage gain on your initial capital, updated live with each stock price change.
                 </p>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[#0E131D] border border-[#EAB308]/30">
-                <div className="text-xl font-black font-mono text-[#EAB308]">20%</div>
-                <div className="text-xs font-bold text-white uppercase mt-0.5">Risk & Diversity</div>
+                <div className="text-xl font-black font-mono text-[#EAB308]">Live Ranks</div>
+                <div className="text-xs font-bold text-white uppercase mt-0.5">Real-Time Sync</div>
                 <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                  Portfolio spread across sectors. Stacking all capital into one stock incurs risk penalties.
+                  Podium P1, P2, and P3 positions update instantaneously on the auditorium leaderboard.
                 </p>
               </div>
             </div>

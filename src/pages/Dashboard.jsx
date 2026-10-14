@@ -544,25 +544,23 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {/* Card 4: 50/30/20 Official Score */}
+          {/* Card 4: Competition Rank & Net Profit */}
           <div className="p-5 rounded-xl bg-[#121720] border border-[#EAB308]/40">
             <div className="flex justify-between items-start mb-1.5">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#EAB308]">
-                50/30/20 Total Score
+                Competition Rank
               </span>
               <div className="p-1 text-[#EAB308]">
                 <Trophy className="w-4 h-4" />
               </div>
             </div>
             <div className="text-2xl font-black text-[#EAB308] font-mono">
-              {scoreData.total} <span className="text-xs text-slate-400 font-sans font-bold">/ 100 pts</span>
+              {teamRank}
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-2 font-mono">
-              <span>P:{scoreData.portfolio}</span>
-              <span>•</span>
-              <span>S:{scoreData.strategy}</span>
-              <span>•</span>
-              <span>E:{scoreData.execution}</span>
+            <div className="flex items-center gap-1.5 text-[10px] mt-2 font-mono">
+              <span className={portfolioStats.totalPnL >= 0 ? "text-[#10B981] font-bold" : "text-[#E10600] font-bold"}>
+                {portfolioStats.totalPnL >= 0 ? "+" : ""}₹{portfolioStats.totalPnL.toLocaleString("en-IN")} Profit
+              </span>
             </div>
           </div>
         </div>
@@ -573,7 +571,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-[#E10600]" />
               <h2 className="text-xs font-black uppercase tracking-widest text-slate-300">
-                Sector Diversification (30% Strategy Score)
+                Sector Diversification
               </h2>
             </div>
             <span className="text-xs font-bold text-[#06B6D4]">
@@ -677,7 +675,7 @@ export default function Dashboard() {
                   }`}
               >
                 <span className="sm:hidden">Rules</span>
-                <span className="hidden sm:inline">50/30/20 Rules</span>
+                <span className="hidden sm:inline">Competition Rules</span>
                 {activeTab === "scorecard" && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#10B981] rounded-full" />
                 )}
@@ -918,37 +916,37 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Tab 4: 50/30/20 Official Scorecard */}
+          {/* Tab 4: Competition Rules & Profit Breakdown */}
           {activeTab === "scorecard" && (
             <div className="p-4 sm:p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                 <div className="p-4 rounded-lg bg-[#0A0D12] border border-[#232B3B]">
-                  <div className="text-xs font-bold text-slate-400 uppercase mb-1">50% Portfolio Growth</div>
-                  <div className="text-xl font-black text-white font-mono">
-                    {scoreData.portfolio} <span className="text-xs text-slate-500">/ 50 pts</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Based on net worth return vs initial ₹1,00,000 capital.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-lg bg-[#0A0D12] border border-[#232B3B]">
-                  <div className="text-xs font-bold text-slate-400 uppercase mb-1">30% Strategy & Diversification</div>
+                  <div className="text-xs font-bold text-slate-400 uppercase mb-1">Ranked by Net Profit</div>
                   <div className="text-xl font-black text-[#10B981] font-mono">
-                    {scoreData.strategy} <span className="text-xs text-slate-500">/ 30 pts</span>
+                    {portfolioStats.totalPnL >= 0 ? "+" : ""}₹{portfolioStats.totalPnL.toLocaleString("en-IN")}
                   </div>
                   <p className="text-[11px] text-slate-500 mt-1">
-                    Holding 3 or more distinct sectors unlocks maximum 30 points.
+                    Leaderboard rankings are determined strictly by net profit vs initial ₹1,00,000 capital.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-lg bg-[#0A0D12] border border-[#232B3B]">
-                  <div className="text-xs font-bold text-slate-400 uppercase mb-1">20% Execution & Deployment</div>
-                  <div className="text-xl font-black text-[#06B6D4] font-mono">
-                    {scoreData.execution} <span className="text-xs text-slate-500">/ 20 pts</span>
+                  <div className="text-xs font-bold text-slate-400 uppercase mb-1">Current Standing</div>
+                  <div className="text-xl font-black text-[#EAB308] font-mono">
+                    {teamRank}
                   </div>
                   <p className="text-[11px] text-slate-500 mt-1">
-                    Active capital deployment (50%+ cash invested) and trade count.
+                    Your real-time rank among all registered teams on the live grid.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-lg bg-[#0A0D12] border border-[#232B3B]">
+                  <div className="text-xs font-bold text-slate-400 uppercase mb-1">Portfolio Return</div>
+                  <div className="text-xl font-black text-[#06B6D4] font-mono">
+                    {portfolioStats.totalPnL >= 0 ? "+" : ""}{portfolioStats.pnlPercent}%
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Overall percentage return on total capital across cash and stock holdings.
                   </p>
                 </div>
               </div>

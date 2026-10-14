@@ -12,11 +12,10 @@ import { useSEO } from "../hooks/useSEO";
 
 /**
  * @file Leaderboard.jsx
- * @description Auditorium Projector View & Pole Position Standings for Imprenditore 5.0.
- * Displays real-time grand prix rankings evaluated using the 50/30/20 scoring model:
- * - 50% Portfolio Return benchmarked against base capital
- * - 30% Strategy & Sector Diversification (1 to 3+ sectors)
- * - 20% Decision-Making & Capital Deployment (≥50% cash invested + order frequency)
+ * @description Auditorium Projector View & Standings for Imprenditore 5.0.
+ * Displays real-time competition rankings evaluated strictly by Net Profit:
+ * - Net Profit = Total Portfolio Value (Cash + Stock Holdings) - Starting Capital (₹1,00,000)
+ * - Return % = (Net Profit / Starting Capital) * 100
  *
  * Features high-contrast P1, P2, and P3 podium cards alongside the full grid table.
  *
@@ -25,13 +24,22 @@ import { useSEO } from "../hooks/useSEO";
 export default function Leaderboard() {
   useSEO({
     title: "Competition Leaderboard",
-    description: "Live 50/30/20 Competition Standings for Imprenditore 5.0. Track team net worth, return percentages, sector diversification, and real-time rank positions."
+    description: "Live Standings for Imprenditore 5.0. Track team net profit, portfolio value, return percentages, and real-time rank positions."
   });
 
   const { leaderboard, raceState, currentTeam } = useSimulation();
 
   // Extract top three teams for podium presentation
   const top3 = leaderboard.slice(0, 3);
+
+  /**
+   * Helper to compute net profit
+   */
+  const getNetProfit = (entry) => {
+    if (!entry) return 0;
+    if (typeof entry.netProfit === "number") return entry.netProfit;
+    return (entry.totalPortfolioValue || 100000) - (raceState.defaultStartingCapital || 100000);
+  };
 
   /**
    * Formats remaining lap duration into MM:SS notation.
@@ -83,7 +91,7 @@ export default function Leaderboard() {
                   : "text-[#06B6D4]"
               }`}>
               {raceState.status === "GREEN_FLAG"
-                ? `LAP ${raceState.currentLap}/5`
+                ? `ROUND ${raceState.currentLap}/5`
                 : raceState.status === "SAFETY_CAR"
                   ? "PAUSED"
                   : raceState.status === "CHECKERED_FLAG"
@@ -110,106 +118,113 @@ export default function Leaderboard() {
         {top3.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             {/* 2nd Place */}
-            {top3[1] && (
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-5 rounded-xl bg-[#121720] border border-[#94A3B8]/40 order-2 md:order-1"
-              >
-                <div className="w-8 h-8 rounded bg-[#94A3B8]/15 text-[#94A3B8] flex items-center justify-center font-black text-sm border border-[#94A3B8]/30 mb-2">
-                  P2
-                </div>
-                <div className="text-[10px] font-mono text-slate-500">{top3[1].teamCode}</div>
-                <h3 className="text-lg font-black text-white truncate">{top3[1].teamName}</h3>
-                <div className="text-xs text-slate-400 mb-3">Leader: {top3[1].leaderName}</div>
-
-                <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] mb-3">
-                  <div className="text-[10px] uppercase font-bold text-slate-400">Total Score</div>
-                  <div className="text-xl font-black font-mono text-[#94A3B8]">
-                    {top3[1].totalScore} <span className="text-xs text-slate-500">/ 100</span>
+            {top3[1] && (() => {
+              const profit2 = getNetProfit(top3[1]);
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-5 rounded-xl bg-[#121720] border border-[#94A3B8]/40 order-2 md:order-1"
+                >
+                  <div className="w-8 h-8 rounded bg-[#94A3B8]/15 text-[#94A3B8] flex items-center justify-center font-black text-sm border border-[#94A3B8]/30 mb-2">
+                    P2
                   </div>
-                </div>
+                  <div className="text-[10px] font-mono text-slate-500">{top3[1].teamCode}</div>
+                  <h3 className="text-lg font-black text-white truncate">{top3[1].teamName}</h3>
+                  <div className="text-xs text-slate-400 mb-3">Leader: {top3[1].leaderName}</div>
 
-                <div className="flex justify-between text-xs font-mono text-slate-300">
-                  <span>₹{top3[1].totalPortfolioValue.toLocaleString("en-IN")}</span>
-                  <span className={top3[1].returnPercent >= 0 ? "text-[#10B981]" : "text-[#E10600]"}>
-                    {top3[1].returnPercent >= 0 ? "+" : ""}{top3[1].returnPercent}%
-                  </span>
-                </div>
-              </motion.div>
-            )}
+                  <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] mb-3">
+                    <div className="text-[10px] uppercase font-bold text-slate-400">Net Profit</div>
+                    <div className={`text-xl font-black font-mono ${profit2 >= 0 ? "text-[#10B981]" : "text-[#E10600]"}`}>
+                      {profit2 >= 0 ? "+" : ""}₹{profit2.toLocaleString("en-IN")}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between text-xs font-mono text-slate-300">
+                    <span>Portfolio: ₹{top3[1].totalPortfolioValue.toLocaleString("en-IN")}</span>
+                    <span className={top3[1].returnPercent >= 0 ? "text-[#10B981]" : "text-[#E10600]"}>
+                      {top3[1].returnPercent >= 0 ? "+" : ""}{top3[1].returnPercent}%
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })()}
 
             {/* 1st Place - Podium */}
-            {top3[0] && (
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-6 rounded-xl bg-[#161B24] border-2 border-[#EAB308] order-1 md:order-2 md:-translate-y-2"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div className="w-9 h-9 rounded bg-[#EAB308]/20 text-[#EAB308] flex items-center justify-center font-black text-base border border-[#EAB308]/50">
-                    P1
+            {top3[0] && (() => {
+              const profit1 = getNetProfit(top3[0]);
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 rounded-xl bg-[#161B24] border-2 border-[#EAB308] order-1 md:order-2 md:-translate-y-2"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="w-9 h-9 rounded bg-[#EAB308]/20 text-[#EAB308] flex items-center justify-center font-black text-base border border-[#EAB308]/50">
+                      P1
+                    </div>
+                    <Crown className="w-6 h-6 text-[#EAB308]" />
                   </div>
-                  <Crown className="w-6 h-6 text-[#EAB308]" />
-                </div>
-                <div className="text-[10px] font-mono text-slate-500">{top3[0].teamCode}</div>
-                <h3 className="text-xl sm:text-2xl font-black text-white truncate">{top3[0].teamName}</h3>
-                <div className="text-xs text-[#EAB308] font-bold mb-4">Leader: {top3[0].leaderName}</div>
+                  <div className="text-[10px] font-mono text-slate-500">{top3[0].teamCode}</div>
+                  <h3 className="text-xl sm:text-2xl font-black text-white truncate">{top3[0].teamName}</h3>
+                  <div className="text-xs text-[#EAB308] font-bold mb-4">Leader: {top3[0].leaderName}</div>
 
-                <div className="p-3.5 rounded-lg bg-[#0A0D12] border border-[#EAB308]/30 mb-3">
-                  <div className="text-[10px] uppercase font-black tracking-wider text-[#EAB308]">
-                    First Place Score
+                  <div className="p-3.5 rounded-lg bg-[#0A0D12] border border-[#EAB308]/30 mb-3">
+                    <div className="text-[10px] uppercase font-black tracking-wider text-[#EAB308]">
+                      First Place Net Profit
+                    </div>
+                    <div className={`text-3xl font-black font-mono ${profit1 >= 0 ? "text-[#EAB308]" : "text-[#E10600]"}`}>
+                      {profit1 >= 0 ? "+" : ""}₹{profit1.toLocaleString("en-IN")}
+                    </div>
+                    <div className="flex gap-2 text-[10px] text-slate-400 font-mono mt-1">
+                      <span>Return: {top3[0].returnPercent >= 0 ? "+" : ""}{top3[0].returnPercent}%</span>
+                      <span>•</span>
+                      <span>Portfolio: ₹{top3[0].totalPortfolioValue.toLocaleString("en-IN")}</span>
+                    </div>
                   </div>
-                  <div className="text-3xl font-black font-mono text-[#EAB308]">
-                    {top3[0].totalScore} <span className="text-xs text-slate-400 font-sans font-bold">/ 100 pts</span>
-                  </div>
-                  <div className="flex gap-2 text-[10px] text-slate-400 font-mono mt-1">
-                    <span>P:{top3[0].portfolioScore}</span>
-                    <span>•</span>
-                    <span>S:{top3[0].strategyScore}</span>
-                    <span>•</span>
-                    <span>E:{top3[0].executionScore}</span>
-                  </div>
-                </div>
 
-                <div className="flex justify-between text-xs font-mono text-slate-200">
-                  <span>Portfolio: ₹{top3[0].totalPortfolioValue.toLocaleString("en-IN")}</span>
-                  <span className={`font-bold ${top3[0].returnPercent >= 0 ? "text-[#10B981]" : "text-[#E10600]"}`}>
-                    {top3[0].returnPercent >= 0 ? "+" : ""}{top3[0].returnPercent}%
-                  </span>
-                </div>
-              </motion.div>
-            )}
+                  <div className="flex justify-between text-xs font-mono text-slate-200">
+                    <span>Portfolio: ₹{top3[0].totalPortfolioValue.toLocaleString("en-IN")}</span>
+                    <span className={`font-bold ${top3[0].returnPercent >= 0 ? "text-[#10B981]" : "text-[#E10600]"}`}>
+                      {top3[0].returnPercent >= 0 ? "+" : ""}{top3[0].returnPercent}%
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })()}
 
             {/* 3rd Place */}
-            {top3[2] && (
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-5 rounded-xl bg-[#121720] border border-[#CD7F32]/40 order-3"
-              >
-                <div className="w-8 h-8 rounded bg-[#CD7F32]/15 text-[#CD7F32] flex items-center justify-center font-black text-sm border border-[#CD7F32]/30 mb-2">
-                  P3
-                </div>
-                <div className="text-[10px] font-mono text-slate-500">{top3[2].teamCode}</div>
-                <h3 className="text-lg font-black text-white truncate">{top3[2].teamName}</h3>
-                <div className="text-xs text-slate-400 mb-3">Leader: {top3[2].leaderName}</div>
-
-                <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] mb-3">
-                  <div className="text-[10px] uppercase font-bold text-slate-400">Total Score</div>
-                  <div className="text-xl font-black font-mono text-[#CD7F32]">
-                    {top3[2].totalScore} <span className="text-xs text-slate-500">/ 100</span>
+            {top3[2] && (() => {
+              const profit3 = getNetProfit(top3[2]);
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-5 rounded-xl bg-[#121720] border border-[#CD7F32]/40 order-3"
+                >
+                  <div className="w-8 h-8 rounded bg-[#CD7F32]/15 text-[#CD7F32] flex items-center justify-center font-black text-sm border border-[#CD7F32]/30 mb-2">
+                    P3
                   </div>
-                </div>
+                  <div className="text-[10px] font-mono text-slate-500">{top3[2].teamCode}</div>
+                  <h3 className="text-lg font-black text-white truncate">{top3[2].teamName}</h3>
+                  <div className="text-xs text-slate-400 mb-3">Leader: {top3[2].leaderName}</div>
 
-                <div className="flex justify-between text-xs font-mono text-slate-300">
-                  <span>₹{top3[2].totalPortfolioValue.toLocaleString("en-IN")}</span>
-                  <span className={top3[2].returnPercent >= 0 ? "text-[#10B981]" : "text-[#E10600]"}>
-                    {top3[2].returnPercent >= 0 ? "+" : ""}{top3[2].returnPercent}%
-                  </span>
-                </div>
-              </motion.div>
-            )}
+                  <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] mb-3">
+                    <div className="text-[10px] uppercase font-bold text-slate-400">Net Profit</div>
+                    <div className={`text-xl font-black font-mono ${profit3 >= 0 ? "text-[#10B981]" : "text-[#E10600]"}`}>
+                      {profit3 >= 0 ? "+" : ""}₹{profit3.toLocaleString("en-IN")}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between text-xs font-mono text-slate-300">
+                    <span>Portfolio: ₹{top3[2].totalPortfolioValue.toLocaleString("en-IN")}</span>
+                    <span className={top3[2].returnPercent >= 0 ? "text-[#10B981]" : "text-[#E10600]"}>
+                      {top3[2].returnPercent >= 0 ? "+" : ""}{top3[2].returnPercent}%
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })()}
           </div>
         )}
 
@@ -221,7 +236,7 @@ export default function Leaderboard() {
               <span>Team Rankings ({leaderboard.length} Teams)</span>
             </h3>
             <span className="text-[11px] text-slate-500 font-mono">
-              Live Standings
+              Ranked by Net Profit
             </span>
           </div>
 
@@ -241,54 +256,55 @@ export default function Leaderboard() {
                     <th className="pb-2.5">Team &amp; Code</th>
                     <th className="pb-2.5">Team Leader</th>
                     <th className="pb-2.5 text-right">Portfolio Value</th>
+                    <th className="pb-2.5 text-right">Available Cash</th>
                     <th className="pb-2.5 text-right">Return %</th>
-                    <th className="pb-2.5 text-center">Sectors</th>
-                    <th className="pb-2.5 text-center">Score (P/S/E)</th>
-                    <th className="pb-2.5 text-right font-black text-[#EAB308]">Total Score</th>
+                    <th className="pb-2.5 text-right font-black text-[#EAB308]">Net Profit</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1A202C]">
-                  {leaderboard.map((entry) => (
-                    <tr
-                      key={entry.teamId || entry.id || entry.rank}
-                      className={`hover:bg-[#161B24] transition-colors ${currentTeam && (currentTeam.id === entry.teamId || currentTeam.id === entry.id) ? "bg-[#E10600]/10 font-bold" : ""
-                        }`}
-                    >
-                      <td className="py-3 text-center font-black font-mono">
-                        {entry.rank === 1 ? (
-                          <span className="text-[#EAB308]">P1</span>
-                        ) : entry.rank === 2 ? (
-                          <span className="text-[#94A3B8]">P2</span>
-                        ) : entry.rank === 3 ? (
-                          <span className="text-[#CD7F32]">P3</span>
-                        ) : (
-                          <span className="text-slate-400">{entry.rank}</span>
-                        )}
-                      </td>
-                      <td className="py-3">
-                        <div className="font-bold text-white">{entry.teamName}</div>
-                        <div className="text-[10px] font-mono text-slate-500">{entry.teamCode}</div>
-                      </td>
-                      <td className="py-3 text-slate-300">{entry.leaderName}</td>
-                      <td className="py-3 text-right font-mono font-bold text-white">
-                        ₹{entry.totalPortfolioValue.toLocaleString("en-IN")}
-                      </td>
-                      <td className="py-3 text-right font-mono font-bold">
-                        <span className={entry.returnPercent >= 0 ? "text-[#10B981]" : "text-[#E10600]"}>
-                          {entry.returnPercent >= 0 ? "+" : ""}{entry.returnPercent}%
-                        </span>
-                      </td>
-                      <td className="py-3 text-center font-mono text-slate-300">
-                        {entry.uniqueSectorCount}/5
-                      </td>
-                      <td className="py-3 text-center font-mono text-[11px] text-slate-400">
-                        {entry.portfolioScore} / {entry.strategyScore} / {entry.executionScore}
-                      </td>
-                      <td className="py-3 text-right font-mono font-black text-sm text-[#EAB308]">
-                        {entry.totalScore}
-                      </td>
-                    </tr>
-                  ))}
+                  {leaderboard.map((entry) => {
+                    const profit = getNetProfit(entry);
+                    return (
+                      <tr
+                        key={entry.teamId || entry.id || entry.rank}
+                        className={`hover:bg-[#161B24] transition-colors ${currentTeam && (currentTeam.id === entry.teamId || currentTeam.id === entry.id) ? "bg-[#E10600]/10 font-bold" : ""
+                          }`}
+                      >
+                        <td className="py-3 text-center font-black font-mono">
+                          {entry.rank === 1 ? (
+                            <span className="text-[#EAB308]">P1</span>
+                          ) : entry.rank === 2 ? (
+                            <span className="text-[#94A3B8]">P2</span>
+                          ) : entry.rank === 3 ? (
+                            <span className="text-[#CD7F32]">P3</span>
+                          ) : (
+                            <span className="text-slate-400">{entry.rank}</span>
+                          )}
+                        </td>
+                        <td className="py-3">
+                          <div className="font-bold text-white">{entry.teamName}</div>
+                          <div className="text-[10px] font-mono text-slate-500">{entry.teamCode}</div>
+                        </td>
+                        <td className="py-3 text-slate-300">{entry.leaderName}</td>
+                        <td className="py-3 text-right font-mono font-bold text-white">
+                          ₹{entry.totalPortfolioValue.toLocaleString("en-IN")}
+                        </td>
+                        <td className="py-3 text-right font-mono text-slate-400">
+                          ₹{(entry.cashBalance || 0).toLocaleString("en-IN")}
+                        </td>
+                        <td className="py-3 text-right font-mono font-bold">
+                          <span className={entry.returnPercent >= 0 ? "text-[#10B981]" : "text-[#E10600]"}>
+                            {entry.returnPercent >= 0 ? "+" : ""}{entry.returnPercent}%
+                          </span>
+                        </td>
+                        <td className="py-3 text-right font-mono font-black text-sm">
+                          <span className={profit >= 0 ? "text-[#10B981]" : "text-[#E10600]"}>
+                            {profit >= 0 ? "+" : ""}₹{profit.toLocaleString("en-IN")}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}

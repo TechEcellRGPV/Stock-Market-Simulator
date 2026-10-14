@@ -746,12 +746,14 @@ export function SimulationProvider({ children }) {
         const executionScore = Math.min(20, (team.tradeCount || teamOrdersList.length) * 2);
 
         const totalScore = team.status === "DISQUALIFIED" ? 0 : portfolioScore + strategyScore + executionScore;
+        const netProfit = Math.round((totalPortfolioValue - baseCapital) * 100) / 100;
 
         return {
           ...team,
           teamId: team.id,
           stockPortfolioValue,
           totalPortfolioValue,
+          netProfit,
           returnPercent,
           sectorCount,
           uniqueSectorCount: sectorCount,
@@ -763,10 +765,10 @@ export function SimulationProvider({ children }) {
         };
       })
       .sort((a, b) => {
-        if (b.totalScore !== a.totalScore) {
-          return b.totalScore - a.totalScore;
+        if (b.totalPortfolioValue !== a.totalPortfolioValue) {
+          return b.totalPortfolioValue - a.totalPortfolioValue;
         }
-        return b.totalPortfolioValue - a.totalPortfolioValue;
+        return b.returnPercent - a.returnPercent;
       })
       .map((entry, index) => ({
         ...entry,
