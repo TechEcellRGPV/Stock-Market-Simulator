@@ -70,6 +70,7 @@ export const executeTrade = mutation({
     type: v.string(), // "BUY" | "SELL"
     shares: v.number(),
     executedBy: v.string(),
+    sessionId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const shares = Math.floor(args.shares);
@@ -100,7 +101,7 @@ export const executeTrade = mutation({
       );
     }
 
-    // 2. Fetch Team
+    // 2. Fetch Team and verify Leader Trade Authorization
     const team = await ctx.db.get(args.teamId);
     if (!team) {
       throw new Error("Team not found.");
@@ -110,6 +111,27 @@ export const executeTrade = mutation({
     }
     if (team.status === "LOCKED") {
       throw new Error("Team portfolio is locked.");
+    }
+
+    // Role-Based Access: Strictly the Team Leader can execute trades
+    const caller = (args.executedBy || "").trim().toLowerCase();
+    const leader = (team.leaderName || "").trim().toLowerCase();
+
+    if (leader && !leader.startsWith("driver lead") && caller !== leader) {
+      throw new Error(
+        `Order rejected: Only the designated Team Leader (${team.leaderName}) is authorized to execute trades. Other members have spectator view-only access.`,
+      );
+    }
+
+    // Single active leader session guard
+    if (
+      args.sessionId &&
+      team.activeLeaderSessionId &&
+      args.sessionId !== team.activeLeaderSessionId
+    ) {
+      throw new Error(
+        "Leader session expired: Another session has logged in as Team Leader.",
+      );
     }
 
     // 3. Fetch Stock

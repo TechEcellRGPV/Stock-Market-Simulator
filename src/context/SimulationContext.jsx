@@ -70,9 +70,15 @@ export function SimulationProvider({ children }) {
   const resetGridMutation = useMutation(api.market.resetGrid);
   const createTeamMutation = useMutation(api.teams.createTeam);
   const joinTeamMutation = useMutation(api.teams.joinTeam);
+  const seedCanonical15TeamsMutation = useMutation(api.teams.seedCanonical15Teams);
+  const registerTeamSlotMutation = useMutation(api.teams.registerTeamSlot);
+  const adminUpdateTeamMembersMutation = useMutation(api.teams.adminUpdateTeamMembers);
+  const adminClearLeaderSessionMutation = useMutation(api.teams.adminClearLeaderSession);
   const adminUpdateTeamMutation = useMutation(api.teams.adminUpdateTeam);
   const adminDeleteTeamMutation = useMutation(api.teams.adminDeleteTeam);
   const executeTradeMutation = useMutation(api.trades.executeTrade);
+  const adminUpdateStockMutation = useMutation(api.market.adminUpdateStock);
+  const adminTriggerSectorShockMutation = useMutation(api.market.adminTriggerSectorShock);
 
   // 1. Stocks State
   const [stocks, setStocks] = useState(() => {
@@ -767,9 +773,9 @@ export function SimulationProvider({ children }) {
       }));
   }, [teams, allHoldings, orders, stocks, raceState.defaultStartingCapital]);
 
-  // Auth: Create Team (Grid Registration)
+  // Auth: Create Team (Grid Registration - strictly 3 members)
   const createTeam = useCallback(
-    async ({ teamName, teamPin, leaderName, memberNames = [] }) => {
+    async ({ teamName, teamPin, leaderName, member2, member3, memberNames = [] }) => {
       if (raceState.isRegistrationOpen === false) {
         throw new Error("Team Registration is currently locked by the Race Director. Registration will open on the official event day.");
       }
@@ -781,17 +787,22 @@ export function SimulationProvider({ children }) {
         throw new Error("4-digit Team PIN is required.");
       }
       if (!leaderName || !leaderName.trim()) {
-        throw new Error("Team leader driver name is required.");
+        throw new Error("Team leader name is required.");
       }
 
       const cleanName = teamName.trim();
-      const filteredMembers = memberNames.map((m) => m.trim()).filter(Boolean);
+      const m2 = member2?.trim() || memberNames[0]?.trim() || "Strategist Lead";
+      const m3 = member3?.trim() || memberNames[1]?.trim() || "Telemetry Lead";
+      const filteredMembers = [leaderName.trim(), m2, m3];
+      const sessionId = "sess_" + Math.random().toString(36).substring(2, 12);
 
       const cloudResult = await createTeamMutation({
         teamName: cleanName,
         teamPin: teamPin.trim(),
         leaderName: leaderName.trim(),
-        memberNames: filteredMembers
+        member2: m2,
+        member3: m3,
+        memberNames: [m2, m3]
       });
 
       const newTeam = {
@@ -801,9 +812,14 @@ export function SimulationProvider({ children }) {
         teamName: cloudResult.teamName,
         teamPin: teamPin.trim(),
         leaderName: cloudResult.leaderName,
-        members: [leaderName.trim(), ...filteredMembers],
+        member2: m2,
+        member3: m3,
+        members: filteredMembers,
         cashBalance: cloudResult.cashBalance,
         status: "ACTIVE",
+        userRole: "LEADER",
+        currentMemberName: leaderName.trim(),
+        sessionId,
         createdAt: Date.now()
       };
 
@@ -814,23 +830,20 @@ export function SimulationProvider({ children }) {
     [raceState.isRegistrationOpen, createTeamMutation]
   );
 
-  // Auth: Join Team
-  const joinTeam = useCallback(
-    async ({ teamIdentifier, teamPin, memberName }) => {
-      if (!teamIdentifier || !teamIdentifier.trim()) {
-        throw new Error("Please enter your Team Code or Registered Team Name.");
-      }
-      if (!teamPin || teamPin.trim().length !== 4) {
-        throw new Error("4-digit Team PIN is required.");
-      }
-      if (!memberName || !memberName.trim()) {
-        throw new Error("Driver / Member name is required.");
+  // Auth: Register Team Slot for Pre-Decided Grid Team (Strictly 3 members)
+  const registerTeamSlot = useCallback(
+    async ({ teamCode, teamPin, leaderName, member2, member3 }) => {
+      if (raceState.isRegistrationOpen === false) {
+        throw new Error("Team Registration is currently locked by the Race Director. Registration will open on the official event day.");
       }
 
-      const result = await joinTeamMutation({
-        teamIdentifier: teamIdentifier.trim(),
+      const sessionId = "sess_" + Math.random().toString(36).substring(2, 12);
+      const result = await registerTeamSlotMutation({
+        teamCode: teamCode.trim().toUpperCase(),
         teamPin: teamPin.trim(),
-        memberName: memberName.trim()
+        leaderName: leaderName.trim(),
+        member2: member2.trim(),
+        member3: member3.trim()
       });
 
       const activeTeam = {
@@ -840,9 +853,60 @@ export function SimulationProvider({ children }) {
         teamName: result.teamName,
         teamPin: teamPin.trim(),
         leaderName: result.leaderName,
+        member2: result.member2,
+        member3: result.member3,
+        members: result.members,
+        cashBalance: result.cashBalance,
+        status: "ACTIVE",
+        userRole: "LEADER",
+        currentMemberName: leaderName.trim(),
+        sessionId
+      };
+
+      setCurrentTeam(activeTeam);
+      localStorage.setItem("imprenditore_active_team", JSON.stringify(activeTeam));
+      return activeTeam;
+    },
+    [raceState.isRegistrationOpen, registerTeamSlotMutation]
+  );
+
+  // Auth: Join / Authenticate Team (Role: LEADER or MEMBER)
+  const joinTeam = useCallback(
+    async ({ teamIdentifier, teamPin, memberName, role = "LEADER" }) => {
+      if (!teamIdentifier || !teamIdentifier.trim()) {
+        throw new Error("Please select or enter your Team Code or Name.");
+      }
+      if (!teamPin || teamPin.trim().length !== 4) {
+        throw new Error("4-digit Team PIN is required.");
+      }
+      if (!memberName || !memberName.trim()) {
+        throw new Error("Member / Driver name is required.");
+      }
+
+      const sessionId = "sess_" + Math.random().toString(36).substring(2, 12);
+      const result = await joinTeamMutation({
+        teamIdentifier: teamIdentifier.trim(),
+        teamPin: teamPin.trim(),
+        memberName: memberName.trim(),
+        role,
+        sessionId
+      });
+
+      const activeTeam = {
+        id: result.teamId,
+        _id: result.teamId,
+        teamCode: result.teamCode,
+        teamName: result.teamName,
+        teamPin: teamPin.trim(),
+        leaderName: result.leaderName,
+        member2: result.member2,
+        member3: result.member3,
         cashBalance: result.cashBalance,
         status: result.status,
-        members: [result.leaderName, memberName.trim()]
+        members: result.members || [result.leaderName, memberName.trim()],
+        userRole: result.userRole || role,
+        currentMemberName: memberName.trim(),
+        sessionId: result.userRole === "LEADER" ? sessionId : undefined
       };
 
       setCurrentTeam(activeTeam);
@@ -896,6 +960,13 @@ export function SimulationProvider({ children }) {
         throw new Error("No active team session. Please log in first.");
       }
 
+      // Role check: Only the designated Team Leader can place bids and execute trades
+      if (currentTeam.userRole === "MEMBER") {
+        throw new Error(
+          `Spectator Mode: You are logged in as a Team Member (${currentTeam.currentMemberName || "Spectator"}). Only the Team Leader (${currentTeam.leaderName}) can execute trades.`
+        );
+      }
+
       if (raceState.status !== "GREEN_FLAG") {
         throw new Error("Market Orders Locked: The simulation is not currently running under Green Flag.");
       }
@@ -938,7 +1009,8 @@ export function SimulationProvider({ children }) {
             ticker,
             type,
             shares: shareCount,
-            executedBy: executedBy || currentTeam.leaderName
+            executedBy: executedBy || currentTeam.currentMemberName || currentTeam.leaderName,
+            sessionId: currentTeam.sessionId
           });
         } catch (mutationErr) {
           // Atomic rollback: restore exact pre-order team snapshot on rejection
@@ -1736,6 +1808,46 @@ export function SimulationProvider({ children }) {
     }
   }, [raceState, broadcastSync, resetGridMutation]);
 
+  // Admin Actions: Seed Canonical 15 Teams
+  const seedCanonical15Teams = useCallback(
+    async (overwrite = false) => {
+      return await seedCanonical15TeamsMutation({ overwrite });
+    },
+    [seedCanonical15TeamsMutation]
+  );
+
+  // Admin Actions: Update Team Members Roster and Credentials
+  const adminUpdateTeamMembers = useCallback(
+    async (args) => {
+      return await adminUpdateTeamMembersMutation(args);
+    },
+    [adminUpdateTeamMembersMutation]
+  );
+
+  // Admin Actions: Clear Leader Session Lock
+  const adminClearLeaderSession = useCallback(
+    async (teamId) => {
+      return await adminClearLeaderSessionMutation({ teamId });
+    },
+    [adminClearLeaderSessionMutation]
+  );
+
+  // Admin Actions: Update Individual Stock
+  const adminUpdateStock = useCallback(
+    async (args) => {
+      return await adminUpdateStockMutation(args);
+    },
+    [adminUpdateStockMutation]
+  );
+
+  // Admin Actions: Trigger Industry Sector Shock
+  const adminTriggerSectorShock = useCallback(
+    async (args) => {
+      return await adminTriggerSectorShockMutation(args);
+    },
+    [adminTriggerSectorShockMutation]
+  );
+
   const value = {
     isConnected,
     isWebSocketConnected: isConnected,
@@ -1754,6 +1866,7 @@ export function SimulationProvider({ children }) {
     isAdmin,
     hasEnvAdminKey: Boolean(getCleanAdminKeys().hasEnvKey),
     createTeam,
+    registerTeamSlot,
     joinTeam,
     logout,
     adminLogin,
@@ -1771,6 +1884,11 @@ export function SimulationProvider({ children }) {
     adminSetDefaultStartingCapital,
     broadcastTrackEvent,
     triggerSectorShock,
+    adminUpdateStock,
+    adminTriggerSectorShock,
+    seedCanonical15Teams,
+    adminUpdateTeamMembers,
+    adminClearLeaderSession,
     adminUpdateTeam,
     adminUpdateTeamCash,
     adminDeleteTeam,

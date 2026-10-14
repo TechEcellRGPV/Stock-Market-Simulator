@@ -443,6 +443,130 @@ export const broadcastTrackEvent = mutation({
   },
 });
 
+// Mutation: Admin directly edit an individual stock's price, volatility, and properties
+export const adminUpdateStock = mutation({
+  args: {
+    ticker: v.string(),
+    currentPrice: v.number(),
+    volatility: v.optional(v.number()),
+    name: v.optional(v.string()),
+    sector: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const stock = await ctx.db
+      .query("stocks")
+      .withIndex("by_ticker", (q) => q.eq("ticker", args.ticker))
+      .first();
+
+    if (!stock) {
+      throw new Error(`Stock ticker ${args.ticker} not found.`);
+    }
+
+    const now = Date.now();
+    const newPrice = Math.max(1, Math.round(args.currentPrice * 10) / 10);
+    const changePercent =
+      Math.round(
+        ((newPrice - stock.openingPrice) / stock.openingPrice) * 1000,
+      ) / 10;
+    const newSparkline = [...stock.sparkline.slice(-10), newPrice];
+
+    const patchData: Record<string, unknown> = {
+      currentPrice: newPrice,
+      dayHigh: Math.max(stock.dayHigh, newPrice),
+      dayLow: Math.min(stock.dayLow, newPrice),
+      changePercent,
+      sparkline: newSparkline,
+      updatedAt: now,
+    };
+
+    if (args.volatility !== undefined) patchData.volatility = args.volatility;
+    if (args.name !== undefined) patchData.name = args.name.trim();
+    if (args.sector !== undefined) patchData.sector = args.sector.trim();
+
+    await ctx.db.patch(stock._id, patchData);
+    return {
+      success: true,
+      ticker: stock.ticker,
+      currentPrice: newPrice,
+      changePercent,
+    };
+  },
+});
+
+// Mutation: Admin trigger macro sector shock (impacts entire industry)
+export const adminTriggerSectorShock = mutation({
+  args: {
+    sector: v.string(),
+    percentChange: v.number(), // e.g. +15 or -12
+    newsTitle: v.string(),
+    newsDescription: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const raceState = await ctx.db.query("raceState").first();
+    const currentLap = raceState ? raceState.currentLap : 1;
+
+    // 1. Fetch all stocks in target sector
+    const sectorStocks = await ctx.db
+      .query("stocks")
+      .withIndex("by_sector", (q) => q.eq("sector", args.sector))
+      .collect();
+
+    if (sectorStocks.length === 0) {
+      throw new Error(`No equities found for sector: ${args.sector}`);
+    }
+
+    // 2. Adjust prices for all stocks in the sector
+    const multiplier = 1 + args.percentChange / 100;
+    for (const stock of sectorStocks) {
+      const newPrice = Math.max(
+        10,
+        Math.round(stock.currentPrice * multiplier * 10) / 10,
+      );
+      const changePercent =
+        Math.round(
+          ((newPrice - stock.openingPrice) / stock.openingPrice) * 1000,
+        ) / 10;
+      const newSparkline = [...stock.sparkline.slice(-10), newPrice];
+
+      await ctx.db.patch(stock._id, {
+        currentPrice: newPrice,
+        dayHigh: Math.max(stock.dayHigh, newPrice),
+        dayLow: Math.min(stock.dayLow, newPrice),
+        changePercent,
+        sparkline: newSparkline,
+        updatedAt: now,
+      });
+    }
+
+    // 3. Insert breaking news track event
+    await ctx.db.insert("trackEvents", {
+      title: args.newsTitle,
+      description: args.newsDescription,
+      type: args.percentChange >= 0 ? "NEWS_FLASH" : "YELLOW_FLAG",
+      affectedSectors: [args.sector],
+      priceImpactPercent: args.percentChange,
+      lap: currentLap,
+      timestamp: now,
+    });
+
+    // 4. Update raceState marquee
+    if (raceState) {
+      await ctx.db.patch(raceState._id, {
+        activeNews: `Sector Shock [${args.sector} ${args.percentChange >= 0 ? "+" : ""}${args.percentChange}%]: ${args.newsTitle}`,
+        updatedAt: now,
+      });
+    }
+
+    return {
+      success: true,
+      sector: args.sector,
+      percentChange: args.percentChange,
+      affectedCount: sectorStocks.length,
+    };
+  },
+});
+
 // Mutation: Apply organic micro-jitter (1-2%) to simulate active trading ticks
 export const applyOrganicJitter = mutation({
   args: {},

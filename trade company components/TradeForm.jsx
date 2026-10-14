@@ -138,6 +138,14 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
       return;
     }
 
+    // Guard 1.5: Verify Team Leader bidding authorization
+    if (currentTeam.userRole === "MEMBER") {
+      setError(
+        `Spectator Mode: Only the designated Team Leader (${currentTeam.leaderName}) can execute trades.`
+      );
+      return;
+    }
+
     // Guard 2: Verify valid target scrip
     if (!selectedStock) {
       setError("Please select a target company.");
@@ -173,7 +181,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
         ticker: selectedStock.ticker,
         type: orderType,
         shares: shareCount,
-        executedBy: currentTeam.leaderName
+        executedBy: currentTeam.currentMemberName || currentTeam.leaderName
       });
 
       const confirmedShares = res?.shares ?? shareCount;
@@ -405,6 +413,21 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
           </div>
         </div>
 
+        {/* Spectator Mode Banner */}
+        {currentTeam?.userRole === "MEMBER" && (
+          <div className="p-3 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/30 text-xs text-[#EAB308] flex items-start gap-2.5">
+            <ShieldAlert className="w-4 h-4 shrink-0 text-[#EAB308] mt-0.5" />
+            <div>
+              <div className="font-bold uppercase tracking-wider text-[#FACC15]">
+                Spectator Access Active
+              </div>
+              <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                You are authenticated as <strong className="text-white">{currentTeam.currentMemberName || "Team Member"}</strong>. In accordance with competition rules, only the designated Team Leader (<strong className="text-white">{currentTeam.leaderName}</strong>) can place bids and execute market orders.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Race State Alert Banner */}
         {raceState.status !== "GREEN_FLAG" && (
           <div
@@ -431,9 +454,9 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
         {/* Execute Button */}
         <button
           type="submit"
-          disabled={isSubmitting || raceState.status !== "GREEN_FLAG" || !isConnected}
+          disabled={isSubmitting || raceState.status !== "GREEN_FLAG" || !isConnected || currentTeam?.userRole === "MEMBER"}
           className={`w-full py-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-            !isConnected || raceState.status !== "GREEN_FLAG"
+            !isConnected || raceState.status !== "GREEN_FLAG" || currentTeam?.userRole === "MEMBER"
               ? "bg-[#1A202C] text-slate-500 border border-[#232B3B] cursor-not-allowed"
               : orderType === "BUY"
               ? "bg-[#10B981] hover:bg-[#059669] text-slate-950 shadow-sm"
@@ -442,7 +465,9 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
         >
           <Zap className="w-3.5 h-3.5" />
           <span>
-            {!isConnected
+            {currentTeam?.userRole === "MEMBER"
+              ? "Spectator Mode (Order Execution Locked)"
+              : !isConnected
               ? "Telemetry Offline (Reconnecting...)"
               : raceState.status === "GRID_WARMUP"
               ? "Trading Locked (Pre-Race Warmup)"
