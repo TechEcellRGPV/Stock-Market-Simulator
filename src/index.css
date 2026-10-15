@@ -7,11 +7,16 @@ body {
   width: 100%;
   min-height: 100%;
   overflow-x: hidden;
-  background-color: #090D14;
-  color: #F8FAFC;
+  background-color: #0A0D12;
+  color: #FFFFFF;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: #E10600;
+  color: #FFFFFF;
 }
 
 #root {
@@ -21,21 +26,21 @@ body {
   flex-direction: column;
 }
 
-/* Custom scrollbars */
+/* Custom motorsport scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090D14;
+  background: #0A0D12;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1A2336;
+  background: #232B3B;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #25334E;
+  background: #3A465E;
 }

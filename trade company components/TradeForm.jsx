@@ -92,7 +92,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
     setSuccess("");
 
     if (isConnected === false) {
-      setError("Cannot route order while offline. Reconnecting...");
+      setError("Cannot route order while offline. Reconnecting to Race Control...");
       return;
     }
 
@@ -102,7 +102,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
     }
 
     if (currentTeam.userRole === "MEMBER") {
-      setError(`View Only Mode: Only Team Leader (${currentTeam.leaderName}) can execute trades.`);
+      setError(`View Only Mode: Only designated Team Leader (${currentTeam.leaderName}) can execute trades.`);
       return;
     }
 
@@ -118,7 +118,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
     }
 
     if (orderType === "BUY" && totalCost > availableCash) {
-      setError(`Insufficient cash balance (₹${Math.floor(availableCash).toLocaleString("en-IN")} available).`);
+      setError(`Insufficient cash fuel (₹${Math.floor(availableCash).toLocaleString("en-IN")} available).`);
       return;
     }
 
@@ -149,74 +149,74 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
 
   if (!currentTeam) {
     return (
-      <div className="p-6 rounded-xl bg-[#0D121D] border border-[#1A2336] text-center space-y-4">
-        <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/20">
+      <div className="p-6 rounded-xl bg-[#121720] border border-[#232B3B] text-center space-y-4">
+        <div className="w-10 h-10 rounded-full bg-[#E10600]/15 text-[#E10600] flex items-center justify-center mx-auto border border-[#E10600]/30">
           <Zap className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-white">Authentication Required</h3>
-          <p className="text-xs text-slate-400 mt-1">Sign in with your team PIN to place orders</p>
+          <h3 className="text-sm font-black uppercase italic text-white">Login Required to Trade</h3>
+          <p className="text-xs text-slate-400 mt-1">Authenticate as Team Leader to place pit stop orders</p>
         </div>
         <Link
           to="/login"
-          className="inline-block w-full py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-colors"
+          className="inline-block w-full py-2.5 rounded bg-[#E10600] hover:bg-[#C50500] text-white font-black text-xs uppercase tracking-wider transition-colors"
         >
-          Sign In to Trade
+          Team Login
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-5 rounded-xl bg-[#0D121D] border border-[#1A2336] space-y-4">
+    <div className="p-4 sm:p-5 rounded-xl bg-[#121720] border border-[#232B3B] space-y-4">
       {/* Header: Available Cash */}
-      <div className="flex items-center justify-between pb-3 border-b border-[#1A2336]">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
-          <Wallet className="w-3.5 h-3.5 text-emerald-400" />
+      <div className="flex items-center justify-between pb-3 border-b border-[#1E2638]">
+        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300">
+          <Wallet className="w-3.5 h-3.5 text-[#10B981]" />
           <span>Available Cash</span>
         </div>
-        <div className="font-mono font-bold text-sm text-emerald-400">
+        <div className="font-mono font-black text-sm text-[#10B981]">
           ₹{availableCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
         </div>
       </div>
 
       {/* Segmented Buy / Sell Control */}
-      <div className="grid grid-cols-2 p-1 rounded-lg bg-[#090D14] border border-[#1A2336] gap-1">
+      <div className="grid grid-cols-2 p-1 rounded-lg bg-[#0A0D12] border border-[#1A202C] gap-1">
         <button
           type="button"
           onClick={() => { setOrderType("BUY"); setError(""); setSuccess(""); }}
-          className={`py-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-2 rounded text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
             orderType === "BUY"
-              ? "bg-emerald-500 text-slate-950 shadow-xs"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-[#10B981] text-slate-950 shadow-xs"
+              : "text-slate-400 hover:text-white"
           }`}
         >
           <TrendingUp className="w-3.5 h-3.5" />
-          <span>Buy</span>
+          <span>Buy Scrip</span>
         </button>
         <button
           type="button"
           onClick={() => { setOrderType("SELL"); setError(""); setSuccess(""); }}
-          className={`py-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-2 rounded text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
             orderType === "SELL"
-              ? "bg-rose-500 text-white shadow-xs"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-[#E10600] text-white shadow-xs"
+              : "text-slate-400 hover:text-white"
           }`}
         >
           <TrendingDown className="w-3.5 h-3.5" />
-          <span>Sell</span>
+          <span>Sell Scrip</span>
         </button>
       </div>
 
       {/* Alert Notices */}
       {error && (
-        <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 flex items-center gap-2">
+        <div className="p-2.5 rounded-lg bg-[#E10600]/15 border border-[#E10600]/30 text-xs text-[#FF8080] flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span className="truncate">{error}</span>
         </div>
       )}
       {success && (
-        <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center gap-2">
+        <div className="p-2.5 rounded-lg bg-[#10B981]/15 border border-[#10B981]/30 text-xs text-[#10B981] flex items-center gap-2">
           <CheckCircle className="w-4 h-4 shrink-0" />
           <span className="truncate">{success}</span>
         </div>
@@ -224,19 +224,19 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
 
       {/* Order Form */}
       <form onSubmit={handleSubmit} className="space-y-3.5">
-        {/* Company Dropdown */}
+        {/* Scrip Dropdown */}
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
-            Target Scrip
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1">
+            Target Company
           </label>
           <div className="relative">
             <select
               value={selectedStock ? selectedStock.ticker : ""}
               onChange={(e) => handleTickerChange(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white font-medium outline-none appearance-none cursor-pointer"
+              className="w-full px-3 py-2 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#E10600] text-xs text-white font-bold outline-none appearance-none cursor-pointer"
             >
               {stocks.map((stock) => (
-                <option key={stock.ticker} value={stock.ticker} className="bg-[#0D121D] text-white">
+                <option key={stock.ticker} value={stock.ticker} className="bg-[#121720] text-white">
                   {stock.ticker} - {stock.name} (₹{stock.currentPrice.toFixed(2)})
                 </option>
               ))}
@@ -246,17 +246,17 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
         </div>
 
         {/* Position Summary Pill */}
-        <div className="p-2.5 rounded-lg bg-[#090D14] border border-[#161F30] text-xs space-y-1">
+        <div className="p-2.5 rounded-lg bg-[#0A0D12] border border-[#1A202C] text-xs space-y-1">
           <div className="flex items-center justify-between text-slate-400">
             <span>Current Position</span>
-            <span className="font-mono font-semibold text-white">
+            <span className="font-mono font-bold text-white">
               {ownedShares} shares
             </span>
           </div>
           {ownedShares > 0 && (
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-[#161F30]">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-[#1A202C]">
               <span>Avg ₹{avgCost.toFixed(2)}</span>
-              <span className={`font-mono font-semibold ${unrealizedPnL >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+              <span className={`font-mono font-bold ${unrealizedPnL >= 0 ? "text-[#10B981]" : "text-[#E10600]"}`}>
                 {unrealizedPnL >= 0 ? "+" : ""}₹{unrealizedPnL.toFixed(2)} ({unrealizedPnLPct.toFixed(1)}%)
               </span>
             </div>
@@ -266,7 +266,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
         {/* Share Quantity Input + Quick % chips */}
         <div>
           <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
-            <span className="font-semibold uppercase tracking-wider">Quantity</span>
+            <span className="font-bold uppercase tracking-wider text-slate-300">Quantity</span>
             <span className="font-mono">
               {orderType === "BUY" ? `Affordable: ${maxSharesCanBuy}` : `Available: ${ownedShares}`}
             </span>
@@ -278,7 +278,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
               min="1"
               value={shares}
               onChange={(e) => handleSharesChange(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs font-mono font-bold text-white outline-none"
+              className="w-full px-3 py-2 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#E10600] text-xs font-mono font-black text-white outline-none"
             />
             <div className="grid grid-cols-4 gap-1.5">
               {[25, 50, 75, 100].map((pct) => (
@@ -286,9 +286,9 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
                   key={pct}
                   type="button"
                   onClick={() => handlePercentAllocation(pct)}
-                  className="py-1 rounded bg-[#121824] hover:bg-[#182234] text-slate-300 hover:text-white text-[10px] font-mono font-semibold border border-[#1C263B] transition-colors"
+                  className="py-1 rounded bg-[#161B24] hover:bg-[#1D232E] text-slate-300 hover:text-white text-[10px] font-mono font-bold border border-[#232B3B] transition-colors"
                 >
-                  {pct === 100 ? "Max" : `${pct}%`}
+                  {pct === 100 ? "MAX" : `${pct}%`}
                 </button>
               ))}
             </div>
@@ -296,9 +296,9 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
         </div>
 
         {/* Order Cost Summary */}
-        <div className="p-3 rounded-lg bg-[#090D14] border border-[#161F30] flex items-center justify-between text-xs">
-          <span className="text-slate-400 font-medium">Estimated Total</span>
-          <span className="font-mono font-bold text-sm text-white">
+        <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] flex items-center justify-between text-xs">
+          <span className="text-slate-300 font-bold uppercase tracking-wider text-[11px]">Total Cost</span>
+          <span className="font-mono font-black text-sm text-[#06B6D4]">
             ₹{totalCost.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </span>
         </div>
@@ -315,21 +315,21 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
         <button
           type="submit"
           disabled={isSubmitting || raceState.status !== "GREEN_FLAG" || !isConnected || currentTeam?.userRole === "MEMBER"}
-          className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm ${
+          className={`w-full py-3 rounded font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm ${
             !isConnected || raceState.status !== "GREEN_FLAG" || currentTeam?.userRole === "MEMBER"
-              ? "bg-[#161E2E] text-slate-500 border border-[#20293D] cursor-not-allowed"
+              ? "bg-[#1A202C] text-slate-500 border border-[#232B3B] cursor-not-allowed"
               : orderType === "BUY"
-              ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/10"
-              : "bg-rose-500 hover:bg-rose-400 text-white shadow-rose-500/10"
+              ? "bg-[#10B981] hover:bg-[#059669] text-slate-950 shadow-emerald-500/10"
+              : "bg-[#E10600] hover:bg-[#C50500] text-white shadow-red-500/10"
           }`}
         >
           <Zap className="w-3.5 h-3.5" />
           <span>
             {raceState.status !== "GREEN_FLAG"
-              ? "Market Paused"
+              ? "Trading Frozen"
               : orderType === "BUY"
-              ? `Buy ${selectedStock?.ticker || "Stock"}`
-              : `Sell ${selectedStock?.ticker || "Stock"}`}
+              ? `Execute Buy: ₹${totalCost.toLocaleString("en-IN")}`
+              : `Execute Sell: ₹${totalCost.toLocaleString("en-IN")}`}
           </span>
         </button>
       </form>

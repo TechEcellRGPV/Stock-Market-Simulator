@@ -8,7 +8,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Zap,
-  Info
+  Flag
 } from "lucide-react";
 import { useSimulation } from "../context/SimulationContext";
 
@@ -28,40 +28,40 @@ export default function CirculatingBanner() {
     if (raceState?.activeNews) {
       items.push({
         id: "active_news",
-        tag: "Breaking",
-        tagColor: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+        tag: "TRACK ALERT",
+        tagColor: "text-[#E10600] bg-[#E10600]/15 border-[#E10600]/30",
         content: raceState.activeNews,
         linkTo: "/trade",
-        linkText: "Trade"
+        linkText: "Trade Pit Stop"
       });
     }
 
     if (raceState?.status === "GREEN_FLAG") {
       items.push({
         id: "live_lap",
-        tag: `Round ${raceState.currentLap}/5`,
-        tagColor: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
-        content: "Market orders active. Monitor sector allocations and execute trades.",
+        tag: `LAP ${raceState.currentLap}/5 LIVE`,
+        tagColor: "text-[#10B981] bg-[#10B981]/15 border-[#10B981]/30",
+        content: "Green Flag active: Real-time order matching in progress across all 17 equities.",
         linkTo: "/trade",
         linkText: "Trading Terminal"
       });
     } else if (raceState?.status === "SAFETY_CAR") {
       items.push({
         id: "paused",
-        tag: "Market Paused",
-        tagColor: "text-amber-400 bg-amber-400/10 border-amber-400/20",
-        content: "Simulation paused by Race Control. Order routing will resume shortly.",
+        tag: "SAFETY CAR",
+        tagColor: "text-[#F59E0B] bg-[#F59E0B]/15 border-[#F59E0B]/30",
+        content: "Track caution active: Order routing temporarily frozen by Race Director.",
         linkTo: "/leaderboard",
         linkText: "Standings"
       });
     } else if (raceState?.status === "CHECKERED_FLAG") {
       items.push({
         id: "concluded",
-        tag: "Session Ended",
-        tagColor: "text-rose-400 bg-rose-400/10 border-rose-400/20",
-        content: "Trading is officially closed. Final podium standings are published.",
+        tag: "CHECKERED FLAG",
+        tagColor: "text-white bg-white/10 border-white/20",
+        content: "Race session concluded: Final podium positions are locked in.",
         linkTo: "/leaderboard",
-        linkText: "Final Leaderboard"
+        linkText: "Final Grid"
       });
     }
 
@@ -70,13 +70,13 @@ export default function CirculatingBanner() {
       const isPositive = topGainer.changePercent > 0;
       items.push({
         id: "top_mover",
-        tag: "Top Mover",
+        tag: "POLE MOVER",
         tagColor: isPositive
-          ? "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"
-          : "text-rose-400 bg-rose-400/10 border-rose-400/20",
-        content: `${topGainer.ticker} (${topGainer.name}) is ₹${topGainer.currentPrice.toFixed(2)} (${isPositive ? "+" : ""}${topGainer.changePercent}%)`,
+          ? "text-[#10B981] bg-[#10B981]/15 border-[#10B981]/30"
+          : "text-[#E10600] bg-[#E10600]/15 border-[#E10600]/30",
+        content: `${topGainer.ticker} (${topGainer.name}) is trading at ₹${topGainer.currentPrice.toFixed(2)} (${isPositive ? "+" : ""}${topGainer.changePercent}%)`,
         linkTo: `/trade?ticker=${topGainer.ticker}`,
-        linkText: "View Stock"
+        linkText: "Trade Scrip"
       });
     }
 
@@ -87,13 +87,13 @@ export default function CirculatingBanner() {
         const isNeg = hasImpact && evt.priceImpactPercent < 0;
         items.push({
           id: `evt_${evt.id || evt.timestamp}`,
-          tag: hasImpact ? `${evt.priceImpactPercent > 0 ? "+" : ""}${evt.priceImpactPercent}% Shock` : "Alert",
+          tag: hasImpact ? `SECTOR SHOCK ${evt.priceImpactPercent > 0 ? "+" : ""}${evt.priceImpactPercent}%` : "ALERT",
           tagColor: isNeg
-            ? "text-rose-400 bg-rose-400/10 border-rose-400/20"
-            : "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
+            ? "text-[#E10600] bg-[#E10600]/15 border-[#E10600]/30"
+            : "text-[#06B6D4] bg-[#06B6D4]/15 border-[#06B6D4]/30",
           content: `${evt.title}: ${evt.description}`,
           linkTo: "/trade",
-          linkText: "Trade"
+          linkText: "Pit Stop"
         });
       });
     }
@@ -102,11 +102,11 @@ export default function CirculatingBanner() {
     if (items.length === 0) {
       items.push({
         id: "default_status",
-        tag: "Market Feed",
-        tagColor: "text-slate-400 bg-slate-400/10 border-slate-400/20",
-        content: "17 motorsport equities across 5 sectors with ₹1,00,000 starting mock capital.",
+        tag: "GRID TELEMETRY",
+        tagColor: "text-[#06B6D4] bg-[#06B6D4]/15 border-[#06B6D4]/30",
+        content: "17 scrips across 5 sectors with ₹1,00,000 mock fuel ready.",
         linkTo: "/companies",
-        linkText: "View Equities"
+        linkText: "View Sectors"
       });
     }
 
@@ -124,11 +124,11 @@ export default function CirculatingBanner() {
   const currentMsg = messages[index % messages.length] || messages[0];
 
   return (
-    <div className="bg-[#0B0F17] border-b border-[#182133] px-4 py-1.5 text-xs">
+    <div className="bg-[#0D1117] border-b border-[#232B3B] px-4 py-1.5 text-xs">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         {/* Message ticker */}
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold uppercase tracking-wider border shrink-0 ${currentMsg.tagColor}`}>
+          <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-black uppercase tracking-wider border shrink-0 ${currentMsg.tagColor}`}>
             {currentMsg.tag}
           </span>
 
@@ -142,14 +142,14 @@ export default function CirculatingBanner() {
                 transition={{ duration: 0.15 }}
                 className="flex items-center gap-2 truncate"
               >
-                <span className="text-slate-300 font-normal truncate text-[11px] sm:text-xs">
+                <span className="text-slate-300 font-medium truncate text-[11px] sm:text-xs">
                   {currentMsg.content}
                 </span>
 
                 {currentMsg.linkTo && (
                   <Link
                     to={currentMsg.linkTo}
-                    className="inline-flex items-center text-[10px] font-medium text-emerald-400 hover:text-emerald-300 shrink-0 gap-0.5"
+                    className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-[#06B6D4] hover:text-white shrink-0 gap-0.5"
                   >
                     <span>{currentMsg.linkText}</span>
                     <ChevronRight className="w-3 h-3" />
@@ -166,8 +166,8 @@ export default function CirculatingBanner() {
             <button
               type="button"
               onClick={() => setIndex((prev) => (prev - 1 + messages.length) % messages.length)}
-              className="p-1 rounded hover:bg-[#141C2B] hover:text-slate-200 transition-colors"
-              aria-label="Previous announcement"
+              className="p-1 rounded hover:bg-[#161B24] hover:text-white transition-colors"
+              aria-label="Previous notice"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
@@ -177,8 +177,8 @@ export default function CirculatingBanner() {
             <button
               type="button"
               onClick={() => setIndex((prev) => (prev + 1) % messages.length)}
-              className="p-1 rounded hover:bg-[#141C2B] hover:text-slate-200 transition-colors"
-              aria-label="Next announcement"
+              className="p-1 rounded hover:bg-[#161B24] hover:text-white transition-colors"
+              aria-label="Next notice"
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>

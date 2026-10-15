@@ -9,7 +9,8 @@ import {
   Menu,
   X,
   User,
-  Clock
+  Clock,
+  Flag
 } from "lucide-react";
 import { useSimulation } from "../context/SimulationContext";
 
@@ -47,67 +48,70 @@ export default function Navbar() {
     navigate("/");
   };
 
+  // User requested exact order: Dashboard, Market, Trade, Leaderboard
   const navLinks = [
+    { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { label: "Market", path: "/companies", icon: TrendingUp },
     { label: "Trade", path: "/trade", icon: Activity },
-    { label: "Leaderboard", path: "/leaderboard", icon: Trophy },
-    ...(currentTeam ? [{ label: "Dashboard", path: "/dashboard", icon: LayoutDashboard }] : [])
+    { label: "Leaderboard", path: "/leaderboard", icon: Trophy }
   ];
 
   const getStatusBadge = () => {
     if (raceState?.status === "GREEN_FLAG") {
       return {
-        label: `Lap ${raceState.currentLap}/5`,
-        color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-        dot: "bg-emerald-400 animate-pulse"
+        label: `LAP ${raceState.currentLap}/5`,
+        color: "text-[#E10600] bg-[#E10600]/10 border-[#E10600]/30",
+        dot: "bg-[#E10600] animate-pulse"
       };
     }
     if (raceState?.status === "SAFETY_CAR") {
       return {
-        label: "Paused",
-        color: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+        label: "SAFETY CAR",
+        color: "text-amber-400 bg-amber-500/10 border-amber-500/30",
         dot: "bg-amber-400"
       };
     }
     if (raceState?.status === "CHECKERED_FLAG") {
       return {
-        label: "Ended",
-        color: "text-rose-400 bg-rose-500/10 border-rose-500/20",
-        dot: "bg-rose-400"
+        label: "CHECKERED",
+        color: "text-slate-300 bg-white/10 border-white/20",
+        dot: "bg-white"
       };
     }
     return {
-      label: "Warmup",
-      color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
-      dot: "bg-cyan-400"
+      label: "GRID WARMUP",
+      color: "text-[#06B6D4] bg-[#06B6D4]/10 border-[#06B6D4]/30",
+      dot: "bg-[#06B6D4]"
     };
   };
 
   const status = getStatusBadge();
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#090D14]/90 backdrop-blur-md border-b border-[#1A2234]">
+    <header className="sticky top-0 z-40 w-full bg-[#0A0D12]/95 backdrop-blur-md border-b border-[#232B3B]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-        {/* Brand */}
+        {/* F1 Brand Lockup */}
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-          <div className="relative w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center bg-[#121826] border border-[#232D42]">
+          <div className="relative w-8 h-8 rounded overflow-hidden flex items-center justify-center bg-[#121720] border border-[#232B3B] group-hover:border-[#E10600] transition-colors">
             <img
               src="/logo_D.png"
-              alt="Logo"
-              className="w-5 h-5 object-contain transition-transform duration-200 group-hover:scale-105"
+              alt="Imprenditore 5.0"
+              className="w-6 h-6 object-contain transition-transform duration-200 group-hover:scale-105"
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold tracking-tight text-white leading-tight">
-              Imprenditore <span className="text-emerald-400 font-mono text-xs font-normal">5.0</span>
-            </span>
-            <span className="text-[10px] text-slate-400 font-medium tracking-wide leading-none">
-              Stock Simulator
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#E10600]">
+                E-Cell RGPV
+              </span>
+            </div>
+            <span className="text-xs sm:text-sm font-black uppercase italic tracking-tight text-white leading-tight">
+              Imprenditore <span className="text-[#E10600]">5.0</span>
             </span>
           </div>
         </Link>
 
-        {/* Center Navigation Links (Desktop) */}
+        {/* Center Navigation in Requested Order: Dashboard, Market, Trade, Leaderboard */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => {
             const Icon = link.icon;
@@ -116,29 +120,29 @@ export default function Navbar() {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
                   active
-                    ? "bg-[#161F30] text-white font-semibold shadow-xs"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-[#121824]"
+                    ? "bg-[#161B24] text-white border border-[#E10600]/40 shadow-xs"
+                    : "text-slate-400 hover:text-white hover:bg-[#121720]"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${active ? "text-emerald-400" : "text-slate-400"}`} />
+                <Icon className={`w-3.5 h-3.5 ${active ? "text-[#E10600]" : "text-slate-400"}`} />
                 <span>{link.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Right Section: Status Pill & Auth / Profile */}
+        {/* Right Section: Telemetry Lap Status & Auth Profile */}
         <div className="flex items-center gap-2.5">
-          {/* Race Status Pill */}
-          <div className={`hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full border text-[11px] font-mono ${status.color}`}>
+          {/* F1 Race Status Pill */}
+          <div className={`hidden sm:flex items-center gap-2 px-2.5 py-1 rounded border text-[11px] font-mono font-bold ${status.color}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
             <span>{status.label}</span>
             {raceState?.lapTimeRemaining > 0 && raceState?.status === "GREEN_FLAG" && (
               <span className="text-slate-400 pl-1 border-l border-white/10 flex items-center gap-1">
-                <Clock className="w-2.5 h-2.5" />
-                {formatTime(raceState.lapTimeRemaining)}
+                <Clock className="w-2.5 h-2.5 text-[#06B6D4]" />
+                <span className="text-white">{formatTime(raceState.lapTimeRemaining)}</span>
               </span>
             )}
           </div>
@@ -148,15 +152,15 @@ export default function Navbar() {
             <div className="flex items-center gap-1.5">
               <Link
                 to="/dashboard"
-                className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#121824] hover:bg-[#182132] border border-[#20293D] text-xs transition-colors"
+                className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#121720] hover:bg-[#1A202C] border border-[#232B3B] hover:border-[#E10600]/50 text-xs transition-colors"
                 title="View Team Cockpit"
               >
-                <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span className="font-semibold text-slate-200 max-w-28 sm:max-w-36 truncate">
+                <div className="w-2 h-2 rounded-full bg-[#E10600]" />
+                <span className="font-bold uppercase tracking-wider text-slate-200 max-w-28 sm:max-w-36 truncate">
                   {currentTeam.teamName}
                 </span>
                 {currentRank && (
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-[#EAB308]/15 text-[#EAB308]">
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-black bg-[#EAB308]/20 text-[#EAB308] border border-[#EAB308]/40">
                     {currentRank}
                   </span>
                 )}
@@ -165,7 +169,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                className="p-1.5 rounded text-slate-400 hover:text-[#FF4D4D] hover:bg-[#E10600]/10 transition-colors border border-transparent hover:border-[#E10600]/30"
                 title="Sign Out"
                 aria-label="Sign Out"
               >
@@ -175,10 +179,10 @@ export default function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition-colors shadow-xs flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded bg-[#E10600] hover:bg-[#C50500] text-white font-black text-xs uppercase tracking-wider transition-colors shadow-xs flex items-center gap-1.5"
             >
               <User className="w-3.5 h-3.5" />
-              <span>Sign In</span>
+              <span>Login</span>
             </Link>
           )}
 
@@ -186,7 +190,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#141B28] transition-colors"
+            className="md:hidden p-1.5 rounded text-slate-400 hover:text-white hover:bg-[#161B24] transition-colors"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -194,9 +198,9 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer (exact order) */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-[#1A2234] bg-[#090D14] px-4 py-3 space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="md:hidden border-t border-[#232B3B] bg-[#0A0D12] px-4 py-3 space-y-1">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const active = isActive(link.path);
@@ -205,10 +209,10 @@ export default function Navbar() {
                 key={link.path}
                 to={link.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium ${
+                className={`flex items-center gap-2.5 px-3 py-2 rounded text-xs font-bold uppercase tracking-wider ${
                   active
-                    ? "bg-[#161F30] text-emerald-400 font-semibold"
-                    : "text-slate-300 hover:bg-[#121824]"
+                    ? "bg-[#161B24] text-[#E10600] border border-[#E10600]/30"
+                    : "text-slate-300 hover:bg-[#121720]"
                 }`}
               >
                 <Icon className="w-4 h-4" />
