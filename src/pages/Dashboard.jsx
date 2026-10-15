@@ -555,7 +555,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="text-2xl font-black text-[#EAB308] font-mono">
-              {teamRank}
+              {currentRank}
             </div>
             <div className="flex items-center gap-1.5 text-[10px] mt-2 font-mono">
               <span className={portfolioStats.totalPnL >= 0 ? "text-[#10B981] font-bold" : "text-[#E10600] font-bold"}>
@@ -933,7 +933,7 @@ export default function Dashboard() {
                 <div className="p-4 rounded-lg bg-[#0A0D12] border border-[#232B3B]">
                   <div className="text-xs font-bold text-slate-400 uppercase mb-1">Current Standing</div>
                   <div className="text-xl font-black text-[#EAB308] font-mono">
-                    {teamRank}
+                    {currentRank}
                   </div>
                   <p className="text-[11px] text-slate-500 mt-1">
                     Your real-time rank among all registered teams on the live grid.
