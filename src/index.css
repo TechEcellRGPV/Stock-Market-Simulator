@@ -7,9 +7,11 @@ body {
   width: 100%;
   min-height: 100%;
   overflow-x: hidden;
-  background-color: #0A0D12;
-  color: #FFFFFF;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #090D14;
+  color: #F8FAFC;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -19,21 +21,21 @@ body {
   flex-direction: column;
 }
 
-/* Custom scrollbars for data tables */
+/* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0A0D12;
+  background: #090D14;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #232B3B;
-  border-radius: 3px;
+  background: #1A2336;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3A465E;
+  background: #25334E;
 }

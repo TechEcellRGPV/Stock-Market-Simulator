@@ -1,22 +1,22 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import {
-  Trophy,
-  Gauge,
-  ShieldAlert,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
   TrendingUp,
+  TrendingDown,
+  Trophy,
+  ShieldCheck,
   Zap,
-  CheckCircle2,
-  Users,
-  MapPin,
+  BarChart3,
   Clock,
-  Wallet
+  Layers,
+  Sparkles,
+  ChevronRight
 } from "lucide-react";
+import Navbar from "../components/Navbar";
 import CirculatingBanner from "../components/CirculatingBanner";
+import MiniSparklineCanvas from "../components/MiniSparklineCanvas";
 import EventCountdown from "../components/EventCountdown";
 import { useSimulation } from "../context/SimulationContext";
 import { useSEO } from "../hooks/useSEO";
@@ -24,363 +24,271 @@ import { useSEO } from "../hooks/useSEO";
 export default function Home() {
   useSEO({
     title: "Formula 1 Stock Market Simulator",
-    description: "Official Stock Market Simulation (Motorsport Edition) presented by E-Cell RGPV for Imprenditore 5.0. Trade 17 scrips across 5 sectors with ₹1,00,000 mock capital."
+    description: "Official Stock Market Simulation presented by E-Cell RGPV for Imprenditore 5.0. Trade 17 scrips across 5 sectors with ₹1,00,000 mock capital."
   });
 
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const { currentTeam, raceState } = useSimulation();
-
+  const { currentTeam, raceState, stocks } = useSimulation();
   const startingCapital = raceState?.defaultStartingCapital || 100000;
 
-  // Exact 4 Official Announcement Slides from the Event Draft
-  const slides = [
-    {
-      id: 1,
-      badge: "RULES & REGULATIONS • SLIDE 1 OF 4",
-      title: "THE RULEBOOK",
-      subtitle: "THE MARKET IS UNPREDICTABLE. THE RULES SHOULDN'T BE.",
-      description:
-        "Before you make your move, understand the simulation, trading process, and official evaluation criteria.",
-      icon: Gauge,
-      accentColor: "#E10600",
-      points: [
-        "Venue: RGPV Conference Hall • Timing: 3:00 PM - 5:30 PM.",
-        "Stock Market Simulation: 5 synchronized competition laps with dynamic sector price events.",
-        "Before you make your move, understand the simulation, trading process and evaluation criteria.",
-        "Follow all operational instructions given by the organizers."
-      ]
-    },
-    {
-      id: 2,
-      badge: "SIMULATION DYNAMICS • SLIDE 2 OF 4",
-      title: "HOW THE SIMULATION WORKS",
-      subtitle: "INVEST SMART. TRADE FAST. WIN BIG.",
-      description:
-        "Your goal is simple: make your capital work and finish with the strongest portfolio.",
-      icon: Zap,
-      accentColor: "#10B981",
-      points: [
-        `Start with ₹${startingCapital.toLocaleString("en-IN")} mock capital and decide how you want to build your portfolio.`,
-        "Read the market, spot opportunities, and decide where to put your money.",
-        "Buy, sell or hold based on your strategy and the situation in the market.",
-        "Make your capital work and finish with the strongest portfolio."
-      ]
-    },
-    {
-      id: 3,
-      badge: "GRID REGULATIONS • SLIDE 3 OF 4",
-      title: "RULES OF THE MARKET",
-      subtitle: "PLAY FAIR. TRADE SMART.",
-      description:
-        "Disciplined execution and fair play are strictly enforced throughout the trading session.",
-      icon: ShieldAlert,
-      accentColor: "#06B6D4",
-      points: [
-        `Start with the allotted ₹${startingCapital.toLocaleString("en-IN")} virtual capital.`,
-        "Make all trades within the given simulation platform.",
-        "Keep an eye on your portfolio while you trade.",
-        "Market updates can change things, so be ready to change your strategy.",
-        "Follow all instructions given by the organisers."
-      ]
-    },
-    {
-      id: 4,
-      badge: "EVALUATION CRITERIA • SLIDE 4 OF 4",
-      title: "THE WINNING FORMULA",
-      subtitle: "RETURNS MATTER. BUT STRATEGY AND EXECUTION MATTER TOO.",
-      description:
-        "Will your strategy take you to the top of the podium? 100 total evaluation points distributed across 3 key pillars.",
-      icon: Trophy,
-      accentColor: "#EAB308",
-      points: [
-        "50% PORTFOLIO VALUE: Net capital growth and final portfolio valuation.",
-        "30% STRATEGY & RISK MANAGEMENT: Sector diversification across 5 distinct motorsport sectors.",
-        "20% DECISION-MAKING & EXECUTION: Disciplined capital deployment, order timing, and speed."
-      ]
-    }
-  ];
-
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  // Curate 6 featured stocks for the live preview
+  const featuredStocks = useMemo(() => {
+    if (!stocks || stocks.length === 0) return [];
+    return stocks.slice(0, 6);
+  }, [stocks]);
 
   return (
-    <div className="min-h-screen bg-[#0A0D12] text-white font-sans selection:bg-[#E10600] selection:text-white">
-      {/* Real-time Circulating Live Update Banner */}
+    <div className="min-h-screen bg-[#090D14] text-white font-sans selection:bg-emerald-500 selection:text-slate-950 flex flex-col">
+      {/* Unified Minimal Header */}
+      <Navbar />
+
+      {/* Sleek Ticker Ribbon */}
       <CirculatingBanner />
 
-      {/* Main Navigation Header */}
-      <header className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between border-b border-[#1A202C]">
-        <Link to="/" className="flex items-center gap-2.5 sm:gap-3 min-w-0 hover:opacity-95 transition-opacity">
-          <img
-            src="/logo_D.png"
-            alt="Imprenditore 5.0"
-            className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded shrink-0"
-          />
-          <div className="min-w-0">
-            <div className="text-[9px] font-black tracking-widest text-[#E10600] uppercase truncate">
-              E-Cell RGPV
-            </div>
-            <h1 className="text-xs sm:text-base font-black tracking-wider uppercase text-white leading-none mt-0.5 truncate">
-              Imprenditore 5.0
-            </h1>
-          </div>
-        </Link>
-
-        <nav className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          <Link
-            to="/companies"
-            className="hidden md:inline-flex px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#161B24] transition-colors border border-transparent hover:border-[#232B3B]"
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 space-y-12 sm:space-y-16">
+        {/* Minimal Hero Section */}
+        <section className="text-center max-w-3xl mx-auto space-y-5">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#121824] border border-[#202B3E] text-slate-300 text-xs font-mono"
           >
-            Companies
-          </Link>
-          <Link
-            to="/leaderboard"
-            className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-[#EAB308] hover:bg-[#EAB308]/10 transition-colors border border-[#EAB308]/30 flex items-center gap-1.5 shrink-0"
-            title="Competition Leaderboard"
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>E-Cell RGPV • Imprenditore 5.0</span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.05 }}
+            className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1]"
           >
-            <Trophy className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Ranks</span>
-          </Link>
-          {currentTeam ? (
-            <Link
-              to="/dashboard"
-              className="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-black uppercase tracking-wider bg-[#E10600] hover:bg-[#C50500] text-white transition-colors flex items-center gap-1.5 shrink-0"
-            >
-              <span className="truncate max-w-24 sm:max-w-none">{currentTeam.teamName}</span>
-              <ArrowRight className="w-3.5 h-3.5 shrink-0" />
-            </Link>
-          ) : !raceState.isRegistrationOpen ? (
-            <a
-              href="#countdown"
-              className="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-black uppercase tracking-wider bg-[#161B24] hover:bg-[#1D232E] text-[#FF8080] border border-[#E10600]/30 transition-colors flex items-center gap-1.5 shrink-0"
-            >
-              <Users className="w-3.5 h-3.5 shrink-0" />
-              <span>Registration Locked</span>
-            </a>
-          ) : (
-            <Link
-              to="/login"
-              className="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-black uppercase tracking-wider bg-[#E10600] hover:bg-[#C50500] text-white transition-colors flex items-center gap-1.5 shrink-0"
-            >
-              <Users className="w-3.5 h-3.5 shrink-0" />
-              <span>Team Login</span>
-            </Link>
-          )}
-        </nav>
-      </header>
+            High-Speed <br />
+            <span className="bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
+              Stock Market Simulator
+            </span>
+          </motion.h1>
 
-      {/* Hero Section */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-16">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          {/* Official Institutional Presenter Lockup */}
-          <div className="inline-flex flex-wrap items-center justify-center gap-2.5 sm:gap-5 max-w-full px-3 sm:px-4 py-2 rounded-2xl bg-[#121720] border border-[#232B3B] mb-6 shadow-md">
-            <div className="flex items-center gap-2">
-              <img
-                src="/rgpv-logo.jpeg"
-                alt="RGPV Bhopal"
-                className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-full bg-white p-0.5"
-              />
-              <span className="hidden sm:inline text-[10px] font-bold tracking-wider text-slate-300 uppercase">
-                RGPV Bhopal
-              </span>
-            </div>
-            <div className="w-px h-5 bg-[#232B3B]" />
-            <div className="flex items-center gap-2">
-              <img
-                src="/logo.png"
-                alt="E-Cell RGPV"
-                className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
-              />
-              <span className="text-[10px] sm:text-xs font-black tracking-wider text-white uppercase">
-                E-Cell RGPV
-              </span>
-            </div>
-            <div className="w-px h-5 bg-[#232B3B]" />
-            <div className="flex items-center gap-2">
-              <img
-                src="/logo_D.png"
-                alt="Imprenditore 5.0"
-                className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
-              />
-              <span className="text-[10px] sm:text-xs font-black tracking-wider text-[#E10600] uppercase">
-                Imprenditore 5.0
-              </span>
-            </div>
-          </div>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.1 }}
+            className="text-sm sm:text-base text-slate-400 max-w-xl mx-auto leading-relaxed"
+          >
+            Deploy ₹{startingCapital.toLocaleString("en-IN")} mock capital across 17 equities and 5 sectors. Formulate your strategy, execute instant trades, and top the leaderboard.
+          </motion.p>
 
-          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black uppercase italic tracking-tight text-white leading-tight mb-4">
-            THE MARKET IS LIVE. <br />
-            <span className="text-[#E10600]">WHAT'S YOUR MOVE?</span>
-          </h2>
-
-          <p className="text-sm sm:text-base text-slate-300 font-bold max-w-xl mx-auto mb-5 leading-relaxed tracking-wide">
-            ₹{startingCapital.toLocaleString("en-IN")} MOCK CAPITAL • INVEST SMART. TRADE FAST. WIN BIG.
-          </p>
-
-          {/* Official Venue & Timing Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#121720] border border-[#232B3B] text-xs font-mono font-bold text-slate-200">
-              <MapPin className="w-3.5 h-3.5 text-[#E10600]" />
-              <span>Venue: RGPV Conference Hall</span>
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#121720] border border-[#232B3B] text-xs font-mono font-bold text-slate-200">
-              <Clock className="w-3.5 h-3.5 text-[#EAB308]" />
-              <span>Timing: 3:00 PM - 5:30 PM</span>
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#121720] border border-[#232B3B] text-xs font-mono font-bold text-slate-200">
-              <Wallet className="w-3.5 h-3.5 text-[#10B981]" />
-              <span>Mock Capital: ₹{startingCapital.toLocaleString("en-IN")}</span>
-            </div>
-          </div>
-
-          {/* Action Trigger Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            {!raceState.isRegistrationOpen ? (
-              <a
-                href="#countdown"
-                className="w-full sm:w-auto px-7 py-3.5 rounded-lg bg-[#161B24] hover:bg-[#1D232E] text-[#FF8080] font-black text-xs uppercase tracking-wider transition-colors border border-[#E10600]/40 flex items-center justify-center gap-2 shadow-sm"
+          {/* Action Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.15 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2"
+          >
+            {currentTeam ? (
+              <Link
+                to="/dashboard"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-500/10 flex items-center justify-center gap-2"
               >
-                <span>Registration Opens on Event Day</span>
+                <span>Enter Cockpit ({currentTeam.teamName})</span>
                 <ArrowRight className="w-4 h-4" />
-              </a>
+              </Link>
             ) : (
               <Link
                 to="/login"
-                className="w-full sm:w-auto px-7 py-3.5 rounded-lg bg-[#E10600] hover:bg-[#C50500] text-white font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-sm"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-500/10 flex items-center justify-center gap-2"
               >
-                <span>Join As Team</span>
+                <span>Team Login &amp; Register</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             )}
+
             <Link
               to="/companies"
-              className="w-full sm:w-auto px-7 py-3.5 rounded-lg bg-[#161B24] hover:bg-[#1D232E] text-white font-bold text-xs uppercase tracking-wider transition-colors border border-[#232B3B] flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#121824] hover:bg-[#182132] text-slate-200 font-semibold text-xs uppercase tracking-wider transition-all border border-[#20293D] flex items-center justify-center gap-2"
             >
-              <TrendingUp className="w-4 h-4 text-[#10B981]" />
-              <span>Browse Stocks &amp; Sectors</span>
+              <span>Explore Market</span>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </Link>
+
+            <Link
+              to="/leaderboard"
+              className="w-full sm:w-auto px-5 py-3 rounded-xl bg-transparent hover:bg-[#121824] text-amber-400 font-semibold text-xs uppercase tracking-wider transition-all border border-amber-500/20 flex items-center justify-center gap-2"
+            >
+              <Trophy className="w-4 h-4" />
+              <span>Standings</span>
+            </Link>
+          </motion.div>
+        </section>
+
+        {/* Minimal Stats Ribbon */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="p-4 rounded-xl bg-[#0D121D] border border-[#1C263B] text-center">
+            <div className="text-xl sm:text-2xl font-mono font-bold text-white">
+              ₹{startingCapital.toLocaleString("en-IN")}
+            </div>
+            <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">
+              Virtual Capital
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-[#0D121D] border border-[#1C263B] text-center">
+            <div className="text-xl sm:text-2xl font-mono font-bold text-emerald-400">
+              17
+            </div>
+            <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">
+              Scrip Equities
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-[#0D121D] border border-[#1C263B] text-center">
+            <div className="text-xl sm:text-2xl font-mono font-bold text-cyan-400">
+              5
+            </div>
+            <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">
+              Market Sectors
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-[#0D121D] border border-[#1C263B] text-center">
+            <div className="text-xl sm:text-2xl font-mono font-bold text-amber-400">
+              5
+            </div>
+            <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">
+              Competition Rounds
+            </div>
+          </div>
+        </section>
+
+        {/* Live Market Snapshot */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-white tracking-tight">Market Snapshot</h2>
+              <p className="text-xs text-slate-400">Live prices updated in real-time</p>
+            </div>
+            <Link
+              to="/companies"
+              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors"
+            >
+              <span>View All 17 Equities</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {/* Official Flag-Off Countdown Banner */}
-          <div id="countdown" className="mt-8 max-w-xl mx-auto scroll-mt-20">
-            <EventCountdown />
-          </div>
-        </div>
-
-        {/* 4-Slide Official Event Briefing Carousel */}
-        <section className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-3 px-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#E10600]" />
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
-                Official Event Briefing
-              </h3>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={prevSlide}
-                className="p-1.5 rounded bg-[#161B24] hover:bg-[#232B3B] text-slate-300 hover:text-white border border-[#232B3B] transition-colors"
-                aria-label="Previous Slide"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={nextSlide}
-                className="p-1.5 rounded bg-[#161B24] hover:bg-[#232B3B] text-slate-300 hover:text-white border border-[#232B3B] transition-colors"
-                aria-label="Next Slide"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-[#121720] rounded-xl border border-[#232B3B] p-6 sm:p-8">
-            {/* Slide Progress Indicator */}
-            <div className="flex gap-1.5 mb-6">
-              {slides.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentSlide(idx)}
-                  className={`h-1 flex-1 rounded-full transition-colors ${idx === currentSlide ? "bg-[#E10600]" : "bg-[#232B3B]"
-                    }`}
-                  aria-label={`Slide ${idx + 1}`}
-                />
-              ))}
-            </div>
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentSlide}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.18 }}
-                className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center"
-              >
-                <div className="md:col-span-8 space-y-3">
-                  <div className="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#1A202C] text-slate-300 border border-[#232B3B]">
-                    {slides[currentSlide].badge}
-                  </div>
-                  <h4 className="text-xl sm:text-2xl font-black uppercase italic tracking-wide text-white">
-                    {slides[currentSlide].title}
-                  </h4>
-                  <p className="text-xs sm:text-sm font-bold text-[#EAB308]">
-                    {slides[currentSlide].subtitle}
-                  </p>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    {slides[currentSlide].description}
-                  </p>
-
-                  <div className="space-y-2 pt-2">
-                    {slides[currentSlide].points.map((pt, i) => (
-                      <div key={i} className="flex items-start gap-2.5">
-                        <CheckCircle2
-                          className="w-3.5 h-3.5 shrink-0 mt-0.5"
-                          style={{ color: slides[currentSlide].accentColor }}
-                        />
-                        <span className="text-xs text-slate-200 font-medium leading-normal">
-                          {pt}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {featuredStocks.map((stock) => {
+              const isPositive = (stock.changePercent || 0) >= 0;
+              return (
+                <Link
+                  key={stock.ticker}
+                  to={`/trade?ticker=${stock.ticker}`}
+                  className="p-4 rounded-xl bg-[#0D121D] border border-[#1A2336] hover:border-[#2A3854] transition-all group flex flex-col justify-between"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono font-bold text-xs text-white">
+                          {stock.ticker}
+                        </span>
+                        <span className="text-[10px] text-slate-400 px-1.5 py-0.2 rounded bg-[#141B29] border border-[#1F293D]">
+                          {stock.sector.split("&")[0].trim()}
                         </span>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      <div className="text-xs text-slate-300 font-medium truncate mt-1">
+                        {stock.name}
+                      </div>
+                    </div>
 
-                <div className="md:col-span-4 flex justify-center">
-                  <div
-                    className="w-28 h-28 sm:w-36 sm:h-36 rounded-xl flex items-center justify-center border bg-[#161B24]"
-                    style={{ borderColor: `${slides[currentSlide].accentColor}50` }}
-                  >
-                    {(() => {
-                      const IconComponent = slides[currentSlide].icon;
-                      return (
-                        <IconComponent
-                          className="w-12 h-12 sm:w-16 sm:h-16"
-                          style={{ color: slides[currentSlide].accentColor }}
-                        />
-                      );
-                    })()}
+                    <div className="text-right">
+                      <div className="font-mono font-bold text-sm text-white">
+                        ₹{stock.currentPrice.toFixed(2)}
+                      </div>
+                      <div
+                        className={`inline-flex items-center gap-0.5 text-[11px] font-mono font-semibold ${
+                          isPositive ? "text-emerald-400" : "text-rose-400"
+                        }`}
+                      >
+                        {isPositive ? "+" : ""}{stock.changePercent}%
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+
+                  <div className="mt-3 pt-2.5 border-t border-[#161F30] flex items-center justify-between">
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Day Low: ₹{stock.dayLow?.toFixed(1) || stock.currentPrice.toFixed(1)}
+                    </span>
+                    <MiniSparklineCanvas
+                      sparkline={stock.sparkline && stock.sparkline.length > 1 ? stock.sparkline : [stock.openingPrice, stock.currentPrice]}
+                      isPositive={isPositive}
+                      width={80}
+                      height={24}
+                    />
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      High: ₹{stock.dayHigh?.toFixed(1) || stock.currentPrice.toFixed(1)}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
+
+        {/* How It Works: Clean 3-Card Grid */}
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-base font-bold text-white tracking-tight">How It Works</h2>
+            <p className="text-xs text-slate-400">Master the simulation rules and build your edge</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-5 rounded-xl bg-[#0D121D] border border-[#1A2336] space-y-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                <BarChart3 className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm font-bold text-white">1. Capital &amp; Strategy</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Receive ₹1,00,000 initial virtual cash. Diversify across 5 sectors to maximize strategy score and hedge market shocks.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl bg-[#0D121D] border border-[#1A2336] space-y-2.5">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
+                <Zap className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm font-bold text-white">2. Real-Time Order Execution</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                React instantly to sector shocks and price swings. Submit market orders with atomic precision during 5 active laps.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl bg-[#0D121D] border border-[#1A2336] space-y-2.5">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
+                <Trophy className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm font-bold text-white">3. Net Profit Ranking</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Leaderboard positions are strictly determined by net profit generated over initial capital. Finish on the podium.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Optional Event Countdown (compact) */}
+        {raceState?.targetEventDate && (
+          <section className="max-w-xl mx-auto">
+            <EventCountdown />
+          </section>
+        )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-[#1A202C] bg-[#0A0D12] px-4 sm:px-6 py-8 text-center text-xs text-slate-500">
-        <div className="flex items-center justify-center gap-6 mb-4 opacity-80 hover:opacity-100 transition-opacity">
-          <img src="/rgpv-logo.jpeg" alt="RGPV Bhopal" className="h-7 w-7 object-contain rounded-full bg-white p-0.5" />
-          <img src="/logo.png" alt="E-Cell RGPV" className="h-7 object-contain" />
-          <img src="/logo_D.png" alt="Imprenditore 5.0" className="h-7 object-contain" />
+      {/* Minimal Clean Footer */}
+      <footer className="mt-auto border-t border-[#141B28] bg-[#070A0F] py-6 px-4 text-center">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-slate-300">Imprenditore 5.0</span>
+            <span>•</span>
+            <span>E-Cell RGPV</span>
+          </div>
+          <div>Motorsport Edition Trading Simulator</div>
         </div>
-        <p className="font-medium text-slate-400">
-          E-Cell RGPV : Imprenditore 5.0 : Stock Market Simulation : RGPV Conference Hall
-        </p>
-        <p className="text-[11px] text-slate-600 mt-1">
-          Motorsport Edition Trading Simulator for Rajiv Gandhi Proudyogiki Vishwavidyalaya
-        </p>
       </footer>
     </div>
   );

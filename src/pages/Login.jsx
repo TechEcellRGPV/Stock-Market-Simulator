@@ -5,14 +5,13 @@ import {
   LogIn,
   AlertCircle,
   CheckCircle,
-  Flag,
+  Shield,
+  Radio,
   Lock,
   Clock,
-  Shield,
-  Users,
-  UserCheck,
-  Radio
+  UserPlus
 } from "lucide-react";
+import Navbar from "../components/Navbar";
 import { useSimulation } from "../context/SimulationContext";
 import { useSEO } from "../hooks/useSEO";
 
@@ -34,14 +33,6 @@ const FALLBACK_15_GRID = [
   { teamCode: "KOE-15", teamName: "Koenigsegg Racing Dynamics", defaultPin: "1015" }
 ];
 
-/**
- * @file Login.jsx
- * @description Paddock Access & Authentication Gate for Imprenditore 5.0.
- * Enforces:
- * 1. 15 Pre-decided Motorsport Teams Grid.
- * 2. Exactly 3 Members per Team: Leader, Strategist, Telemetry Analyst.
- * 3. Role-Based Access: Team Leader (exclusive bidding privileges, 1 active login session) vs Team Member (spectator view-only).
- */
 export default function Login() {
   useSEO({
     title: "Team Login & Registration",
@@ -56,7 +47,6 @@ export default function Login() {
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Available teams list (combining convex teams or fallback canonical list)
   const gridTeams = useMemo(() => {
     if (Array.isArray(teams) && teams.length > 0) {
       return teams.slice(0, 15);
@@ -64,7 +54,6 @@ export default function Login() {
     return FALLBACK_15_GRID;
   }, [teams]);
 
-  // Login Form State
   const [loginForm, setLoginForm] = useState({
     teamCode: "RBR-01",
     teamPin: "",
@@ -72,7 +61,6 @@ export default function Login() {
     role: "LEADER" // "LEADER" | "MEMBER"
   });
 
-  // 3-Member Registration Form State
   const [registerForm, setRegisterForm] = useState({
     teamCode: "RBR-01",
     teamPin: "",
@@ -81,17 +69,13 @@ export default function Login() {
     member3: ""
   });
 
-  const selectedLoginTeam = useMemo(() => {
-    return gridTeams.find((t) => t.teamCode === loginForm.teamCode) || gridTeams[0];
-  }, [gridTeams, loginForm.teamCode]);
-
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
     if (!loginForm.teamPin || loginForm.teamPin.trim().length !== 4) {
-      setError("Please enter a valid 4-digit team security PIN.");
+      setError("Please enter a valid 4-digit PIN.");
       return;
     }
     if (!loginForm.memberName || !loginForm.memberName.trim()) {
@@ -108,13 +92,12 @@ export default function Login() {
         role: loginForm.role
       });
 
-      const roleLabel = loginForm.role === "LEADER" ? "Team Leader (Can Trade & Bid)" : "Team Member (View Only)";
-      setSuccess(`Connected to ${team.teamName} as ${roleLabel}! Entering dashboard...`);
+      setSuccess(`Authenticated as ${team.teamName}! Redirecting...`);
       setTimeout(() => {
         navigate("/dashboard");
-      }, 700);
+      }, 500);
     } catch (err) {
-      setError(err?.message || "Failed to authenticate team.");
+      setError(err?.message || "Failed to authenticate.");
     } finally {
       setIsSubmitting(false);
     }
@@ -126,7 +109,7 @@ export default function Login() {
     setSuccess("");
 
     if (raceState.isRegistrationOpen === false) {
-      setError("Team Registration is currently locked by Race Control. Registration will open on event day.");
+      setError("Team Registration is currently locked by Race Control.");
       return;
     }
 
@@ -136,7 +119,7 @@ export default function Login() {
     }
 
     if (!registerForm.leaderName.trim() || !registerForm.member2.trim() || !registerForm.member3.trim()) {
-      setError("Each team requires exactly 3 distinct members: Team Leader, Member 2, and Member 3.");
+      setError("Each team requires 3 members: Team Leader, Member 2, and Member 3.");
       return;
     }
 
@@ -150,357 +133,277 @@ export default function Login() {
         member3: registerForm.member3
       });
 
-      setSuccess(`Team ${team.teamName} [${team.teamCode}] 3-member roster confirmed! Logged in as Team Leader.`);
+      setSuccess(`Team ${team.teamName} confirmed! Redirecting...`);
       setTimeout(() => {
         navigate("/dashboard");
-      }, 900);
+      }, 600);
     } catch (err) {
-      setError(err?.message || "Failed to register team roster.");
+      setError(err?.message || "Failed to register team.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0D12] text-white flex flex-col justify-center items-center px-4 sm:px-6 py-10 font-sans">
-      {/* Header Link and Logos */}
-      <div className="mb-6 text-center max-w-md">
-        <div className="flex items-center justify-center gap-3 mb-3">
-          <img src="/rgpv-logo.jpeg" alt="RGPV Bhopal" className="h-8 w-8 object-contain rounded-full bg-white p-0.5" />
-          <img src="/logo.png" alt="E-Cell RGPV" className="h-8 object-contain" />
-          <img src="/logo_D.png" alt="Imprenditore 5.0" className="h-8 object-contain" />
-        </div>
-        <Link to="/" className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-[#E10600] hover:text-[#FF4D4D] transition-colors">
-          <Flag className="w-3.5 h-3.5" />
-          <span>E-Cell RGPV : Imprenditore 5.0</span>
-        </Link>
-        <h2 className="text-2xl sm:text-3xl font-black uppercase italic tracking-tight text-white mt-1">
-          Team Login &amp; Registration
-        </h2>
-        <p className="text-xs text-slate-400 font-medium mt-1">
-          15 Teams : Exactly 3 Members per Team
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#090D14] text-white font-sans selection:bg-emerald-500 selection:text-slate-950 flex flex-col justify-between">
+      <Navbar />
 
-      {/* Main Login / Roster Box */}
-      <div className="w-full max-w-md bg-[#121720] rounded-xl border border-[#232B3B] p-5 sm:p-7 shadow-sm">
-        {/* Mode Switch Tabs */}
-        <div className="grid grid-cols-2 gap-1 bg-[#0A0D12] p-1 rounded-lg border border-[#1A202C] mb-5">
-          <button
-            type="button"
-            onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
-            className={`py-2 rounded text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
-              mode === "login"
-                ? "bg-[#10B981] text-slate-950 font-black shadow-sm"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <LogIn className="w-3.5 h-3.5" />
-            <span>Team Login</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode("register"); setError(""); setSuccess(""); }}
-            className={`py-2 rounded text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
-              mode === "register"
-                ? "bg-[#E10600] text-white shadow-sm"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Register 3 Members</span>
-          </button>
-        </div>
-
-        {/* Error / Success Alerts */}
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-[#E10600]/10 border border-[#E10600]/30 text-xs text-[#FF8080] flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-[#E10600]" />
-            <span>{error}</span>
+      <main className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="max-w-md w-full bg-[#0D121D] rounded-2xl border border-[#1A2336] p-6 sm:p-8 space-y-6 shadow-xl">
+          {/* Header */}
+          <div className="text-center space-y-1">
+            <h1 className="text-xl font-bold text-white tracking-tight">
+              {mode === "login" ? "Team Sign In" : "Register Team Roster"}
+            </h1>
+            <p className="text-xs text-slate-400">
+              {mode === "login"
+                ? "Enter your team code and 4-digit PIN to access cockpit"
+                : "Register exactly 3 team members to secure your grid slot"}
+            </p>
           </div>
-        )}
 
-        {success && (
-          <div className="mb-4 p-3 rounded-lg bg-[#10B981]/10 border border-[#10B981]/30 text-xs text-[#10B981] flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 shrink-0 text-[#10B981]" />
-            <span>{success}</span>
-          </div>
-        )}
-
-        {/* Tab 1: Team Login with Role Select */}
-        {mode === "login" && (
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            {/* Team Grid Selector */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                Select Your Team (1 of 15) *
-              </label>
-              <select
-                value={loginForm.teamCode}
-                onChange={(e) => setLoginForm({ ...loginForm, teamCode: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#10B981] text-xs text-white outline-none font-medium"
-              >
-                {gridTeams.map((team) => (
-                  <option key={team.teamCode} value={team.teamCode} className="bg-[#121720] text-white">
-                    {team.teamCode} : {team.teamName}
-                  </option>
-                ))}
-              </select>
-              {selectedLoginTeam && (
-                <div className="mt-1 text-[11px] text-slate-400 font-mono">
-                  Assigned Team: <span className="text-[#10B981] font-bold">{selectedLoginTeam.teamName}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Role Selection Toggle */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                Login Role *
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setLoginForm({ ...loginForm, role: "LEADER" })}
-                  className={`p-2.5 rounded-lg border text-left transition-all ${
-                    loginForm.role === "LEADER"
-                      ? "bg-[#E10600]/15 border-[#E10600] text-white"
-                      : "bg-[#0A0D12] border-[#232B3B] text-slate-400 hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 mb-1 font-bold text-xs uppercase text-[#FF4D4D]">
-                    <Shield className="w-3.5 h-3.5" />
-                    <span>Team Leader</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400 leading-tight">
-                    Can Trade &amp; Bid (Only 1 active login per team)
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setLoginForm({ ...loginForm, role: "MEMBER" })}
-                  className={`p-2.5 rounded-lg border text-left transition-all ${
-                    loginForm.role === "MEMBER"
-                      ? "bg-[#10B981]/15 border-[#10B981] text-white"
-                      : "bg-[#0A0D12] border-[#232B3B] text-slate-400 hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 mb-1 font-bold text-xs uppercase text-[#10B981]">
-                    <Radio className="w-3.5 h-3.5" />
-                    <span>Team Member</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400 leading-tight">
-                    View Only (Portfolio, charts &amp; leaderboard)
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* Member Name */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                {loginForm.role === "LEADER" ? "Team Leader Name *" : "Team Member Name *"}
-              </label>
-              <input
-                type="text"
-                required
-                placeholder={loginForm.role === "LEADER" ? "Enter Team Leader name" : "Enter your member name"}
-                value={loginForm.memberName}
-                onChange={(e) => setLoginForm({ ...loginForm, memberName: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#10B981] text-xs text-white placeholder:text-slate-600 outline-none"
-              />
-            </div>
-
-            {/* 4-Digit PIN */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                4-Digit Team Security PIN *
-              </label>
-              <input
-                type="password"
-                maxLength={4}
-                required
-                placeholder="Enter 4-digit PIN"
-                value={loginForm.teamPin}
-                onChange={(e) => setLoginForm({ ...loginForm, teamPin: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#10B981] text-xs text-white placeholder:text-slate-600 outline-none tracking-widest font-mono"
-              />
-            </div>
-
-            <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] text-[11px] text-slate-400">
-              {loginForm.role === "LEADER" ? (
-                <span>
-                  <strong className="text-[#FF4D4D] font-bold">Leader Access:</strong> Only the Team Leader can submit market orders and bids. Only 1 active leader device session is allowed.
-                </span>
-              ) : (
-                <span>
-                  <strong className="text-[#10B981] font-bold">View Only Mode:</strong> Teammates have real-time live access to portfolio valuation, charts, order history, and competition leaderboard.
-                </span>
-              )}
-            </div>
-
+          {/* Mode Switcher */}
+          <div className="grid grid-cols-2 p-1 rounded-xl bg-[#090D14] border border-[#1A2336] gap-1">
             <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`w-full py-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-                isSubmitting
-                  ? "bg-[#1A202C] text-slate-500 cursor-not-allowed"
-                  : loginForm.role === "LEADER"
-                    ? "bg-[#E10600] hover:bg-[#C50500] text-white"
-                    : "bg-[#10B981] hover:bg-[#059669] text-slate-950 font-black"
+              type="button"
+              onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
+              className={`py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                mode === "login"
+                  ? "bg-[#161F30] text-emerald-400 shadow-xs"
+                  : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <span>{isSubmitting ? "Connecting..." : loginForm.role === "LEADER" ? "Enter Dashboard as Leader" : "Enter Dashboard as Member"}</span>
-              <ArrowRight className="w-4 h-4" />
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In</span>
             </button>
-          </form>
-        )}
+            <button
+              type="button"
+              onClick={() => { setMode("register"); setError(""); setSuccess(""); }}
+              className={`py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                mode === "register"
+                  ? "bg-[#161F30] text-emerald-400 shadow-xs"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Register</span>
+            </button>
+          </div>
 
-        {/* Tab 2: Register Team Roster (Strictly 3 Members) */}
-        {mode === "register" && (
-          !raceState.isRegistrationOpen ? (
-            <div className="py-4 text-center space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-[#E10600]/15 text-[#E10600] flex items-center justify-center mx-auto border border-[#E10600]/30">
-                <Lock className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-black uppercase italic text-white">
-                  Registration Locked
-                </h3>
-                <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">
-                  Team roster registration is currently locked by Race Control. Registration will open on event day.
-                </p>
-              </div>
-
-              {raceState.scheduledStartTime && (
-                <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#232B3B] text-[11px] text-[#EAB308] font-medium flex items-center justify-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 shrink-0" />
-                  <span>Starts: {raceState.scheduledStartTime}</span>
-                </div>
-              )}
-
-              <Link
-                to="/"
-                className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-[#161B24] hover:bg-[#1D232E] text-slate-200 text-xs font-bold uppercase tracking-wider border border-[#232B3B] transition-colors"
-              >
-                <span>View Event Countdown On Home</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+          {/* Feedback Alerts */}
+          {error && (
+            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
             </div>
-          ) : (
-            <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-              {/* Select Allocated Grid Slot */}
+          )}
+          {success && (
+            <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 shrink-0" />
+              <span>{success}</span>
+            </div>
+          )}
+
+          {/* Tab 1: Login Form */}
+          {mode === "login" && (
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                  Select Team (1 of 15) *
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                  Team
                 </label>
                 <select
-                  value={registerForm.teamCode}
-                  onChange={(e) => setRegisterForm({ ...registerForm, teamCode: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#E10600] text-xs text-white outline-none font-medium"
+                  value={loginForm.teamCode}
+                  onChange={(e) => setLoginForm({ ...loginForm, teamCode: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white outline-none"
                 >
                   {gridTeams.map((team) => (
-                    <option key={team.teamCode} value={team.teamCode} className="bg-[#121720] text-white">
-                      {team.teamCode} : {team.teamName}
+                    <option key={team.teamCode} value={team.teamCode} className="bg-[#0D121D] text-white">
+                      {team.teamCode} — {team.teamName}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Set 4-digit PIN */}
+              {/* Role Toggle */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                  Set 4-Digit Security PIN *
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                  Role
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setLoginForm({ ...loginForm, role: "LEADER" })}
+                    className={`p-2.5 rounded-lg border text-left transition-all ${
+                      loginForm.role === "LEADER"
+                        ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
+                        : "bg-[#090D14] border-[#1A2336] text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-xs">
+                      <Shield className="w-3.5 h-3.5" />
+                      <span>Leader</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Executes trades</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLoginForm({ ...loginForm, role: "MEMBER" })}
+                    className={`p-2.5 rounded-lg border text-left transition-all ${
+                      loginForm.role === "MEMBER"
+                        ? "bg-cyan-500/10 border-cyan-500/40 text-cyan-400"
+                        : "bg-[#090D14] border-[#1A2336] text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-xs">
+                      <Radio className="w-3.5 h-3.5" />
+                      <span>Member</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">View-only telemetry</div>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                  Your Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Alex Smith"
+                  value={loginForm.memberName}
+                  onChange={(e) => setLoginForm({ ...loginForm, memberName: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-400 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                  4-Digit Security PIN
                 </label>
                 <input
                   type="password"
                   maxLength={4}
                   required
-                  placeholder="e.g. 1001"
-                  value={registerForm.teamPin}
-                  onChange={(e) => setRegisterForm({ ...registerForm, teamPin: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#E10600] text-xs text-white placeholder:text-slate-600 outline-none tracking-widest font-mono"
+                  placeholder="••••"
+                  value={loginForm.teamPin}
+                  onChange={(e) => setLoginForm({ ...loginForm, teamPin: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-400 outline-none font-mono tracking-widest"
                 />
-              </div>
-
-              {/* Exact 3 Members Section */}
-              <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] space-y-3">
-                <div className="flex items-center gap-1.5 text-xs font-bold uppercase text-slate-300">
-                  <UserCheck className="w-4 h-4 text-[#E10600]" />
-                  <span>Mandatory 3-Member Roster</span>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Member 1: Team Leader (Can Trade &amp; Bid) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Full Name (Team Leader)"
-                    value={registerForm.leaderName}
-                    onChange={(e) => setRegisterForm({ ...registerForm, leaderName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#121720] border border-[#232B3B] focus:border-[#E10600] text-xs text-white placeholder:text-slate-600 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Member 2: Team Member (View Only) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Full Name (Member 2)"
-                    value={registerForm.member2}
-                    onChange={(e) => setRegisterForm({ ...registerForm, member2: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#121720] border border-[#232B3B] focus:border-[#E10600] text-xs text-white placeholder:text-slate-600 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Member 3: Team Member (View Only) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Full Name (Member 3)"
-                    value={registerForm.member3}
-                    onChange={(e) => setRegisterForm({ ...registerForm, member3: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#121720] border border-[#232B3B] focus:border-[#E10600] text-xs text-white placeholder:text-slate-600 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-[#0A0D12] border border-[#1A202C] text-[11px] text-slate-400">
-                Starting capital of <strong className="text-[#10B981]">₹{(raceState.defaultStartingCapital || 100000).toLocaleString("en-IN")}</strong> is allocated to this team slot upon registration.
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full py-3 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-                  isSubmitting
-                    ? "bg-[#1A202C] text-slate-500 cursor-not-allowed"
-                    : "bg-[#E10600] hover:bg-[#C50500] text-white"
-                }`}
+                className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs"
               >
-                <span>{isSubmitting ? "Confirming Roster..." : "Confirm 3-Member Roster"}</span>
+                <span>{isSubmitting ? "Connecting..." : "Sign In to Cockpit"}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
-          )
-        )}
-      </div>
+          )}
 
-      {/* Return to Home link */}
-      <div className="mt-6 text-center">
-        <Link to="/" className="text-xs text-slate-400 hover:text-slate-200 transition-colors uppercase tracking-wider font-bold">
-          Back to Event Home
+          {/* Tab 2: Register Form */}
+          {mode === "register" && (
+            !raceState.isRegistrationOpen ? (
+              <div className="py-6 text-center space-y-3">
+                <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto border border-rose-500/20">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Registration Locked</h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Registration will open prior to competition flag-off
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                    Select Available Team
+                  </label>
+                  <select
+                    value={registerForm.teamCode}
+                    onChange={(e) => setRegisterForm({ ...registerForm, teamCode: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white outline-none"
+                  >
+                    {gridTeams.map((team) => (
+                      <option key={team.teamCode} value={team.teamCode} className="bg-[#0D121D] text-white">
+                        {team.teamCode} — {team.teamName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                    Set 4-Digit PIN
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={4}
+                    required
+                    placeholder="e.g. 1001"
+                    value={registerForm.teamPin}
+                    onChange={(e) => setRegisterForm({ ...registerForm, teamPin: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-400 outline-none font-mono tracking-widest"
+                  />
+                </div>
+
+                <div className="space-y-2 pt-1 border-t border-[#1A2336]">
+                  <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    3-Member Roster
+                  </span>
+
+                  <input
+                    type="text"
+                    required
+                    placeholder="Team Leader Name"
+                    value={registerForm.leaderName}
+                    onChange={(e) => setRegisterForm({ ...registerForm, leaderName: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-400 outline-none"
+                  />
+
+                  <input
+                    type="text"
+                    required
+                    placeholder="Member 2 Name"
+                    value={registerForm.member2}
+                    onChange={(e) => setRegisterForm({ ...registerForm, member2: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-400 outline-none"
+                  />
+
+                  <input
+                    type="text"
+                    required
+                    placeholder="Member 3 Name"
+                    value={registerForm.member3}
+                    onChange={(e) => setRegisterForm({ ...registerForm, member3: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-400 outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs"
+                >
+                  <span>{isSubmitting ? "Registering..." : "Confirm Team Roster"}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
+            )
+          )}
+        </div>
+      </main>
+
+      <footer className="py-4 text-center text-xs text-slate-400">
+        <Link to="/" className="hover:text-slate-300 transition-colors">
+          Return to Home
         </Link>
-      </div>
+      </footer>
     </div>
   );
 }
