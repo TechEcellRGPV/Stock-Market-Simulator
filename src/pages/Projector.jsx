@@ -8,7 +8,9 @@ import {
   Radio,
   ArrowLeft,
   Wallet,
-  Sparkles
+  Sparkles,
+  User,
+  Crown
 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -351,11 +353,17 @@ export default function Projector() {
                   </div>
 
                   {/* Team Name */}
-                  <div className="text-center pt-1.5 px-1 max-w-[200px]">
+                  <div className="text-center pt-1.5 px-1 max-w-[220px] flex flex-col items-center">
                     <h3 className="text-sm sm:text-base font-black text-white truncate drop-shadow-md">
                       {p2?.teamName}
                     </h3>
-                    <p className="text-[11px] text-slate-400 font-mono truncate">@{p2?.leaderName}</p>
+                    {/* Prominent Team Leader Display */}
+                    <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-300/15 border-2 border-slate-300/50 shadow-[0_0_12px_rgba(203,213,225,0.25)]">
+                      <User className="w-3.5 h-3.5 text-slate-200 shrink-0" />
+                      <span className="text-xs font-mono font-black uppercase tracking-wider text-slate-200 truncate">
+                        Leader: <strong className="text-white font-extrabold">{p2?.leaderName || "Pilot"}</strong>
+                      </span>
+                    </div>
                   </div>
 
                   {/* Valuation Pill */}
@@ -410,11 +418,17 @@ export default function Projector() {
                   </div>
 
                   {/* Team Name */}
-                  <div className="text-center pt-2 px-1 max-w-[230px]">
+                  <div className="text-center pt-2 px-1 max-w-[240px] flex flex-col items-center">
                     <h3 className="text-base sm:text-lg font-black text-white truncate drop-shadow-md">
                       {p1?.teamName}
                     </h3>
-                    <p className="text-xs text-[#E10600] font-mono font-bold truncate">@{p1?.leaderName}</p>
+                    {/* Prominent Team Leader Display */}
+                    <div className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#E10600]/30 via-amber-500/25 to-[#E10600]/30 border-2 border-amber-400/70 shadow-[0_0_18px_rgba(234,179,8,0.4)]">
+                      <Crown className="w-3.5 h-3.5 text-amber-300 shrink-0 animate-pulse" />
+                      <span className="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-amber-200 truncate">
+                        Leader: <strong className="text-white font-black">{p1?.leaderName || "Pilot"}</strong>
+                      </span>
+                    </div>
                   </div>
 
                   {/* Valuation Pill (Red & Gold) */}
@@ -467,11 +481,17 @@ export default function Projector() {
                   </div>
 
                   {/* Team Name */}
-                  <div className="text-center pt-1.5 px-1 max-w-[200px]">
+                  <div className="text-center pt-1.5 px-1 max-w-[220px] flex flex-col items-center">
                     <h3 className="text-sm sm:text-base font-black text-white truncate drop-shadow-md">
                       {p3?.teamName}
                     </h3>
-                    <p className="text-[11px] text-slate-400 font-mono truncate">@{p3?.leaderName}</p>
+                    {/* Prominent Team Leader Display */}
+                    <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-700/25 border-2 border-amber-500/50 shadow-[0_0_12px_rgba(217,119,6,0.2)]">
+                      <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="text-xs font-mono font-black uppercase tracking-wider text-amber-300 truncate">
+                        Leader: <strong className="text-white font-extrabold">{p3?.leaderName || "Pilot"}</strong>
+                      </span>
+                    </div>
                   </div>
 
                   {/* Valuation Pill */}
@@ -558,7 +578,8 @@ export default function Projector() {
               <thead>
                 <tr className="bg-[#0A0E18] border-b border-[#192233] text-[11px] font-black uppercase tracking-wider text-slate-400 font-mono">
                   <th className="py-3 px-5 text-center w-16">Place</th>
-                  <th className="py-3 px-5">Team &amp; Leader</th>
+                  <th className="py-3 px-5">Team</th>
+                  <th className="py-3 px-5">Team Leader</th>
                   <th className="py-3 px-5 text-right">Portfolio Value</th>
                   <th className="py-3 px-5 text-right">Returns</th>
                   <th className="py-3 px-5 text-right">Cash / Assets</th>
@@ -567,7 +588,7 @@ export default function Projector() {
               <tbody className="divide-y divide-[#131926]">
                 {tableStandings.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-slate-400 font-mono">
+                    <td colSpan={6} className="py-8 text-center text-slate-400 font-mono">
                       All teams are currently displayed on the podium above.
                     </td>
                   </tr>
@@ -605,22 +626,37 @@ export default function Projector() {
                           </span>
                         </td>
 
-                        {/* Team Code Avatar (Red & Black Theme) + Name + Leader */}
+                        {/* Team Code Avatar (Red & Black Theme) + Name */}
                         <td className="py-3.5 px-5">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-[#141A26] border border-[#E10600]/40 flex items-center justify-center text-white font-mono font-black text-xs shadow-md shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-[#141A26] border border-[#E10600]/40 flex items-center justify-center text-white font-mono font-black text-xs shadow-md shrink-0">
                               {team.teamCode ? team.teamCode.slice(0, 3) : "TM"}
                             </div>
                             <div className="min-w-0">
                               <div className="font-extrabold text-white text-sm sm:text-base flex items-center gap-2 truncate">
                                 <span>{team.teamName}</span>
-                                {actualRank === 1 && <Trophy className="w-3.5 h-3.5 text-[#EAB308]" />}
+                                {actualRank === 1 && <Trophy className="w-4 h-4 text-[#EAB308]" />}
                               </div>
-                              <div className="text-xs text-slate-400 font-mono flex items-center gap-2">
-                                <span>@{team.leaderName}</span>
-                                <span className="text-slate-600">•</span>
-                                <span className="text-[#E10600] font-bold">{team.teamCode}</span>
+                              <div className="text-xs font-mono font-bold text-[#E10600] mt-0.5">
+                                {team.teamCode}
                               </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Prominent Team Leader Display */}
+                        <td className="py-3.5 px-5">
+                          <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-[#141A28] border border-[#232E42] shadow-xs">
+                            <div className="w-6 h-6 rounded-full bg-[#E10600]/20 border border-[#E10600]/40 flex items-center justify-center shrink-0">
+                              <User className="w-3.5 h-3.5 text-[#E10600]" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-sans font-black text-sm text-white tracking-tight">
+                                {team.leaderName || "Pilot"}
+                              </span>
+                              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold leading-none">
+                                Team Leader
+                              </span>
                             </div>
                           </div>
                         </td>

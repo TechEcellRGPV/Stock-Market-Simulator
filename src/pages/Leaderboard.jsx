@@ -7,7 +7,8 @@ import {
   TrendingUp,
   TrendingDown,
   Clock,
-  ArrowRight
+  ArrowRight,
+  User
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import CirculatingBanner from "../components/CirculatingBanner";
@@ -82,9 +83,15 @@ export default function Leaderboard() {
                     </span>
                     <span className="font-mono text-[11px] text-slate-400">{top3[1].teamCode}</span>
                   </div>
-                  <div>
+                  <div className="space-y-1.5">
                     <h3 className="text-sm font-bold text-white truncate">{top3[1].teamName}</h3>
-                    <div className="text-xs text-slate-400 truncate">Leader: {top3[1].leaderName}</div>
+                    {/* Prominent Team Leader Badge */}
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-slate-400/10 border border-slate-400/25 text-slate-200">
+                      <User className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                      <span className="text-xs font-mono font-bold">
+                        Leader: <strong className="text-white font-extrabold">{top3[1].leaderName}</strong>
+                      </span>
+                    </div>
                   </div>
                   <div className="pt-2 border-t border-[#161F30] flex items-center justify-between">
                     <div>
@@ -116,9 +123,15 @@ export default function Leaderboard() {
                     </span>
                     <Crown className="w-5 h-5 text-amber-400" />
                   </div>
-                  <div>
+                  <div className="space-y-1.5">
                     <h3 className="text-base font-bold text-white truncate">{top3[0].teamName}</h3>
-                    <div className="text-xs text-amber-400/80 truncate">Leader: {top3[0].leaderName}</div>
+                    {/* Prominent Team Leader Badge */}
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 shadow-xs">
+                      <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="text-xs font-mono font-black uppercase tracking-wider">
+                        Leader: <strong className="text-white font-black">{top3[0].leaderName}</strong>
+                      </span>
+                    </div>
                   </div>
                   <div className="pt-2.5 border-t border-[#1C263B] flex items-center justify-between">
                     <div>
@@ -150,9 +163,15 @@ export default function Leaderboard() {
                     </span>
                     <span className="font-mono text-[11px] text-slate-400">{top3[2].teamCode}</span>
                   </div>
-                  <div>
+                  <div className="space-y-1.5">
                     <h3 className="text-sm font-bold text-white truncate">{top3[2].teamName}</h3>
-                    <div className="text-xs text-slate-400 truncate">Leader: {top3[2].leaderName}</div>
+                    {/* Prominent Team Leader Badge */}
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-amber-700/15 border border-amber-600/30 text-amber-400">
+                      <User className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <span className="text-xs font-mono font-bold">
+                        Leader: <strong className="text-white font-extrabold">{top3[2].leaderName}</strong>
+                      </span>
+                    </div>
                   </div>
                   <div className="pt-2 border-t border-[#161F30] flex items-center justify-between">
                     <div>
@@ -204,7 +223,7 @@ export default function Leaderboard() {
                   <tr className="border-b border-[#1A2336] text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-[#080B10]">
                     <th className="py-3 px-4 text-center">Rank</th>
                     <th className="py-3 px-4">Team</th>
-                    <th className="py-3 px-4">Leader</th>
+                    <th className="py-3 px-4">Team Leader</th>
                     <th className="py-3 px-4 text-right">Portfolio Value</th>
                     <th className="py-3 px-4 text-right">Available Cash</th>
                     <th className="py-3 px-4 text-right">Return %</th>
@@ -246,9 +265,30 @@ export default function Leaderboard() {
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] font-mono text-slate-400">{entry.teamCode}</div>
+                          <div className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5 mt-0.5">
+                            <span>{entry.teamCode}</span>
+                            <span className="text-slate-600">•</span>
+                            <span className="text-slate-300">
+                              Lead by <strong className="text-white font-semibold">{entry.leaderName}</strong>
+                            </span>
+                          </div>
                         </td>
-                        <td className="py-3 px-4 text-slate-300">{entry.leaderName}</td>
+                        {/* Prominent Team Leader Column */}
+                        <td className="py-3 px-4">
+                          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#121722] border border-[#222E42] shadow-xs">
+                            <div className="w-5 h-5 rounded-full bg-[#E10600]/15 border border-[#E10600]/30 flex items-center justify-center shrink-0">
+                              <User className="w-3 h-3 text-[#E10600]" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-mono font-bold text-xs text-white">
+                                {entry.leaderName || "Pilot"}
+                              </span>
+                              <span className="text-[9px] font-mono uppercase tracking-wider text-slate-400 leading-none">
+                                Team Leader
+                              </span>
+                            </div>
+                          </div>
+                        </td>
                         <td className="py-3 px-4 text-right font-mono font-bold text-white">
                           ₹{entry.totalPortfolioValue?.toLocaleString("en-IN") || "1,00,000"}
                         </td>
