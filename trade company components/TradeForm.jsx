@@ -8,11 +8,12 @@ import {
   CheckCircle,
   ChevronDown,
   Wallet,
-  ShieldAlert
+  ShieldAlert,
+  Search
 } from "lucide-react";
 import { useSimulation } from "../src/context/SimulationContext";
 
-export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }) {
+export default function TradeForm({ selectedTicker: propTicker, onSelectTicker, onOpenStockDrawer }) {
   const { stocks, currentTeam, currentHoldings, executeTrade, raceState, isConnected } = useSimulation();
 
   const [internalTicker, setInternalTicker] = useState(() => propTicker || "TSLA");
@@ -244,9 +245,21 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
         <form onSubmit={handleSubmit} className="space-y-3">
           {/* Stock Dropdown */}
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1">
-              Target Company
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
+                Target Company
+              </label>
+              {onOpenStockDrawer && (
+                <button
+                  type="button"
+                  onClick={onOpenStockDrawer}
+                  className="text-[10px] font-mono text-[#E10600] hover:text-[#FF4D4D] flex items-center gap-1 font-bold cursor-pointer transition-colors"
+                >
+                  <Search className="w-3 h-3" />
+                  <span>Browse 17 Stocks</span>
+                </button>
+              )}
+            </div>
             <div className="relative">
               <select
                 value={selectedStock ? selectedStock.ticker : ""}
