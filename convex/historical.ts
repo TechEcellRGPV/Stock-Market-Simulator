@@ -7,7 +7,7 @@ import { INITIAL_STOCKS } from "./market";
  * @file historical.ts
  * @description Twelve Data Historical Market Engine & Real-World Timeline Controller.
  * Provides:
- * 1. Twelve Data API 1-minute historical OHLC series fetcher (120+ minutes of real data).
+ * 1. Twelve Data API 1-minute historical OHLC series fetcher (180+ minutes of real data).
  * 2. Authentic volatility mapping preserving real-world market fluctuations across 17 equities.
  * 3. Valid, correlated news ticker events scheduled at milestone minutes.
  * 4. Convex Cloud automated timeline ticker, manual minute stepping, and admin controls.
@@ -42,7 +42,7 @@ export const STOCK_ANCHOR_MAP: Record<string, { anchor: string; beta: number }> 
 function generateAuthenticFallbackCandles(count: number): Record<string, { open: number; high: number; low: number; close: number; volume: number }[]> {
   const result: Record<string, { open: number; high: number; low: number; close: number; volume: number }[]> = {};
   
-  // Base realistic price paths for the 6 anchors over 120 minutes
+  // Base realistic price paths for the 6 anchors over 180 minutes
   // Calibrated for ₹100,000 starting capital so fluctuations produce exciting ₹1,000 - ₹3,000 swings
   const anchors = [
     { sym: "TSLA", base: 368.0, drift: 0.00015, vol: 0.0055 },
@@ -86,7 +86,7 @@ function generateAuthenticFallbackCandles(count: number): Record<string, { open:
   return result;
 }
 
-// Scheduled Valid News Tickers across the 120-Minute Timeline (Simple, clear language)
+// Scheduled Valid News Tickers across the 180-Minute Timeline (Simple, clear language)
 export const VALID_NEWS_SCHEDULE = [
   {
     minuteIndex: 4,
@@ -248,7 +248,101 @@ export const VALID_NEWS_SCHEDULE = [
     priceImpactPercent: 2.5,
     source: "Twelve Data Auto Control",
   },
+  {
+    minuteIndex: 121,
+    title: "Tesla Full Self-Driving Fleet Receives Commercial Ride-Hail Operating Permit",
+    description: "Transportation regulators approve expanded autonomous ride testing in major metro hubs. TSLA surges +3.4%.",
+    ticker: "TSLA",
+    sector: "Electric Vehicles & Clean Energy",
+    type: "GREEN_FLAG",
+    priceImpactPercent: 3.4,
+    source: "Twelve Data Auto Wire",
+  },
+  {
+    minuteIndex: 128,
+    title: "Amazon Logistics Completes Autonomous Drone Delivery Hub Expansion",
+    description: "New air logistics hubs reduce last-mile package delivery costs in suburban markets. AMZN climbs +2.2%.",
+    ticker: "AMZN",
+    sector: "Global Logistics & Delivery",
+    type: "NEWS_FLASH",
+    priceImpactPercent: 2.2,
+    source: "Twelve Data Logistics Bulletin",
+  },
+  {
+    minuteIndex: 135,
+    title: "NVIDIA Next-Gen AI Accelerators Win Cloud Hyperscaler Contracts",
+    description: "Leading cloud providers place multi-billion dollar orders for high-performance AI inference silicon. NVDA gains +3.0%.",
+    ticker: "NVDA",
+    sector: "AI & Semiconductor Computing",
+    type: "GREEN_FLAG",
+    priceImpactPercent: 3.0,
+    source: "Twelve Data Tech Wire",
+  },
+  {
+    minuteIndex: 142,
+    title: "Microsoft Cloud Productivity Suite Reaches Historic Enterprise Renewals",
+    description: "Annual enterprise contract renewals exceed Wall Street targets with 94% retention. MSFT advances +2.1%.",
+    ticker: "MSFT",
+    sector: "Technology & Consumer Devices",
+    type: "NEWS_FLASH",
+    priceImpactPercent: 2.1,
+    source: "Twelve Data Enterprise Wire",
+  },
+  {
+    minuteIndex: 149,
+    title: "Boeing Signs Maintenance & Long-Range Support Agreement with Global Carriers",
+    description: "Multi-year aviation service contract boosts operating cash flow and parts delivery speed. BA rises +2.6%.",
+    ticker: "BA",
+    sector: "Aerospace & Aviation",
+    type: "NEWS_FLASH",
+    priceImpactPercent: 2.6,
+    source: "Twelve Data Aviation Watch",
+  },
+  {
+    minuteIndex: 156,
+    title: "AMD Server Processor Benchmark Demonstrates 40% Energy Efficiency Gain",
+    description: "Independent data center tests confirm superior compute per watt for high-throughput computing. AMD gains +2.7%.",
+    ticker: "AMD",
+    sector: "AI & Semiconductor Computing",
+    type: "GREEN_FLAG",
+    priceImpactPercent: 2.7,
+    source: "Twelve Data Hardware Review",
+  },
+  {
+    minuteIndex: 163,
+    title: "Apple Ecosystem Services & App Marketplace Set Quarterly Revenue Record",
+    description: "Record active device installations expand recurring software subscription revenues. AAPL climbs +2.4%.",
+    ticker: "AAPL",
+    sector: "Technology & Consumer Devices",
+    type: "NEWS_FLASH",
+    priceImpactPercent: 2.4,
+    source: "Twelve Data Tech Bulletin",
+  },
+  {
+    minuteIndex: 170,
+    title: "Netflix Global Live Sports and Special Entertainment Streaming Sets Viewership Record",
+    description: "Record streaming audience drives major advertising revenue and subscriber additions. NFLX rises +3.2%.",
+    ticker: "NFLX",
+    sector: "Media & Entertainment",
+    type: "GREEN_FLAG",
+    priceImpactPercent: 3.2,
+    source: "Twelve Data Media Wire",
+  },
+  {
+    minuteIndex: 177,
+    title: "Google DeepMind Enterprise Solutions Expand Financial Analytics Integrations",
+    description: "Global asset managers deploy real-time predictive analytics models across portfolio desks. GOOGL adds +2.5%.",
+    ticker: "GOOGL",
+    sector: "Technology & Consumer Devices",
+    type: "NEWS_FLASH",
+    priceImpactPercent: 2.5,
+    source: "Twelve Data AI Monitor",
+  },
 ];
+
+// ==============================================================================
+// 1. ACTION: Fetch from Twelve Data API & Store in Database
+export const DEFAULT_SESSION_ID = "session_180min_live";
 
 // ==============================================================================
 // 1. ACTION: Fetch from Twelve Data API & Store in Database
@@ -261,9 +355,9 @@ export const generateHistoricalData = action({
     totalMinutes: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const sessionId = args.sessionId || "session_120min_live";
-    const totalMinutes = Math.max(120, args.totalMinutes || 120);
-    const volMultiplier = args.volatilityMultiplier || 1.5; // 1.5x gives active fluctuations suited for 120-min simulation
+    const sessionId = args.sessionId || DEFAULT_SESSION_ID;
+    const totalMinutes = Math.max(180, args.totalMinutes || 180);
+    const volMultiplier = args.volatilityMultiplier || 1.5; // 1.5x gives active fluctuations suited for 180-min simulation
 
     // Obtain Twelve Data API key from argument or fallback to known environment key
     const rawApiKey = args.apiKey || "53a2aa53fb0246649b42efd3381bcd8e";
@@ -377,7 +471,7 @@ export const generateHistoricalData = action({
       }
     }
 
-    // 2. Generate 120-minute timeline snapshots for all 17 competition equities
+    // 2. Generate 180-minute timeline snapshots for all 17 competition equities
     const baseStocks = INITIAL_STOCKS;
     const timelineMinutes: Array<{
       sessionId: string;
@@ -438,7 +532,7 @@ export const generateHistoricalData = action({
         // Cumulative return of the anchor from minute 0
         const rawReturn = (candle.close - anchorFirst) / anchorFirst;
         // Calibrate scaling factor for ₹100,000 capital:
-        // Multiplying raw 1-min return by 4.5 ensures healthy 2.5% to 7.5% swings across 120 minutes,
+        // Multiplying raw 1-min return by 4.5 ensures healthy 2.5% to 7.5% swings across 180 minutes,
         // so that a trade on ₹100k wallet produces meaningful ₹1,000 to ₹3,500 profit/loss moves!
         const COMPETITION_SCALING_FACTOR = 4.5;
         const effectiveReturn = rawReturn * mapping.beta * volMultiplier * COMPETITION_SCALING_FACTOR;
@@ -468,10 +562,13 @@ export const generateHistoricalData = action({
 
       const scheduledNews = newsByMinute[m] || [];
 
+      const hour = 14 + Math.floor(m / 60);
+      const min = m % 60;
+
       timelineMinutes.push({
         sessionId,
         minuteIndex: m,
-        datetime: `2026-10-19 14:${String(m % 60).padStart(2, "0")}:00`,
+        datetime: `2026-10-19 ${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00`,
         timestamp: baseTimestamp + m * 60 * 1000,
         stockPrices: minuteStocks,
         newsEvents: scheduledNews.map((n) => ({
@@ -627,14 +724,31 @@ export const batchInsertTimeline = internalMutation({
 // 3. QUERIES: Status, Timelines & Upcoming News for UI
 // ==============================================================================
 
+// Helper: Resolve requested session or fallback to current database session
+async function getActiveSession(ctx: any, requestedSessionId?: string) {
+  const targetId = requestedSessionId || DEFAULT_SESSION_ID;
+  let session = await ctx.db
+    .query("historicalSessions")
+    .withIndex("by_sessionId", (q: any) => q.eq("sessionId", targetId))
+    .first();
+
+  if (!session && !requestedSessionId) {
+    const fallback = await ctx.db
+      .query("historicalSessions")
+      .withIndex("by_sessionId", (q: any) => q.eq("sessionId", "session_120min_live"))
+      .first();
+    if (fallback) {
+      return { session: fallback, sessionId: fallback.sessionId };
+    }
+  }
+
+  return { session, sessionId: targetId };
+}
+
 export const getHistoricalStatus = query({
   args: { sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const sessionId = args.sessionId || "session_120min_live";
-    const session = await ctx.db
-      .query("historicalSessions")
-      .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
-      .first();
+    const { session, sessionId } = await getActiveSession(ctx, args.sessionId);
 
     const firstMinute = await ctx.db
       .query("historicalTimeline")
@@ -658,7 +772,7 @@ export const getHistoricalStatus = query({
       session: session || {
         sessionId,
         status: isLoaded ? "READY" : "IDLE",
-        totalMinutes: 120,
+        totalMinutes: 180,
         currentMinuteIndex: 0,
         tickIntervalSeconds: 30,
         volatilityMultiplier: 1.5,
@@ -672,11 +786,11 @@ export const getHistoricalStatus = query({
   },
 });
 
-// Query: Get full 120-minute timeline summary for chart inspection
+// Query: Get full 180-minute timeline summary for chart inspection
 export const getHistoricalTimelineSummary = query({
   args: { sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const sessionId = args.sessionId || "session_120min_live";
+    const { sessionId } = await getActiveSession(ctx, args.sessionId);
     const timeline = await ctx.db
       .query("historicalTimeline")
       .withIndex("by_session_and_minute", (q) => q.eq("sessionId", sessionId))
@@ -753,14 +867,10 @@ export const startHistoricalSimulation = mutation({
     tickIntervalSeconds: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const sessionId = args.sessionId || "session_120min_live";
-    let session = await ctx.db
-      .query("historicalSessions")
-      .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
-      .first();
+    const { session, sessionId } = await getActiveSession(ctx, args.sessionId);
 
     if (!session) {
-      throw new Error(`Session ${sessionId} not found. Please click 'Generate Historical Market Data' first.`);
+      throw new Error(`Session ${sessionId} not found. Please click 'Generate 180-Min Data' first.`);
     }
 
     const interval = args.tickIntervalSeconds || session.tickIntervalSeconds || 30;
@@ -810,11 +920,7 @@ export const startHistoricalSimulation = mutation({
 export const pauseHistoricalSimulation = mutation({
   args: { sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const sessionId = args.sessionId || "session_120min_live";
-    const session = await ctx.db
-      .query("historicalSessions")
-      .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
-      .first();
+    const { session } = await getActiveSession(ctx, args.sessionId);
 
     if (!session) return { success: false };
 
@@ -844,11 +950,7 @@ export const stepHistoricalSimulation = mutation({
     targetMinuteIndex: v.number(),
   },
   handler: async (ctx, args) => {
-    const sessionId = args.sessionId || "session_120min_live";
-    const session = await ctx.db
-      .query("historicalSessions")
-      .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
-      .first();
+    const { session, sessionId } = await getActiveSession(ctx, args.sessionId);
 
     if (!session) throw new Error("No session found");
 
@@ -880,11 +982,7 @@ export const stepHistoricalSimulation = mutation({
 export const resetHistoricalSimulation = mutation({
   args: { sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const sessionId = args.sessionId || "session_120min_live";
-    const session = await ctx.db
-      .query("historicalSessions")
-      .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
-      .first();
+    const { session, sessionId } = await getActiveSession(ctx, args.sessionId);
 
     if (!session) return { success: false };
 
@@ -926,11 +1024,7 @@ export const updateHistoricalSettings = mutation({
     volatilityMultiplier: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const sessionId = args.sessionId || "session_120min_live";
-    const session = await ctx.db
-      .query("historicalSessions")
-      .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
-      .first();
+    const { session } = await getActiveSession(ctx, args.sessionId);
 
     if (!session) return { success: false };
 
@@ -964,7 +1058,7 @@ export const tickSimulationInternal = internalMutation({
 
     const nextMinute = args.targetMinuteIndex;
 
-    // Check if simulation has reached end of timeline (120 minutes)
+    // Check if simulation has reached end of timeline (180 minutes)
     if (nextMinute >= session.totalMinutes) {
       const now = Date.now();
       await ctx.db.patch(session._id, {
@@ -976,7 +1070,7 @@ export const tickSimulationInternal = internalMutation({
       const raceState = await ctx.db.query("raceState").first();
       if (raceState) {
         await ctx.db.patch(raceState._id, {
-          activeNews: "120-minute historical stock data finished. Current lap continues.",
+          activeNews: `${session.totalMinutes}-minute historical stock data finished. Current lap continues.`,
           updatedAt: now,
         });
       }

@@ -83,7 +83,7 @@ export function SimulationProvider({ children }) {
   const adminUpdateStockMutation = useMutation(api.market.adminUpdateStock);
   const adminTriggerSectorShockMutation = useMutation(api.market.adminTriggerSectorShock);
 
-  // Historical Market Mutations & Actions (Twelve Data 120-min Engine)
+  // Historical Market Mutations & Actions (Twelve Data 180-min Engine)
   const generateHistoricalDataAction = useAction(api.historical.generateHistoricalData);
   const startHistoricalSimulationMutation = useMutation(api.historical.startHistoricalSimulation);
   const pauseHistoricalSimulationMutation = useMutation(api.historical.pauseHistoricalSimulation);
@@ -1880,12 +1880,12 @@ export function SimulationProvider({ children }) {
     [adminTriggerSectorShockMutation]
   );
 
-  // Historical Market Operations (Twelve Data 120-Minute Engine)
+  // Historical Market Operations (Twelve Data 180-Minute Engine)
   const generateHistoricalData = useCallback(
     async (options = {}) => {
       return await generateHistoricalDataAction({
         apiKey: options.apiKey || undefined,
-        totalMinutes: options.totalMinutes || 120,
+        totalMinutes: options.totalMinutes || 180,
         volatilityMultiplier: options.volatilityMultiplier || 1.5,
       });
     },

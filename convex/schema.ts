@@ -180,7 +180,7 @@ export default defineSchema({
     .index("by_dataset_lap_lapMinute", ["datasetId", "lap", "lapMinute"])
     .index("by_dataset_symbol", ["datasetId", "symbol"]),
 
-  // Historical Market Session Controller (Twelve Data 120+ Minute Engine)
+  // Historical Market Session Controller (Twelve Data 180+ Minute Engine)
   historicalSessions: defineTable({
     sessionId: v.string(),
     status: v.string(), // "IDLE" | "GENERATING" | "READY" | "RUNNING" | "PAUSED" | "COMPLETED"
@@ -196,7 +196,7 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_sessionId", ["sessionId"]),
 
-  // 120+ Minute Historical Time Series & Valid News Tickers
+  // 180+ Minute Historical Time Series & Valid News Tickers
   historicalTimeline: defineTable({
     sessionId: v.string(),
     minuteIndex: v.number(),

@@ -57,7 +57,7 @@ import { useSEO } from "../../hooks/useSEO";
  * 8. Individual Stocks Operations: Edit stock prices, day range, and volatility
  * 9. Industry Sector Shock Controller: Hitting industries with macro rallies & supply crunches
  * 10. Canonical 15-Team Grid Manager: Seed 15 pre-decided motorsport teams, enforce 3 members per team, and clear leader session locks.
- * 11. Historical Market Engine (Twelve Data): 120-min authentic historical OHLC timeline & valid news ticker streams.
+ * 11. Historical Market Engine (Twelve Data): 180-min authentic historical OHLC timeline & valid news ticker streams.
  *
  * @returns {JSX.Element} Cryptographically locked admin console or control dashboard
  */
@@ -247,11 +247,11 @@ export default function Admin() {
       setHistoricalNotice("");
       setHistoricalError("");
       const res = await generateHistoricalData({
-        totalMinutes: 120,
+        totalMinutes: 180,
         volatilityMultiplier: Number(selectedVolMultiplier) || 1.5,
       });
       if (res && res.success) {
-        setHistoricalNotice(res.message || "Successfully generated 120 minutes of authentic historical data from Twelve Data! Competition lap is unchanged.");
+        setHistoricalNotice(res.message || "Successfully generated 180 minutes of authentic historical data from Twelve Data! Competition lap is unchanged.");
       } else {
         setHistoricalNotice("Historical market data generated and stored. Competition lap is unchanged.");
       }
@@ -287,7 +287,7 @@ export default function Admin() {
   const handleStepHistorical = async (targetMinute) => {
     try {
       await stepHistoricalSimulation(targetMinute);
-      setHistoricalNotice(`Advanced market prices to minute ${targetMinute} of 120. Competition lap is unchanged.`);
+      setHistoricalNotice(`Advanced market prices to minute ${targetMinute} of ${historicalStatus?.session?.totalMinutes || 180}. Competition lap is unchanged.`);
       setTimeout(() => setHistoricalNotice(""), 3000);
     } catch (err) {
       setHistoricalError(err?.message || "Failed to step simulation");
@@ -909,7 +909,7 @@ export default function Admin() {
                 <input
                   type="number"
                   min="1"
-                  max="120"
+                  max="180"
                   value={customMinutes}
                   onChange={(e) => setCustomMinutes(Math.max(1, parseInt(e.target.value) || 1))}
                   className="w-20 px-2.5 py-1.5 rounded bg-[#121720] border border-[#232B3B] text-xs text-white font-mono text-center outline-none"
@@ -927,7 +927,7 @@ export default function Admin() {
           </div>
         </section>
 
-        {/* Section 2.5: Historical Market Engine (Twelve Data 120-Minute Stream) */}
+        {/* Section 2.5: Historical Market Engine (Twelve Data 180-Minute Stream) */}
         <section className="p-5 sm:p-6 rounded-xl bg-[#121720] border border-[#232B3B] space-y-5">
           {/* Section Header */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-[#232B3B] pb-4">
@@ -956,16 +956,16 @@ export default function Admin() {
                         : "bg-[#E10600]/20 text-[#FF4D4D] border border-[#E10600]/40"
                 }`}>
                   {historicalStatus?.session?.status === "RUNNING"
-                    ? `PLAYING • MINUTE ${(historicalStatus?.session?.currentMinuteIndex ?? 0) + 1} OF ${historicalStatus?.session?.totalMinutes || 120}`
+                    ? `PLAYING • MINUTE ${(historicalStatus?.session?.currentMinuteIndex ?? 0) + 1} OF ${historicalStatus?.session?.totalMinutes || 180}`
                     : historicalStatus?.session?.status === "PAUSED"
                       ? "PAUSED"
                       : historicalStatus?.isLoaded
-                        ? "120-MIN DATASET READY"
+                        ? `${historicalStatus?.session?.totalMinutes || 180}-MIN DATASET READY`
                         : "NO DATA GENERATED YET"}
                 </span>
               </h2>
               <p className="text-xs text-slate-400 mt-1 max-w-3xl">
-                Uses real historical stock data from Twelve Data. Generates 120 minutes of realistic market price movements and clear news updates. Changing or resetting this data updates stock prices without affecting your competition lap.
+                Uses real historical stock data from Twelve Data. Generates 180 minutes of realistic market price movements and clear news updates. Changing or resetting this data updates stock prices without affecting your competition lap.
               </p>
             </div>
 
@@ -977,9 +977,9 @@ export default function Admin() {
                   Market Timeline
                 </div>
                 <div className="text-sm font-black font-mono text-white">
-                  Min {historicalStatus?.session?.currentMinuteIndex ?? 0} / {historicalStatus?.session?.totalMinutes || 120}
+                  Min {historicalStatus?.session?.currentMinuteIndex ?? 0} / {historicalStatus?.session?.totalMinutes || 180}
                   <span className="text-slate-400 text-xs ml-1 font-normal">
-                    ({Math.round(((historicalStatus?.session?.currentMinuteIndex ?? 0) / (historicalStatus?.session?.totalMinutes || 120)) * 100)}%)
+                    ({Math.round(((historicalStatus?.session?.currentMinuteIndex ?? 0) / (historicalStatus?.session?.totalMinutes || 180)) * 100)}%)
                   </span>
                 </div>
               </div>
@@ -1027,15 +1027,15 @@ export default function Admin() {
             </div>
           )}
 
-          {/* 120-Minute Timeline Visual Progress Bar */}
+          {/* 180-Minute Timeline Visual Progress Bar */}
           <div className="space-y-1.5 bg-[#0A0D12] p-3.5 rounded-xl border border-[#1D2533]">
             <div className="flex items-center justify-between text-xs">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#06B6D4]" />
-                120-Minute Timeline Progress
+                180-Minute Timeline Progress
               </span>
               <span className="font-mono text-xs text-[#06B6D4] font-bold">
-                Minute {historicalStatus?.session?.currentMinuteIndex ?? 0} of {historicalStatus?.session?.totalMinutes || 120} • Competition Lap {raceState?.currentLap || 1} Intact
+                Minute {historicalStatus?.session?.currentMinuteIndex ?? 0} of {historicalStatus?.session?.totalMinutes || 180} • Competition Lap {raceState?.currentLap || 1} Intact
               </span>
             </div>
 
@@ -1044,18 +1044,18 @@ export default function Admin() {
               <div
                 className="h-full bg-linear-to-r from-[#06B6D4] via-[#10B981] to-[#E10600] transition-all duration-300"
                 style={{
-                  width: `${Math.min(100, (((historicalStatus?.session?.currentMinuteIndex ?? 0) + 1) / (historicalStatus?.session?.totalMinutes || 120)) * 100)}%`
+                  width: `${Math.min(100, (((historicalStatus?.session?.currentMinuteIndex ?? 0) + 1) / (historicalStatus?.session?.totalMinutes || 180)) * 100)}%`
                 }}
               />
             </div>
 
-            {/* Clear quarter markers */}
+            {/* Clear quarter markers for 3 hours */}
             <div className="flex justify-between text-[10px] font-mono text-slate-500 pt-0.5 px-1">
               <span>Start (0m)</span>
-              <span>Quarter 1 (30m)</span>
-              <span>Midpoint (60m)</span>
-              <span>Quarter 3 (90m)</span>
-              <span>Finish (120m)</span>
+              <span>45m</span>
+              <span>Midpoint (90m)</span>
+              <span>135m</span>
+              <span>Finish ({historicalStatus?.session?.totalMinutes || 180}m)</span>
             </div>
           </div>
 
@@ -1073,7 +1073,7 @@ export default function Admin() {
               }`}
             >
               <RefreshCw className={`w-4 h-4 ${isGeneratingHistorical ? "animate-spin" : ""}`} />
-              <span>{isGeneratingHistorical ? "Fetching Twelve Data..." : "Generate 120-Min Data"}</span>
+              <span>{isGeneratingHistorical ? "Fetching Twelve Data..." : "Generate 180-Min Data"}</span>
             </button>
 
             {/* Start Auto-Play */}
@@ -1231,13 +1231,13 @@ export default function Admin() {
                   Jump to Any Minute
                 </span>
                 <span className="text-[11px] font-mono text-[#10B981] font-bold">
-                  Minute {historicalStatus?.session?.currentMinuteIndex ?? 0} of 120
+                  Minute {historicalStatus?.session?.currentMinuteIndex ?? 0} of {historicalStatus?.session?.totalMinutes || 180}
                 </span>
               </div>
               <input
                 type="range"
                 min="0"
-                max={Math.max(0, (historicalStatus?.session?.totalMinutes || 120) - 1)}
+                max={Math.max(0, (historicalStatus?.session?.totalMinutes || 180) - 1)}
                 value={historicalStatus?.session?.currentMinuteIndex ?? 0}
                 onChange={(e) => handleStepHistorical(parseInt(e.target.value, 10))}
                 disabled={!historicalStatus?.isLoaded}
@@ -1252,7 +1252,7 @@ export default function Admin() {
               <div className="flex items-center gap-2">
                 <Radio className="w-4 h-4 text-[#06B6D4]" />
                 <span className="text-xs font-black uppercase tracking-widest text-slate-200">
-                  Scheduled News Tickers (120-Minute Timeline)
+                  Scheduled News Tickers (180-Minute Timeline)
                 </span>
               </div>
               <span className="text-[11px] text-slate-400 font-mono">
