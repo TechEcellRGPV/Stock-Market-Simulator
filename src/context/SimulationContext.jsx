@@ -55,6 +55,7 @@ export function SimulationProvider({ children }) {
   const convexLiveGrid = useQuery(api.market.getLiveGrid, {});
   const convexTeams = useQuery(api.teams.adminListTeams, {});
   const convexLeaderboard = useQuery(api.leaderboard.getLeaderboard, {});
+  const convexAllTeamsWithHoldings = useQuery(api.trades.getAllTeamsWithHoldings, {});
   const historicalStatus = useQuery(api.historical.getHistoricalStatus, {});
 
   // Convex Cloud Mutations & Actions
@@ -845,7 +846,7 @@ export function SimulationProvider({ children }) {
     [raceState.isRegistrationOpen, createTeamMutation]
   );
 
-  // Auth: Register Team Slot for Pre-Decided Grid Team (Strictly 3 members)
+  // Auth: Register Team Slot for Pre-Decided Grid Team (Up to 3 members)
   const registerTeamSlot = useCallback(
     async ({ teamCode, teamPin, leaderName, member2, member3 }) => {
       if (raceState.isRegistrationOpen === false) {
@@ -853,13 +854,15 @@ export function SimulationProvider({ children }) {
       }
 
       const sessionId = "sess_" + Math.random().toString(36).substring(2, 12);
-      const result = await registerTeamSlotMutation({
+      const payload = {
         teamCode: teamCode.trim().toUpperCase(),
         teamPin: teamPin.trim(),
-        leaderName: leaderName.trim(),
-        member2: member2.trim(),
-        member3: member3.trim()
-      });
+        leaderName: leaderName.trim()
+      };
+      if (member2 && member2.trim()) payload.member2 = member2.trim();
+      if (member3 && member3.trim()) payload.member3 = member3.trim();
+
+      const result = await registerTeamSlotMutation(payload);
 
       const activeTeam = {
         id: result.teamId,
@@ -1935,6 +1938,7 @@ export function SimulationProvider({ children }) {
     raceState,
     trackEvents,
     leaderboard: (Array.isArray(convexLeaderboard) && convexLeaderboard.length > 0) ? convexLeaderboard : leaderboard,
+    gridTeamsWithHoldings: Array.isArray(convexAllTeamsWithHoldings) ? convexAllTeamsWithHoldings : [],
     historicalStatus,
     generateHistoricalData,
     startHistoricalSimulation,

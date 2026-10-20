@@ -153,8 +153,18 @@ export default function Login() {
       return;
     }
 
-    if (!registerForm.leaderName.trim() || !registerForm.member2.trim() || !registerForm.member3.trim()) {
-      setError("Each team requires 3 members: Team Leader, Member 2, and Member 3.");
+    if (!registerForm.leaderName.trim()) {
+      setError("Team Leader name is required. Each team can have 1 to 3 members.");
+      return;
+    }
+
+    const roster = [registerForm.leaderName.trim()];
+    if (registerForm.member2.trim()) roster.push(registerForm.member2.trim());
+    if (registerForm.member3.trim()) roster.push(registerForm.member3.trim());
+
+    const lower = roster.map((n) => n.toLowerCase());
+    if (new Set(lower).size !== roster.length) {
+      setError("Team members must have distinct names.");
       return;
     }
 
@@ -163,9 +173,9 @@ export default function Login() {
       const team = await registerTeamSlot({
         teamCode: effectiveRegisterTeamCode,
         teamPin: registerForm.teamPin,
-        leaderName: registerForm.leaderName,
-        member2: registerForm.member2,
-        member3: registerForm.member3
+        leaderName: registerForm.leaderName.trim(),
+        member2: registerForm.member2.trim() || undefined,
+        member3: registerForm.member3.trim() || undefined
       });
 
       setSuccess(`Team ${team.teamName} confirmed! Redirecting...`);
@@ -193,7 +203,7 @@ export default function Login() {
             <p className="text-xs text-slate-400">
               {mode === "login"
                 ? "Enter your team code and 4-digit PIN to access cockpit"
-                : "Register exactly 3 team members to secure your grid slot"}
+                : "Register up to 3 team members to secure your grid slot"}
             </p>
           </div>
 
@@ -408,35 +418,38 @@ export default function Login() {
                 </div>
 
                 <div className="space-y-2 pt-1 border-t border-[#1A2336]">
-                  <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    3-Member Roster
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                      Team Roster (1 to 3 Members)
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-medium">
+                      Leader required • Others optional
+                    </span>
+                  </div>
 
                   <input
                     type="text"
                     required
-                    placeholder="Team Leader Name"
+                    placeholder="Team Leader Name *"
                     value={registerForm.leaderName}
                     onChange={(e) => setRegisterForm({ ...registerForm, leaderName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-400 outline-none"
+                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-500 outline-none"
                   />
 
                   <input
                     type="text"
-                    required
-                    placeholder="Member 2 Name"
+                    placeholder="Member 2 Name (Optional)"
                     value={registerForm.member2}
                     onChange={(e) => setRegisterForm({ ...registerForm, member2: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-400 outline-none"
+                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-500 outline-none"
                   />
 
                   <input
                     type="text"
-                    required
-                    placeholder="Member 3 Name"
+                    placeholder="Member 3 Name (Optional)"
                     value={registerForm.member3}
                     onChange={(e) => setRegisterForm({ ...registerForm, member3: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-400 outline-none"
+                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white placeholder:text-slate-500 outline-none"
                   />
                 </div>
 

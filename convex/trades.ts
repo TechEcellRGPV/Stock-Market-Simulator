@@ -49,6 +49,95 @@ export const getAllHoldings = query({
 });
 
 /**
+ * Query: Retrieve all teams with their complete stock investments breakdown.
+ * Returns each team's cash balance, stocks owned, share counts, buy prices,
+ * current market valuation, and unrealized profit/loss.
+ */
+export const getAllTeamsWithHoldings = query({
+  args: {},
+  handler: async (ctx) => {
+    const teams = await ctx.db.query("teams").collect();
+    const stocks = await ctx.db.query("stocks").collect();
+    const allHoldings = await ctx.db.query("holdings").collect();
+    const raceState = await ctx.db.query("raceState").first();
+    const startingCapital = raceState?.defaultStartingCapital || 100000;
+
+    const stockMap = new Map();
+    for (const s of stocks) {
+      stockMap.set(s.ticker, s);
+    }
+
+    const result = teams.map((team) => {
+      const teamHoldings = allHoldings
+        .filter((h) => h.teamId === team._id && h.shares > 0)
+        .map((h) => {
+          const s = stockMap.get(h.ticker);
+          const currentPrice = s ? s.currentPrice : h.avgBuyPrice;
+          const currentValue = Math.round(h.shares * currentPrice * 100) / 100;
+          const investedValue = Math.round(h.shares * h.avgBuyPrice * 100) / 100;
+          const unrealizedPnL = Math.round((currentValue - investedValue) * 100) / 100;
+          const returnPercent =
+            investedValue > 0
+              ? Math.round(((currentValue - investedValue) / investedValue) * 1000) / 10
+              : 0;
+          return {
+            holdingId: h._id,
+            ticker: h.ticker,
+            stockName: s ? s.name : h.ticker,
+            sector: s ? s.sector : "Unknown",
+            shares: h.shares,
+            avgBuyPrice: h.avgBuyPrice,
+            currentPrice,
+            investedValue,
+            currentValue,
+            unrealizedPnL,
+            returnPercent,
+          };
+        });
+
+      const totalInvested = Math.round(
+        teamHoldings.reduce((sum, h) => sum + h.investedValue, 0) * 100
+      ) / 100;
+      const totalHoldingsValue = Math.round(
+        teamHoldings.reduce((sum, h) => sum + h.currentValue, 0) * 100
+      ) / 100;
+      const totalPortfolioValue =
+        Math.round((team.cashBalance + totalHoldingsValue) * 100) / 100;
+      const totalProfitLoss =
+        Math.round((totalPortfolioValue - startingCapital) * 100) / 100;
+      const returnPercent =
+        Math.round(((totalPortfolioValue - startingCapital) / startingCapital) * 1000) / 10;
+
+      return {
+        _id: team._id,
+        teamId: team._id,
+        teamCode: team.teamCode,
+        teamName: team.teamName,
+        teamPin: team.teamPin,
+        leaderName: team.leaderName,
+        member2: team.member2,
+        member3: team.member3,
+        members: team.members || [team.leaderName],
+        status: team.status,
+        isRegistered: team.isRegistered,
+        tradeCount: team.tradeCount || 0,
+        cashBalance: team.cashBalance,
+        totalInvested,
+        totalHoldingsValue,
+        totalPortfolioValue,
+        totalProfitLoss,
+        returnPercent,
+        holdingsCount: teamHoldings.length,
+        holdings: teamHoldings,
+      };
+    });
+
+    result.sort((a, b) => b.totalPortfolioValue - a.totalPortfolioValue);
+    return result;
+  },
+});
+
+/**
  * Query: Retrieve global order audit stream across all teams (bounded to 100).
  */
 export const getAllOrders = query({

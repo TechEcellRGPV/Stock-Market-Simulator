@@ -11,6 +11,7 @@ const Trade = lazy(() => import("./pages/Trade"));
 const Company = lazy(() => import("./pages/Company"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Admin = lazy(() => import("./pages/Admin/Admin"));
+const Projector = lazy(() => import("./pages/Projector"));
 
 /**
  * High-performance lightweight telemetry fallback rendered during route transitions.
@@ -40,6 +41,8 @@ function App() {
             <Route path="/companies" element={<Company />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/projector" element={<Projector />} />
+            <Route path="/admin/projector" element={<Projector />} />
           </Routes>
         </Suspense>
       </Router>

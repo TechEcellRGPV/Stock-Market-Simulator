@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, Fragment } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ShieldCheck,
@@ -33,7 +33,12 @@ import {
   FastForward,
   RotateCcw,
   SlidersHorizontal,
-  Info
+  Info,
+  Trophy,
+  ChevronDown,
+  ChevronUp,
+  PieChart,
+  Briefcase
 } from "lucide-react";
 import { useSimulation } from "../../context/SimulationContext";
 import { useSEO } from "../../hooks/useSEO";
@@ -95,8 +100,14 @@ export default function Admin() {
     pauseHistoricalSimulation,
     stepHistoricalSimulation,
     resetHistoricalSimulation,
-    updateHistoricalSettings
+    updateHistoricalSettings,
+    gridTeamsWithHoldings
   } = useSimulation();
+
+  // Holdings & Portfolio Inspection State
+  const [expandedTeamCode, setExpandedTeamCode] = useState(null);
+  const [holdingFilterStock, setHoldingFilterStock] = useState("ALL");
+  const [holdingSearchTerm, setHoldingSearchTerm] = useState("");
 
   // Login Gate State (for unauthenticated /admin visits)
   const [adminPasscode, setAdminPasscode] = useState("");
@@ -141,6 +152,17 @@ export default function Admin() {
   const [editMember3, setEditMember3] = useState("");
   const [editTeamPin, setEditTeamPin] = useState("");
   const [rosterNotice, setRosterNotice] = useState("");
+
+  // Fast Lookup for Team Stock Holdings
+  const holdingsMap = useMemo(() => {
+    const map = new Map();
+    if (Array.isArray(gridTeamsWithHoldings)) {
+      for (const t of gridTeamsWithHoldings) {
+        map.set(t.teamCode, t);
+      }
+    }
+    return map;
+  }, [gridTeamsWithHoldings]);
 
   const sectors = useMemo(() => {
     const list = Array.from(new Set((stocks || []).map((s) => s.sector).filter(Boolean)));
@@ -412,8 +434,8 @@ export default function Admin() {
     setEditTeamName(team.teamName || "");
     setEditTeamPin(team.teamPin || "");
     setEditLeaderName(team.leaderName || "");
-    setEditMember2(team.member2 || (team.members && team.members[1]) || "Member 2");
-    setEditMember3(team.member3 || (team.members && team.members[2]) || "Member 3");
+    setEditMember2(team.member2 || (team.members && team.members[1]) || "");
+    setEditMember3(team.member3 || (team.members && team.members[2]) || "");
     setRosterNotice("");
   };
 
@@ -427,10 +449,10 @@ export default function Admin() {
         teamName: editTeamName,
         teamPin: editTeamPin,
         leaderName: editLeaderName,
-        member2: editMember2,
-        member3: editMember3,
+        member2: editMember2.trim() || undefined,
+        member3: editMember3.trim() || undefined,
       });
-      setRosterNotice(`Successfully updated 3-member roster for ${editTeamName}!`);
+      setRosterNotice(`Successfully updated team roster for ${editTeamName}!`);
       setTimeout(() => {
         setRosterNotice("");
         setEditingRosterTeam(null);
@@ -577,10 +599,14 @@ export default function Admin() {
             Reset Event Grid
           </button>
           <Link
-            to="/leaderboard"
-            className="px-3.5 py-1.5 rounded bg-[#161B24] hover:bg-[#1D232E] text-xs font-bold text-[#EAB308] border border-[#EAB308]/30 transition-colors"
+            to="/projector"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-1.5 rounded bg-gradient-to-r from-[#EAB308]/20 to-amber-600/20 hover:from-[#EAB308]/30 hover:to-amber-600/30 text-xs font-black uppercase text-[#EAB308] border border-[#EAB308]/50 transition-all flex items-center gap-1.5 shadow-xs"
+            title="Open Auditorium Big-Screen Projector View in New Tab"
           >
-            Projector View
+            <Trophy className="w-3.5 h-3.5" />
+            <span>📽️ Projector Screen</span>
           </Link>
           <button
             onClick={handleLogout}
@@ -1636,149 +1662,370 @@ export default function Admin() {
               <table className="w-full min-w-180 text-left text-xs font-sans">
                 <thead>
                   <tr className="border-b border-[#232B3B] text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    <th className="pb-2.5">Slot & Code</th>
-                    <th className="pb-2.5">Team Name & PIN</th>
-                    <th className="pb-2.5">Member 1: Team Leader</th>
-                    <th className="pb-2.5">Member 2</th>
-                    <th className="pb-2.5">Member 3</th>
+                    <th className="pb-2.5">Slot &amp; Code</th>
+                    <th className="pb-2.5">Team Name &amp; PIN</th>
+                    <th className="pb-2.5">Leader &amp; Members</th>
                     <th className="pb-2.5 text-right">Cash Balance</th>
+                    <th className="pb-2.5 text-center">Stock Holdings</th>
                     <th className="pb-2.5 text-center">Leader Session</th>
                     <th className="pb-2.5 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1A202C]">
-                  {teams.map((t) => (
-                    <tr key={t.id || t._id} className="hover:bg-[#161B24] transition-colors">
-                      <td className="py-2.5 font-mono font-bold text-[#06B6D4]">
-                        {t.teamCode}
-                      </td>
-                      <td className="py-2.5">
-                        <div className="font-bold text-white">{t.teamName}</div>
-                        <div className="text-[10px] font-mono text-slate-500">PIN: {t.teamPin}</div>
-                      </td>
-                      <td className="py-2.5 text-slate-200 font-medium">
-                        <div className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#E10600] shrink-0" />
-                          <span>{t.leaderName}</span>
-                        </div>
-                      </td>
-                      <td className="py-2.5 text-slate-400">
-                        {t.member2 || (t.members && t.members[1]) || "Member 2"}
-                      </td>
-                      <td className="py-2.5 text-slate-400">
-                        {t.member3 || (t.members && t.members[2]) || "Member 3"}
-                      </td>
-                      <td className="py-2.5 text-right font-mono font-bold text-white">
-                        {editingTeamId === (t.id || t._id) ? (
-                          <div className="flex items-center justify-end gap-1">
-                            <span className="text-xs text-slate-400">₹</span>
-                            <input
-                              type="number"
-                              value={newCashAmount}
-                              onChange={(e) => setNewCashAmount(e.target.value)}
-                              className="w-20 px-1.5 py-0.5 rounded bg-[#0A0D12] border border-[#232B3B] text-xs text-white font-mono outline-none"
-                              placeholder={t.cashBalance.toString()}
-                              autoFocus
-                            />
+                  {teams.map((t) => {
+                    const teamHolding = holdingsMap.get(t.teamCode);
+                    const holdingsList = teamHolding?.holdings || [];
+                    const count = teamHolding?.holdingsCount || 0;
+                    const isExpanded = expandedTeamCode === t.teamCode;
+
+                    return (
+                      <React.Fragment key={t.id || t._id}>
+                        <tr className="hover:bg-[#161B24] transition-colors">
+                          <td className="py-2.5 font-mono font-bold text-[#06B6D4]">
+                            {t.teamCode}
+                          </td>
+                          <td className="py-2.5">
+                            <div className="font-bold text-white">{t.teamName}</div>
+                            <div className="text-[10px] font-mono text-slate-500">PIN: {t.teamPin}</div>
+                          </td>
+                          <td className="py-2.5 text-slate-200 font-medium">
+                            <div className="flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#E10600] shrink-0" />
+                              <span>{t.leaderName}</span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">
+                              {[t.member2, t.member3].filter(Boolean).join(" • ") || "Solo Leader"}
+                            </div>
+                          </td>
+                          <td className="py-2.5 text-right font-mono font-bold text-white">
+                            {editingTeamId === (t.id || t._id) ? (
+                              <div className="flex items-center justify-end gap-1">
+                                <span className="text-xs text-slate-400">₹</span>
+                                <input
+                                  type="number"
+                                  value={newCashAmount}
+                                  onChange={(e) => setNewCashAmount(e.target.value)}
+                                  className="w-20 px-1.5 py-0.5 rounded bg-[#0A0D12] border border-[#232B3B] text-xs text-white font-mono outline-none"
+                                  placeholder={t.cashBalance.toString()}
+                                  autoFocus
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveTeamCash(t.id || t._id)}
+                                  className="px-1.5 py-0.5 rounded bg-[#10B981] text-slate-950 text-[10px] font-bold uppercase"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingTeamId(null);
+                                    setNewCashAmount("");
+                                  }}
+                                  className="px-1.5 py-0.5 rounded bg-[#161B24] text-slate-400 text-[10px] font-bold uppercase"
+                                >
+                                  X
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <span>₹{t.cashBalance.toLocaleString("en-IN")}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingTeamId(t.id || t._id);
+                                    setNewCashAmount(t.cashBalance.toString());
+                                  }}
+                                  className="text-[10px] text-slate-500 hover:text-[#06B6D4] font-sans underline"
+                                >
+                                  Edit
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-2.5 text-center">
                             <button
                               type="button"
-                              onClick={() => handleSaveTeamCash(t.id || t._id)}
-                              className="px-1.5 py-0.5 rounded bg-[#10B981] text-slate-950 text-[10px] font-bold uppercase"
+                              onClick={() => setExpandedTeamCode(isExpanded ? null : t.teamCode)}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-mono font-bold transition-all border ${
+                                count > 0
+                                  ? "bg-[#06B6D4]/15 hover:bg-[#06B6D4]/30 text-[#06B6D4] border-[#06B6D4]/30 shadow-xs"
+                                  : "bg-[#161B24] hover:bg-[#1E2532] text-slate-400 border-[#232B3B]"
+                              }`}
+                              title="Click to view all stock investments made by this team"
                             >
-                              Save
+                              <span>{count} Stocks</span>
+                              {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingTeamId(null);
-                                setNewCashAmount("");
-                              }}
-                              className="px-1.5 py-0.5 rounded bg-[#161B24] text-slate-400 text-[10px] font-bold uppercase"
-                            >
-                              X
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <span>₹{t.cashBalance.toLocaleString("en-IN")}</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingTeamId(t.id || t._id);
-                                setNewCashAmount(t.cashBalance.toString());
-                              }}
-                              className="text-[10px] text-slate-500 hover:text-[#06B6D4] font-sans underline"
-                            >
-                              Edit
-                            </button>
-                          </div>
+                          </td>
+                          <td className="py-2.5 text-center">
+                            {t.activeLeaderSessionId ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <span className="px-1.5 py-0.5 rounded bg-[#10B981]/15 text-[#10B981] font-mono text-[10px] font-bold">
+                                  Connected
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleClearSession(t.id || t._id, t.teamName)}
+                                  className="text-[10px] text-slate-400 hover:text-[#E10600] underline"
+                                  title="Reset session lock if leader lost connection"
+                                >
+                                  Reset
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                Available
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2.5 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditRoster(t)}
+                                className="px-2 py-1 rounded bg-[#161B24] hover:bg-[#232B3B] text-slate-300 hover:text-white text-[10px] font-bold uppercase transition-colors"
+                              >
+                                Roster
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  adminUpdateTeam(t.id || t._id, {
+                                    status: t.status === "ACTIVE" ? "DISQUALIFIED" : "ACTIVE"
+                                  })
+                                }
+                                className={`px-1.5 py-1 rounded text-[10px] font-bold uppercase transition-colors border ${
+                                  t.status === "ACTIVE"
+                                    ? "bg-[#161B24] hover:bg-[#F59E0B]/20 text-slate-300 hover:text-[#F59E0B] border-[#232B3B]"
+                                    : "bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40"
+                                }`}
+                              >
+                                {t.status === "ACTIVE" ? "Lock" : "Unlock"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (window.confirm(`Permanently delete team "${t.teamName}" and all associated orders?`)) {
+                                    adminDeleteTeam(t.id || t._id);
+                                  }
+                                }}
+                                className="p-1 rounded bg-[#161B24] hover:bg-[#E10600] text-slate-400 hover:text-white transition-colors border border-[#232B3B]"
+                                title="Delete team"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+
+                        {/* Expandable Stock Portfolio Breakdown */}
+                        {isExpanded && (
+                          <tr className="bg-[#0A0E18] border-y border-[#233148]">
+                            <td colSpan={7} className="p-4 space-y-3">
+                              <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-[#1A263C]">
+                                <div>
+                                  <div className="text-xs font-bold text-white flex items-center gap-2">
+                                    <Briefcase className="w-4 h-4 text-[#06B6D4]" />
+                                    <span>{t.teamName} ({t.teamCode}) — Live Stock Portfolio Breakdown</span>
+                                  </div>
+                                  <div className="text-[11px] text-slate-400">
+                                    Leader: {t.leaderName} • {holdingsList.length} active equities held
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4 text-xs font-mono">
+                                  <div>
+                                    <span className="text-slate-500 text-[10px] uppercase block">Cash Balance</span>
+                                    <span className="font-bold text-white">₹{t.cashBalance.toLocaleString("en-IN")}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-500 text-[10px] uppercase block">Holdings Value</span>
+                                    <span className="font-bold text-[#06B6D4]">₹{(teamHolding?.totalHoldingsValue || 0).toLocaleString("en-IN")}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-500 text-[10px] uppercase block">Total Net Worth</span>
+                                    <span className="font-bold text-emerald-400">₹{(teamHolding?.totalPortfolioValue || t.cashBalance).toLocaleString("en-IN")}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {holdingsList.length > 0 ? (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-left text-xs font-mono">
+                                    <thead>
+                                      <tr className="text-[10px] text-slate-400 uppercase border-b border-[#1A263C]">
+                                        <th className="pb-1.5">Stock Ticker &amp; Name</th>
+                                        <th className="pb-1.5">Sector</th>
+                                        <th className="pb-1.5 text-right">Shares Owned</th>
+                                        <th className="pb-1.5 text-right">Avg Buy Price</th>
+                                        <th className="pb-1.5 text-right">Current Price</th>
+                                        <th className="pb-1.5 text-right">Total Invested</th>
+                                        <th className="pb-1.5 text-right">Current Valuation</th>
+                                        <th className="pb-1.5 text-right">Unrealized P&amp;L</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#151F33]">
+                                      {holdingsList.map((h) => (
+                                        <tr key={h.holdingId || h.ticker} className="hover:bg-[#121A2C]">
+                                          <td className="py-2 font-bold text-white">
+                                            <span className="text-[#06B6D4]">{h.ticker}</span>
+                                            <span className="text-slate-400 font-normal ml-1 text-[11px] font-sans">: {h.stockName}</span>
+                                          </td>
+                                          <td className="py-2 text-[11px] text-slate-400 font-sans">{h.sector.split("&")[0]}</td>
+                                          <td className="py-2 text-right font-bold text-white">{h.shares}</td>
+                                          <td className="py-2 text-right text-slate-300">₹{h.avgBuyPrice.toFixed(2)}</td>
+                                          <td className="py-2 text-right text-white font-bold">₹{h.currentPrice.toFixed(2)}</td>
+                                          <td className="py-2 text-right text-slate-300">₹{h.investedValue.toLocaleString("en-IN")}</td>
+                                          <td className="py-2 text-right font-bold text-white">₹{h.currentValue.toLocaleString("en-IN")}</td>
+                                          <td className="py-2 text-right">
+                                            <span className={`px-1.5 py-0.5 rounded font-bold text-[10px] ${
+                                              h.unrealizedPnL >= 0 ? "bg-[#10B981]/15 text-[#10B981]" : "bg-[#E10600]/15 text-[#FF8080]"
+                                            }`}>
+                                              {h.unrealizedPnL >= 0 ? "+" : ""}₹{h.unrealizedPnL.toFixed(2)} ({h.returnPercent}%)
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : (
+                                <div className="py-3 text-center text-xs text-slate-400 font-sans bg-[#0E1524] rounded-lg border border-[#1A263C]">
+                                  This team has not purchased any stocks yet. They are holding 100% of their balance in cash.
+                                </div>
+                              )}
+                            </td>
+                          </tr>
                         )}
-                      </td>
-                      <td className="py-2.5 text-center">
-                        {t.activeLeaderSessionId ? (
-                          <div className="flex items-center justify-center gap-1">
-                            <span className="px-1.5 py-0.5 rounded bg-[#10B981]/15 text-[#10B981] font-mono text-[10px] font-bold">
-                              Connected
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleClearSession(t.id || t._id, t.teamName)}
-                              className="text-[10px] text-slate-400 hover:text-[#E10600] underline"
-                              title="Reset session lock if leader lost connection"
-                            >
-                              Reset
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-slate-500 font-mono">
-                            Available
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2.5 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditRoster(t)}
-                            className="px-2 py-1 rounded bg-[#161B24] hover:bg-[#232B3B] text-slate-300 hover:text-white text-[10px] font-bold uppercase transition-colors"
-                          >
-                            Roster
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              adminUpdateTeam(t.id || t._id, {
-                                status: t.status === "ACTIVE" ? "DISQUALIFIED" : "ACTIVE"
-                              })
-                            }
-                            className={`px-1.5 py-1 rounded text-[10px] font-bold uppercase transition-colors border ${
-                              t.status === "ACTIVE"
-                                ? "bg-[#161B24] hover:bg-[#F59E0B]/20 text-slate-300 hover:text-[#F59E0B] border-[#232B3B]"
-                                : "bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40"
-                            }`}
-                          >
-                            {t.status === "ACTIVE" ? "Lock" : "Unlock"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (window.confirm(`Permanently delete team "${t.teamName}" and all associated orders?`)) {
-                                adminDeleteTeam(t.id || t._id);
-                              }
-                            }}
-                            className="p-1 rounded bg-[#161B24] hover:bg-[#E10600] text-slate-400 hover:text-white transition-colors border border-[#232B3B]"
-                            title="Delete team"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
+        </section>
+
+        {/* Section 6: Grid-Wide Stock Investment Matrix ("Who Owns What") */}
+        <section className="p-5 sm:p-6 rounded-xl bg-[#121720] border border-[#232B3B] space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#232B3B] pb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-[#06B6D4]" />
+                <h2 className="text-sm font-black uppercase tracking-widest text-white">
+                  Grid-Wide Stock Investment Matrix ("Who Owns What")
+                </h2>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Inspect which equities each team has invested in, or filter by specific stock to see all shareholder teams.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="text"
+                placeholder="Search team or stock..."
+                value={holdingSearchTerm}
+                onChange={(e) => setHoldingSearchTerm(e.target.value)}
+                className="px-3 py-1.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#06B6D4] text-xs text-white placeholder:text-slate-600 outline-none w-44"
+              />
+              <select
+                value={holdingFilterStock}
+                onChange={(e) => setHoldingFilterStock(e.target.value)}
+                className="px-3 py-1.5 rounded-lg bg-[#0A0D12] border border-[#232B3B] text-xs text-white outline-none"
+              >
+                <option value="ALL">All Stocks (17 Equities)</option>
+                {(stocks || []).map((s) => (
+                  <option key={s.ticker} value={s.ticker}>
+                    {s.ticker} - {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Grid Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {gridTeamsWithHoldings
+              .filter((team) => {
+                if (holdingSearchTerm) {
+                  const q = holdingSearchTerm.toLowerCase();
+                  const matchesTeam = team.teamName.toLowerCase().includes(q) || team.teamCode.toLowerCase().includes(q);
+                  const matchesStock = team.holdings?.some((h) => h.ticker.toLowerCase().includes(q) || h.stockName.toLowerCase().includes(q));
+                  if (!matchesTeam && !matchesStock) return false;
+                }
+                if (holdingFilterStock !== "ALL") {
+                  return team.holdings?.some((h) => h.ticker === holdingFilterStock);
+                }
+                return true;
+              })
+              .map((team) => (
+                <div
+                  key={team.teamCode}
+                  className="p-4 rounded-xl bg-[#0A0D12] border border-[#1A202C] hover:border-[#232B3B] transition-colors space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-2 border-b border-[#161B24] pb-2">
+                    <div>
+                      <div className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                        <span className="font-mono text-[#06B6D4] font-bold">{team.teamCode}</span>
+                        <span className="truncate max-w-[150px]">{team.teamName}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                        Leader: {team.leaderName}
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded bg-[#161B24] border border-[#232B3B] text-[10px] font-mono text-cyan-400 shrink-0 font-bold">
+                      {team.holdingsCount} Stocks
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                    <div>
+                      <span className="text-[10px] text-slate-500 uppercase block">Cash Balance</span>
+                      <span className="text-white font-bold">₹{team.cashBalance.toLocaleString("en-IN")}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-500 uppercase block">Invested Value</span>
+                      <span className="text-cyan-400 font-bold">₹{team.totalHoldingsValue.toLocaleString("en-IN")}</span>
+                    </div>
+                  </div>
+
+                  {team.holdings && team.holdings.length > 0 ? (
+                    <div className="space-y-1.5 pt-1 border-t border-[#161B24]">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
+                        Equities Portfolio:
+                      </span>
+                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
+                        {team.holdings.map((h) => (
+                          <div
+                            key={h.ticker}
+                            className={`px-2 py-1 rounded-md text-[11px] font-mono border flex items-center justify-between gap-2 w-full ${
+                              h.unrealizedPnL >= 0
+                                ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-300"
+                                : "bg-rose-500/10 border-rose-500/25 text-rose-300"
+                            }`}
+                          >
+                            <span className="font-bold">
+                              {h.ticker} <span className="font-normal text-slate-400">({h.shares} sh)</span>
+                            </span>
+                            <span className="font-bold">
+                              ₹{h.currentValue.toLocaleString("en-IN")}
+                              <span className="text-[10px] ml-1 opacity-80">
+                                ({h.returnPercent >= 0 ? "+" : ""}{h.returnPercent}%)
+                              </span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-2 text-center text-[11px] text-slate-500 font-mono italic">
+                      No stock holdings (100% Cash)
+                    </div>
+                  )}
+                </div>
+              ))}
+          </div>
         </section>
 
         {/* 3-Member Roster Edit Modal */}
@@ -1837,46 +2084,52 @@ export default function Admin() {
                 </div>
 
                 <div className="p-3 rounded-lg bg-[#0A0D12] border border-[#1A202C] space-y-2.5">
-                  <div className="text-[11px] font-bold uppercase text-[#FF4D4D] tracking-wide">
-                    Strictly 3 Assigned Members
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase text-[#06B6D4] tracking-wide">
+                      Team Roster (Up to 3 Members)
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      1 to 3 members permitted
+                    </span>
                   </div>
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">
-                      Member 1: Team Leader (Can Trade &amp; Bid)
+                      Member 1: Team Leader (Required) *
                     </label>
                     <input
                       type="text"
                       required
                       value={editLeaderName}
                       onChange={(e) => setEditLeaderName(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded bg-[#121720] border border-[#232B3B] text-xs text-white outline-none"
+                      placeholder="Leader Name"
+                      className="w-full px-2.5 py-1.5 rounded bg-[#121720] border border-[#232B3B] text-xs text-white placeholder:text-slate-600 outline-none"
                     />
                   </div>
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">
-                      Member 2: Team Member (View Only)
+                      Member 2: Team Member (Optional)
                     </label>
                     <input
                       type="text"
-                      required
                       value={editMember2}
                       onChange={(e) => setEditMember2(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded bg-[#121720] border border-[#232B3B] text-xs text-white outline-none"
+                      placeholder="Leave blank if 1-member team"
+                      className="w-full px-2.5 py-1.5 rounded bg-[#121720] border border-[#232B3B] text-xs text-white placeholder:text-slate-600 outline-none"
                     />
                   </div>
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">
-                      Member 3: Team Member (View Only)
+                      Member 3: Team Member (Optional)
                     </label>
                     <input
                       type="text"
-                      required
                       value={editMember3}
                       onChange={(e) => setEditMember3(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded bg-[#121720] border border-[#232B3B] text-xs text-white outline-none"
+                      placeholder="Leave blank if 2-member team"
+                      className="w-full px-2.5 py-1.5 rounded bg-[#121720] border border-[#232B3B] text-xs text-white placeholder:text-slate-600 outline-none"
                     />
                   </div>
                 </div>
@@ -1884,9 +2137,9 @@ export default function Admin() {
                 <div className="flex items-center gap-2 pt-2">
                   <button
                     type="submit"
-                    className="flex-1 py-2 rounded-lg bg-[#E10600] hover:bg-[#C50500] text-white text-xs font-black uppercase tracking-wider transition-colors"
+                    className="flex-1 py-2 rounded-lg bg-[#E10600] hover:bg-[#C50500] text-white text-xs font-black uppercase tracking-wider transition-colors shadow-xs"
                   >
-                    Save 3-Member Roster
+                    Save Team Roster
                   </button>
                   <button
                     type="button"

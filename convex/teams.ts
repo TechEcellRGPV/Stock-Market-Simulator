@@ -262,14 +262,14 @@ export const seedCanonical15Teams = mutation({
   },
 });
 
-// Mutation: Register members for an allocated team slot (Strictly 3 members)
+// Mutation: Register members for an allocated team slot (Up to 3 members)
 export const registerTeamSlot = mutation({
   args: {
     teamCode: v.string(),
     teamPin: v.string(),
     leaderName: v.string(),
-    member2: v.string(),
-    member3: v.string(),
+    member2: v.optional(v.string()),
+    member3: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const raceState = await ctx.db.query("raceState").first();
@@ -282,21 +282,21 @@ export const registerTeamSlot = mutation({
     const code = args.teamCode.trim().toUpperCase();
     const pin = args.teamPin.trim();
     const leader = args.leaderName.trim();
-    const m2 = args.member2.trim();
-    const m3 = args.member3.trim();
+    const m2 = args.member2?.trim() || "";
+    const m3 = args.member3?.trim() || "";
 
-    if (!leader || !m2 || !m3) {
-      throw new Error(
-        "Each team requires exactly 3 members: Team Leader, Member 2 (Strategist), and Member 3 (Telemetry Analyst).",
-      );
+    if (!leader) {
+      throw new Error("Team Leader name is required.");
     }
 
-    if (
-      leader.toLowerCase() === m2.toLowerCase() ||
-      leader.toLowerCase() === m3.toLowerCase() ||
-      m2.toLowerCase() === m3.toLowerCase()
-    ) {
-      throw new Error("All 3 team members must have distinct names.");
+    const memberList = [leader];
+    if (m2) memberList.push(m2);
+    if (m3) memberList.push(m3);
+
+    const lowerNames = memberList.map((n) => n.toLowerCase());
+    const uniqueNames = new Set(lowerNames);
+    if (uniqueNames.size !== memberList.length) {
+      throw new Error("All team members must have distinct names.");
     }
 
     if (!/^\d{4}$/.test(pin)) {
@@ -328,13 +328,12 @@ export const registerTeamSlot = mutation({
       );
     }
 
-    const members = [leader, m2, m3];
     const now = Date.now();
     await ctx.db.patch(team._id, {
       leaderName: leader,
-      member2: m2,
-      member3: m3,
-      members,
+      member2: m2 || undefined,
+      member3: m3 || undefined,
+      members: memberList,
       teamPin: pin,
       isRegistered: true,
       registeredAt: now,
@@ -345,9 +344,9 @@ export const registerTeamSlot = mutation({
       teamCode: team.teamCode,
       teamName: team.teamName,
       leaderName: leader,
-      member2: m2,
-      member3: m3,
-      members,
+      member2: m2 || undefined,
+      member3: m3 || undefined,
+      members: memberList,
       cashBalance: team.cashBalance,
     };
   },
@@ -404,21 +403,24 @@ export const createTeam = mutation({
     }
 
     const leader = args.leaderName.trim();
-    const m2 =
-      args.member2?.trim() ||
-      args.memberNames?.[0]?.trim() ||
-      "Strategist Lead";
-    const m3 =
-      args.member3?.trim() ||
-      args.memberNames?.[1]?.trim() ||
-      "Telemetry Lead";
+    const m2 = args.member2?.trim() || args.memberNames?.[0]?.trim() || "";
+    const m3 = args.member3?.trim() || args.memberNames?.[1]?.trim() || "";
 
     if (!leader) {
       throw new Error("Team Leader name is required.");
     }
 
+    const memberList = [leader];
+    if (m2) memberList.push(m2);
+    if (m3) memberList.push(m3);
+
+    const lowerNames = memberList.map((n) => n.toLowerCase());
+    const uniqueNames = new Set(lowerNames);
+    if (uniqueNames.size !== memberList.length) {
+      throw new Error("All team members must have distinct names.");
+    }
+
     const teamCode = generateTeamCode(cleanTeamName);
-    const members = [leader, m2, m3];
     const now = Date.now();
 
     const teamId = await ctx.db.insert("teams", {
@@ -426,9 +428,9 @@ export const createTeam = mutation({
       teamName: cleanTeamName,
       teamPin: args.teamPin.trim(),
       leaderName: leader,
-      member2: m2,
-      member3: m3,
-      members,
+      member2: m2 || undefined,
+      member3: m3 || undefined,
+      members: memberList,
       cashBalance: initialCapital,
       totalScore: 0,
       portfolioScore: 0,
@@ -666,16 +668,20 @@ export const adminUpdateTeamMembers = mutation({
     const m2 =
       args.member2 !== undefined
         ? args.member2.trim()
-        : team.member2 || "Strategist Lead";
+        : team.member2;
     const m3 =
       args.member3 !== undefined
         ? args.member3.trim()
-        : team.member3 || "Telemetry Lead";
+        : team.member3;
+
+    const memberList = [leader];
+    if (m2) memberList.push(m2);
+    if (m3) memberList.push(m3);
 
     patchData.leaderName = leader;
-    patchData.member2 = m2;
-    patchData.member3 = m3;
-    patchData.members = [leader, m2, m3];
+    patchData.member2 = m2 || undefined;
+    patchData.member3 = m3 || undefined;
+    patchData.members = memberList;
 
     await ctx.db.patch(args.teamId, patchData);
     return { success: true };
