@@ -154,15 +154,15 @@ export default function Trade() {
           </div>
         </div>
 
-        {/* 2-Column Grid: Chart & Order Ticket */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* 2-Column Grid: Chart & Order Ticket (Appropriate balanced sizing & stretch alignment) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
           {/* Chart View */}
-          <div className="lg:col-span-8">
-            <StockTelemetryChart stock={activeStock} height={340} />
+          <div className="lg:col-span-7 xl:col-span-8 flex flex-col">
+            <StockTelemetryChart stock={activeStock} height={350} />
           </div>
 
           {/* Execution Form */}
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-5 xl:col-span-4 flex flex-col">
             <TradeForm
               selectedTicker={activeStock.ticker}
               onSelectTicker={handleSelectTicker}
@@ -170,8 +170,8 @@ export default function Trade() {
           </div>
         </div>
 
-        {/* Session Orders Table */}
-        <div className="rounded-xl bg-[#0D121D] border border-[#1A2336] p-4 sm:p-5">
+        {/* Session Orders Table (Stable Min-Height Container to avoid page shake) */}
+        <div className="rounded-xl bg-[#0D121D] border border-[#1A2336] p-4 sm:p-5 min-h-[220px]">
           <div className="flex items-center justify-between pb-3 border-b border-[#1A2336] mb-3">
             <div className="flex items-center gap-2">
               <Receipt className="w-4 h-4 text-emerald-400" />
@@ -184,13 +184,14 @@ export default function Trade() {
           </div>
 
           {!orders || orders.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-400">
-              No orders placed in this session yet. Submit your first trade above.
+            <div className="h-28 flex flex-col items-center justify-center text-xs text-slate-400 text-center">
+              <span>No orders placed in this session yet.</span>
+              <span className="text-[11px] text-slate-500 mt-1">Submit your first trade ticket above.</span>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[360px] overflow-y-auto">
               <table className="w-full text-left text-xs font-sans">
-                <thead>
+                <thead className="sticky top-0 bg-[#0D121D] z-10">
                   <tr className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-[#161F30]">
                     <th className="py-2.5">Side</th>
                     <th className="py-2.5">Ticker</th>

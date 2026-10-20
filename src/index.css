@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+html {
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+}
+
 html,
 body {
   margin: 0;
@@ -12,6 +17,28 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Floating Right-to-Left Ticker for Mobile */
+@keyframes marquee-rtl {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-ticker-rtl {
+  display: inline-block;
+  white-space: nowrap;
+  will-change: transform;
+  animation: marquee-rtl 24s linear infinite;
+}
+
+.animate-ticker-rtl:hover,
+.animate-ticker-rtl:active {
+  animation-play-state: paused;
 }
 
 ::selection {

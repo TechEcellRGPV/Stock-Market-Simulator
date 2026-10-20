@@ -1,34 +1,22 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  TrendingUp,
-  TrendingDown,
   ChevronRight,
-  ChevronDown,
-  ChevronUp,
+  ChevronLeft,
   Radio,
-  X,
-  Sparkles,
-  Zap
+  History,
+  RotateCcw
 } from "lucide-react";
 import { useSimulation } from "../context/SimulationContext";
 
 export default function CirculatingBanner() {
-  const { raceState, stocks } = useSimulation();
-  const [index, setIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const [prevNews, setPrevNews] = useState(raceState?.activeNews);
-  const [isMobileExpanded, setIsMobileExpanded] = useState(true);
-  const [isMobileDismissed, setIsMobileDismissed] = useState(false);
+  const { raceState, stocks, trackEvents } = useSimulation();
 
-  // When a new live headline arrives from race control, automatically expand and alert mobile users
-  if (raceState?.activeNews && raceState.activeNews !== prevNews) {
-    setPrevNews(raceState.activeNews);
-    setIsMobileDismissed(false);
-    setIsMobileExpanded(true);
-    setIndex(0);
-  }
+  // 0 = Current Live News; 1..5 = Previous 5 Broadcasted News Items
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const prevLiveNewsRef = useRef(null);
 
   const topGainer = useMemo(() => {
     if (!stocks || stocks.length === 0) return null;
@@ -40,106 +28,129 @@ export default function CirculatingBanner() {
     return [...stocks].sort((a, b) => a.changePercent - b.changePercent)[0];
   }, [stocks]);
 
-  // LIVE FEED ONLY: Strict real-time feed without exposing future or past news archives
-  const messages = useMemo(() => {
-    const items = [];
+  // Construct chronologically ordered list of broadcasted news:
+  // Position 0 = Current live news
+  // Positions 1..5 = Previous up to 5 news items that have already occurred
+  // Future news is NEVER included.
+  const newsStream = useMemo(() => {
+    const list = [];
+    const seen = new Set();
 
-    // 1. Current Live Breaking News broadcast from the running historical minute
-    if (raceState?.activeNews) {
-      items.push({
-        id: "active_news",
+    // 1. Current active live news broadcast from simulation
+    if (raceState?.activeNews && typeof raceState.activeNews === "string" && raceState.activeNews.trim()) {
+      const text = raceState.activeNews.trim();
+      list.push({
+        id: "active_live_news",
         tag: "LIVE WIRE",
-        tagType: "breaking",
-        tagColor: "text-rose-300 bg-rose-500/20 border-rose-500/40 shadow-xs shadow-rose-950/50",
-        content: raceState.activeNews,
+        tagColor: "text-rose-300 bg-rose-500/20 border-rose-500/40",
+        headline: text,
+        timestamp: raceState.updatedAt || 0,
+        isLive: true,
         linkTo: "/trade",
         linkText: "Trade Stocks"
       });
+      seen.add(text.toLowerCase());
     }
 
-    // 2. Current Competition Live Lap Status
-    if (raceState?.status === "GREEN_FLAG") {
-      items.push({
-        id: "live_lap",
-        tag: `LAP ${raceState.currentLap}/5 • OPEN`,
-        tagType: "status",
-        tagColor: "text-emerald-300 bg-emerald-500/20 border-emerald-500/40 shadow-xs shadow-emerald-950/50",
-        content: "Market trading is live! Teams can place buy and sell orders across all 17 competition equities.",
-        linkTo: "/trade",
-        linkText: "Open Cockpit"
-      });
-    } else if (raceState?.status === "SAFETY_CAR") {
-      items.push({
-        id: "paused",
-        tag: "MARKET PAUSED",
-        tagType: "alert",
-        tagColor: "text-amber-300 bg-amber-500/20 border-amber-500/40",
-        content: "Trading is temporarily paused by the organizers. Orders and timers are on hold.",
-        linkTo: "/leaderboard",
-        linkText: "View Standings"
-      });
-    } else if (raceState?.status === "CHECKERED_FLAG") {
-      items.push({
-        id: "concluded",
-        tag: "FINAL RESULTS",
-        tagType: "neutral",
-        tagColor: "text-slate-200 bg-slate-700/40 border-slate-600/50",
-        content: "The competition has concluded! Final portfolio rankings are now locked.",
-        linkTo: "/leaderboard",
-        linkText: "View Leaderboard"
-      });
+    // 2. Broadcasted track events (already ordered descending by timestamp)
+    if (Array.isArray(trackEvents)) {
+      for (let i = 0; i < trackEvents.length; i++) {
+        const evt = trackEvents[i];
+        const title = evt.title || "";
+        const desc = evt.description || "";
+        const combined = `${title} ${desc}`.trim();
+        const key = combined.toLowerCase();
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+
+        const hasImpact = typeof evt.priceImpactPercent === "number" && evt.priceImpactPercent !== 0;
+        const isNeg = hasImpact && evt.priceImpactPercent < 0;
+        let tag = "MARKET ALERT";
+        let tagColor = "text-amber-300 bg-amber-500/20 border-amber-500/40";
+
+        if (hasImpact) {
+          tag = `SECTOR SHOCK ${evt.priceImpactPercent > 0 ? "+" : ""}${evt.priceImpactPercent}%`;
+          tagColor = isNeg
+            ? "text-rose-300 bg-rose-500/20 border-rose-500/40"
+            : "text-emerald-300 bg-emerald-500/20 border-emerald-500/40";
+        } else if (evt.type === "GREEN_FLAG") {
+          tag = `LAP ${evt.lap || raceState?.currentLap || 1} • GREEN FLAG`;
+          tagColor = "text-emerald-300 bg-emerald-500/20 border-emerald-500/40";
+        } else if (evt.type === "SAFETY_CAR") {
+          tag = "SAFETY CAR";
+          tagColor = "text-amber-300 bg-amber-500/20 border-amber-500/40";
+        }
+
+        list.push({
+          id: evt.id || evt._id || `evt_${evt.timestamp || i}`,
+          tag,
+          tagColor,
+          headline: title ? (desc && desc !== title ? `${title}: ${desc}` : title) : desc,
+          timestamp: evt.timestamp || 0,
+          isLive: false,
+          linkTo: "/trade",
+          linkText: "Trade Stock"
+        });
+
+        // Strictly cap to at most 6 items: index 0 (current) + 5 previous news
+        if (list.length >= 6) break;
+      }
     }
 
-    // 3. Top live market mover
-    if (topGainer && topGainer.changePercent > 0) {
-      items.push({
-        id: "top_gainer",
-        tag: "TOP MOVER",
-        tagType: "gainer",
-        tagColor: "text-emerald-300 bg-emerald-500/20 border-emerald-500/40",
-        content: `${topGainer.ticker} (${topGainer.name}) surges +${topGainer.changePercent}% to ₹${topGainer.currentPrice.toFixed(2)}`,
-        linkTo: `/trade?ticker=${topGainer.ticker}`,
-        linkText: "Trade Stock"
-      });
-    } else if (topLoser && topLoser.changePercent < 0) {
-      items.push({
-        id: "top_dip",
-        tag: "MARKET DIP",
-        tagType: "loser",
-        tagColor: "text-rose-300 bg-rose-500/20 border-rose-500/40",
-        content: `${topLoser.ticker} (${topLoser.name}) corrects ${topLoser.changePercent}% to ₹${topLoser.currentPrice.toFixed(2)}`,
-        linkTo: `/trade?ticker=${topLoser.ticker}`,
-        linkText: "Buy Dip"
-      });
+    // Fallback baseline items if competition just initialized
+    if (list.length === 0) {
+      if (topGainer && topGainer.changePercent > 0) {
+        list.push({
+          id: "top_gainer_init",
+          tag: "TOP MOVER",
+          tagColor: "text-emerald-300 bg-emerald-500/20 border-emerald-500/40",
+          headline: `${topGainer.ticker} (${topGainer.name}) leads market +${topGainer.changePercent}% at ₹${topGainer.currentPrice.toFixed(2)}`,
+          timestamp: 0,
+          isLive: true,
+          linkTo: `/trade?ticker=${topGainer.ticker}`,
+          linkText: "Trade Stock"
+        });
+      } else if (topLoser && topLoser.changePercent < 0) {
+        list.push({
+          id: "top_loser_init",
+          tag: "MARKET DIP",
+          tagColor: "text-rose-300 bg-rose-500/20 border-rose-500/40",
+          headline: `${topLoser.ticker} (${topLoser.name}) corrects ${topLoser.changePercent}% to ₹${topLoser.currentPrice.toFixed(2)}`,
+          timestamp: 0,
+          isLive: true,
+          linkTo: `/trade?ticker=${topLoser.ticker}`,
+          linkText: "Buy Dip"
+        });
+      } else {
+        list.push({
+          id: "market_open_init",
+          tag: "MARKET OPEN",
+          tagColor: "text-emerald-300 bg-emerald-500/20 border-emerald-500/40",
+          headline: "Trading is live across all 17 equities with ₹1,00,000 starting mock capital.",
+          timestamp: 0,
+          isLive: true,
+          linkTo: "/trade",
+          linkText: "Open Cockpit"
+        });
+      }
     }
 
-    // Fallback baseline tip if waiting for first minute
-    if (items.length === 0) {
-      items.push({
-        id: "stream_standby",
-        tag: "LIVE STREAM",
-        tagType: "status",
-        tagColor: "text-cyan-300 bg-cyan-500/20 border-cyan-500/40",
-        content: "Connecting to race telemetry wire. 1-minute historical prices stream automatically.",
-        linkTo: "/trade",
-        linkText: "View Stocks"
-      });
-    }
+    // Limit to maximum 6 items: Current news + at most 5 past news
+    return list.slice(0, 6);
+  }, [raceState, trackEvents, topGainer, topLoser]);
 
-    return items;
-  }, [raceState, topGainer, topLoser]);
-
-  // Automatic cycling (10 seconds)
+  // When a new live event flows in from race control, reset to current live news (index 0)
+  const currentLiveKey = newsStream[0]?.id || newsStream[0]?.headline;
   useEffect(() => {
-    if (messages.length <= 1 || isHovered) return;
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % messages.length);
-    }, 10000);
-    return () => clearInterval(timer);
-  }, [messages.length, isHovered]);
+    if (prevLiveNewsRef.current && prevLiveNewsRef.current !== currentLiveKey) {
+      setHistoryIndex(0);
+    }
+    prevLiveNewsRef.current = currentLiveKey;
+  }, [currentLiveKey]);
 
-  const currentMsg = messages[index % messages.length] || messages[0];
-  const isBreaking = currentMsg.tagType === "breaking";
+  const currentItem = newsStream[historyIndex] || newsStream[0];
+  const isViewingHistory = historyIndex > 0;
+  const maxHistoryReached = historyIndex >= newsStream.length - 1 || historyIndex >= 5;
 
   return (
     <>
@@ -149,51 +160,52 @@ export default function CirculatingBanner() {
       <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="hidden md:block relative bg-gradient-to-r from-[#080B12] via-[#0E1320] to-[#080B12] border-b border-[#1E2638] px-4 sm:px-6 py-2.5 text-xs select-none transition-colors duration-200 shadow-sm"
-        title="Hover to pause ticker"
+        className="hidden md:block relative bg-[#090D14] border-b border-[#182133] px-4 sm:px-6 py-2 text-xs select-none transition-colors duration-200"
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-          {/* Left: Live Radar Beacon + Tag */}
+          {/* Left: Tag + Headline */}
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            {/* Live Indicator or History Badge */}
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="relative flex h-2.5 w-2.5">
-                <span
-                  className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                    isBreaking ? "bg-rose-500" : "bg-[#E10600]"
-                  }`}
-                />
-                <span
-                  className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                    isBreaking ? "bg-rose-500" : "bg-[#E10600]"
-                  }`}
-                />
-              </span>
-              <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-mono font-extrabold uppercase tracking-wider border shrink-0 ${currentMsg.tagColor}`}>
-                {currentMsg.tag}
+              {!isViewingHistory ? (
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
+                </span>
+              ) : (
+                <History className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              )}
+
+              <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider border shrink-0 ${
+                isViewingHistory
+                  ? "text-amber-300 bg-amber-500/15 border-amber-500/30"
+                  : currentItem.tagColor
+              }`}>
+                {isViewingHistory ? `PREVIOUS -${historyIndex}` : currentItem.tag}
               </span>
             </div>
 
-            {/* Middle: Headline Text */}
-            <div className="overflow-hidden relative flex-1 min-w-0 h-6 flex items-center">
+            {/* Headline Text */}
+            <div className="overflow-hidden relative flex-1 min-w-0 h-5 flex items-center">
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={currentMsg.id + currentMsg.content}
-                  initial={{ opacity: 0, y: 5 }}
+                  key={`${currentItem.id}_${historyIndex}`}
+                  initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
                   className="flex items-center gap-2.5 truncate"
                 >
-                  <span className="text-slate-100 font-semibold text-xs sm:text-[13px] tracking-normal truncate">
-                    {currentMsg.content}
+                  <span className="text-slate-200 font-medium text-xs tracking-normal truncate">
+                    {currentItem.headline}
                   </span>
 
-                  {currentMsg.linkTo && (
+                  {currentItem.linkTo && (
                     <Link
-                      to={currentMsg.linkTo}
-                      className="inline-flex items-center text-[10px] font-extrabold uppercase tracking-wider text-rose-400 hover:text-white shrink-0 gap-0.5 px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/25 transition-all"
+                      to={currentItem.linkTo}
+                      className="inline-flex items-center text-[10px] font-semibold text-rose-400 hover:text-white shrink-0 gap-0.5 px-1.5 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 transition-colors"
                     >
-                      <span>{currentMsg.linkText}</span>
+                      <span>{currentItem.linkText}</span>
                       <ChevronRight className="w-3 h-3" />
                     </Link>
                   )}
@@ -202,128 +214,140 @@ export default function CirculatingBanner() {
             </div>
           </div>
 
-          {/* Right: Live Feed Indicator */}
-          <div className="flex items-center gap-2 shrink-0 text-slate-400">
-            {isHovered && (
-              <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/25 animate-pulse">
-                PAUSED
+          {/* Right: History Navigation Controls (Previous 5 News only, NO Future News) */}
+          <div className="flex items-center gap-2 shrink-0">
+            {isHovered && !isViewingHistory && (
+              <span className="text-[10px] font-mono text-slate-500 hidden sm:inline">
+                Click arrows for past 5 news
               </span>
             )}
-            <span className="text-[10px] font-mono font-bold text-slate-400 px-2 py-0.5 rounded bg-[#121824] border border-[#1E273A] flex items-center gap-1">
-              <Radio className="w-3 h-3 text-[#E10600] animate-pulse" />
-              <span>LIVE FEED</span>
-            </span>
-          </div>
-        </div>
 
-        {/* Bottom Progress Line */}
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#1A2234] overflow-hidden">
-          {!isHovered && (
-            <motion.div
-              key={index}
-              initial={{ width: "0%" }}
-              animate={{ width: "100%" }}
-              transition={{ duration: 10, ease: "linear" }}
-              className={`h-full ${isBreaking ? "bg-rose-500" : "bg-[#E10600]"}`}
-            />
-          )}
+            {isViewingHistory && (
+              <button
+                type="button"
+                onClick={() => setHistoryIndex(0)}
+                className="px-2 py-0.5 rounded bg-[#161F30] hover:bg-[#1E2A40] text-amber-300 hover:text-white text-[10px] font-mono font-bold flex items-center gap-1 border border-amber-500/30 transition-colors cursor-pointer"
+                title="Return to Live broadcast"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Return to Live</span>
+              </button>
+            )}
+
+            <div className="flex items-center gap-1 bg-[#0E131D] px-1.5 py-0.5 rounded border border-[#1A2336] text-slate-400">
+              {/* Previous button (Goes back in time, up to 5 past news) */}
+              <button
+                type="button"
+                onClick={() => setHistoryIndex((prev) => Math.min(newsStream.length - 1, Math.min(5, prev + 1)))}
+                disabled={maxHistoryReached}
+                className="p-1 rounded hover:bg-[#161F30] hover:text-white disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                title={maxHistoryReached ? "Max 5 past news reached" : "Previous News"}
+                aria-label="Previous News"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              <span className="text-[10px] font-mono font-bold px-1.5 min-w-[52px] text-center text-slate-300">
+                {historyIndex === 0 ? "LIVE" : `-${historyIndex} / 5`}
+              </span>
+
+              {/* Next button (Returns forward to newer news, strictly DISABLED at live index 0) */}
+              <button
+                type="button"
+                onClick={() => setHistoryIndex((prev) => Math.max(0, prev - 1))}
+                disabled={historyIndex <= 0}
+                className="p-1 rounded hover:bg-[#161F30] hover:text-white disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                title={historyIndex <= 0 ? "At current live news (future news unavailable)" : "Newer News"}
+                aria-label="Newer News"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="hidden lg:flex items-center gap-1 text-[10px] font-mono text-slate-400 pl-2 border-l border-[#1A2336]">
+              <Radio className="w-3 h-3 text-[#E10600] animate-pulse" />
+              <span>RADAR WIRE</span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* ============================================================== */}
-      {/* 2. MOBILE VIEW (md:hidden): FLOATING LIVE NEWS CARD            */}
-      {/* Displays the ENTIRE news without truncation so mobile users    */}
-      {/* can comfortably read full headlines & descriptions!           */}
+      {/* 2. MOBILE VIEW (md:hidden): Floating Right-to-Left Ticker Ribbon*/}
+      {/* Smooth continuous right-to-left marquee with NO popup alerts!   */}
       {/* ============================================================== */}
-      {!isMobileDismissed && (
-        <div className="md:hidden fixed bottom-3 left-3 right-3 z-40">
-          <AnimatePresence>
-            {isMobileExpanded ? (
-              /* Expanded Full News View (No Truncation) */
-              <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className="bg-[#0B0F19]/95 backdrop-blur-xl border-2 border-[#E10600]/40 rounded-2xl p-3.5 shadow-[0_10px_35px_rgba(0,0,0,0.85)] space-y-2.5"
-              >
-                {/* Header bar with tag and control buttons */}
-                <div className="flex items-center justify-between gap-2 border-b border-[#1E273A] pb-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-                    </span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-black uppercase tracking-wider border ${currentMsg.tagColor}`}>
-                      {currentMsg.tag}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setIsMobileExpanded(false)}
-                      className="p-1 rounded-md bg-[#141A28] text-slate-400 hover:text-white border border-[#222E46]"
-                      title="Minimize ticker"
-                    >
-                      <ChevronDown className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsMobileDismissed(true)}
-                      className="p-1 rounded-md bg-[#141A28] text-slate-400 hover:text-white border border-[#222E46]"
-                      title="Dismiss until next headline"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Complete Uncut Headline Text */}
-                <p className="text-xs sm:text-sm text-slate-100 font-semibold leading-relaxed break-words">
-                  {currentMsg.content}
-                </p>
-
-                {/* Footer action button */}
-                {currentMsg.linkTo && (
-                  <div className="pt-1 flex justify-end">
-                    <Link
-                      to={currentMsg.linkTo}
-                      className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#E10600] text-white text-xs font-bold font-mono tracking-wider shadow-sm hover:bg-[#B80500]"
-                    >
-                      <span>{currentMsg.linkText}</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                )}
-              </motion.div>
+      <div className="md:hidden bg-[#090D14] border-b border-[#182133] px-2.5 py-1.5 text-xs select-none">
+        <div className="flex items-center justify-between gap-2 h-7">
+          {/* Left: Compact Live or History badge */}
+          <div className="flex items-center gap-1 shrink-0 z-10 bg-[#090D14] pr-1.5 border-r border-[#182133]">
+            {!isViewingHistory ? (
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+              </span>
             ) : (
-              /* Minimized Compact Floating Pill */
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                onClick={() => setIsMobileExpanded(true)}
-                className="bg-[#0B0F19]/95 backdrop-blur-lg border border-[#E10600]/50 rounded-full px-3.5 py-2 shadow-2xl flex items-center justify-between gap-2 cursor-pointer"
-              >
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
-                  <span className="text-[11px] font-mono font-bold text-rose-400 shrink-0">
-                    {currentMsg.tag}:
-                  </span>
-                  <span className="text-xs text-slate-200 font-medium truncate">
-                    {currentMsg.content}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 shrink-0 text-slate-400">
-                  <span className="text-[10px] text-slate-400 font-mono">Tap</span>
-                  <ChevronUp className="w-3.5 h-3.5 text-white" />
-                </div>
-              </motion.div>
+              <History className="w-2.5 h-2.5 text-amber-400 shrink-0" />
             )}
-          </AnimatePresence>
+            <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold uppercase tracking-wider border ${
+              isViewingHistory
+                ? "text-amber-300 bg-amber-500/15 border-amber-500/30"
+                : "text-rose-300 bg-rose-500/15 border-rose-500/30"
+            }`}>
+              {isViewingHistory ? `-${historyIndex}` : "LIVE"}
+            </span>
+          </div>
+
+          {/* Center: Smooth Floating Text from Right to Left */}
+          <div className="overflow-hidden relative flex-1 min-w-0 h-full flex items-center">
+            <div
+              key={`${currentItem.id}_${historyIndex}`}
+              className="animate-ticker-rtl text-[11px] font-medium text-slate-100 flex items-center cursor-pointer"
+              title="Touch and hold to pause ticker"
+            >
+              <span className="inline-block mr-12">{currentItem.headline}</span>
+              <span className="inline-block mr-12 text-[#E10600] font-black">•</span>
+              <span className="inline-block mr-12">{currentItem.headline}</span>
+            </div>
+          </div>
+
+          {/* Right: Quick Previous / Next News Buttons (Capped at 5 past, 0 future) */}
+          <div className="flex items-center gap-0.5 shrink-0 z-10 bg-[#090D14] pl-1.5 border-l border-[#182133]">
+            {isViewingHistory && (
+              <button
+                type="button"
+                onClick={() => setHistoryIndex(0)}
+                className="p-1 rounded text-amber-400 hover:text-white"
+                title="Jump to live"
+              >
+                <RotateCcw className="w-3 h-3" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setHistoryIndex((prev) => Math.min(newsStream.length - 1, Math.min(5, prev + 1)))}
+              disabled={maxHistoryReached}
+              className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-20 cursor-pointer"
+              aria-label="Previous News"
+              title="Previous news"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <span className="text-[9px] font-mono font-bold text-slate-400 min-w-[16px] text-center">
+              {historyIndex === 0 ? "0" : `-${historyIndex}`}
+            </span>
+            <button
+              type="button"
+              onClick={() => setHistoryIndex((prev) => Math.max(0, prev - 1))}
+              disabled={historyIndex <= 0}
+              className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-20 cursor-pointer"
+              aria-label="Newer News"
+              title="Newer news (future unavailable)"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
-      )}
+      </div>
     </>
   );
 }
