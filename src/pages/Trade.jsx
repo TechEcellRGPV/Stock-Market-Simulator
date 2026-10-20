@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import TradeForm from "../../trade company components/TradeForm";
 import Navbar from "../components/Navbar";
@@ -35,11 +35,27 @@ export default function Trade() {
     return stocks[0]?.ticker || "TSLA";
   });
 
+  // Derived active ticker: prioritizes queryTicker if present, falls back to selectedTicker
+  const activeTicker = (queryTicker && stocks.some((s) => s.ticker === queryTicker))
+    ? queryTicker
+    : selectedTicker;
+
+  // Support instantaneous same-page stock switching via custom event from CirculatingBanner
+  useEffect(() => {
+    const handleSwitchStock = (e) => {
+      const ticker = e.detail;
+      if (ticker && stocks.some((s) => s.ticker === ticker)) {
+        setSelectedTicker(ticker);
+        setSearchParams({ ticker });
+      }
+    };
+    window.addEventListener("select_stock_ticker", handleSwitchStock);
+    return () => window.removeEventListener("select_stock_ticker", handleSwitchStock);
+  }, [stocks, setSearchParams]);
+
   const activeStock = useMemo(() => {
-    return (
-      stocks.find((s) => s.ticker === selectedTicker) ||
-      stocks.find((s) => s.ticker === queryTicker) ||
-      stocks[0] || {
+    if (!stocks || stocks.length === 0) {
+      return {
         ticker: "TSLA",
         name: "Tesla, Inc.",
         sector: "Electric Vehicles & Clean Energy",
@@ -50,9 +66,14 @@ export default function Trade() {
         changePercent: 0,
         volatility: 1.5,
         sparkline: [365, 368]
-      }
+      };
+    }
+
+    return (
+      stocks.find((s) => s.ticker === activeTicker) ||
+      stocks[0]
     );
-  }, [stocks, selectedTicker, queryTicker]);
+  }, [stocks, activeTicker]);
 
   const handleSelectTicker = (ticker) => {
     setSelectedTicker(ticker);

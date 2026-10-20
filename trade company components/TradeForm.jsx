@@ -233,9 +233,9 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
             <div className="w-full px-3 py-2 rounded-lg bg-[#0A0D12] border border-[#1A202C]/60 text-[11px] text-slate-400 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-medium text-slate-300">Order Routing Terminal Active</span>
+                <span className="font-medium text-slate-300">Live Trading Desk</span>
               </span>
-              <span className="font-mono text-[10px] text-slate-400">Zero Slippage</span>
+              <span className="font-mono text-[10px] text-emerald-400 font-semibold">Ready to Trade</span>
             </div>
           )}
         </div>
