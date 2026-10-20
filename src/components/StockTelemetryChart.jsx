@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, Activity } from "lucide-react";
 
 export default function StockTelemetryChart({
   stock,
-  height = 320,
+  height,
   showControls = true
 }) {
   const canvasRef = useRef(null);
@@ -11,6 +11,15 @@ export default function StockTelemetryChart({
   const [hoverData, setHoverData] = useState(null);
   const [timeframe, setTimeframe] = useState("ALL"); // "1M" | "5M" | "15M" | "ALL"
   const [chartType, setChartType] = useState("area"); // "area" | "line"
+  const [isMobileScreen, setIsMobileScreen] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 640 : false));
+
+  useEffect(() => {
+    const handleResize = () => setIsMobileScreen(window.innerWidth < 640);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const chartHeight = height || (isMobileScreen ? 230 : 340);
 
   // Synthesize realistic telemetry ticks from sparkline and current/open/high/low prices
   const chartData = useMemo(() => {
@@ -70,7 +79,10 @@ export default function StockTelemetryChart({
 
     ctx.clearRect(0, 0, width, h);
 
-    const padding = { top: 20, right: 65, bottom: 28, left: 16 };
+    const isMobile = width < 480;
+    const padding = isMobile
+      ? { top: 14, right: 48, bottom: 22, left: 8 }
+      : { top: 20, right: 65, bottom: 28, left: 16 };
     const chartW = width - padding.left - padding.right;
     const chartH = h - padding.top - padding.bottom;
 
@@ -106,10 +118,10 @@ export default function StockTelemetryChart({
 
       // Price Axis Text
       ctx.fillStyle = "#64748B";
-      ctx.font = "10px monospace";
+      ctx.font = isMobile ? "9px monospace" : "10px monospace";
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillText(`₹${gridPrice.toFixed(1)}`, padding.left + chartW + 8, yPos);
+      ctx.fillText(`₹${gridPrice.toFixed(1)}`, padding.left + chartW + (isMobile ? 5 : 8), yPos);
     }
 
     ctx.setLineDash([]); // Reset line dash
@@ -256,7 +268,8 @@ export default function StockTelemetryChart({
     const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
     const x = clientX - rect.left;
 
-    const padding = { left: 16, right: 65 };
+    const isMobile = rect.width < 480;
+    const padding = isMobile ? { left: 8, right: 48 } : { left: 16, right: 65 };
     const chartW = rect.width - padding.left - padding.right;
 
     if (x < padding.left || x > padding.left + chartW) {
@@ -292,49 +305,49 @@ export default function StockTelemetryChart({
   return (
     <div
       ref={containerRef}
-      className="w-full bg-[#0D121D] border border-[#1A2336] rounded-xl p-4 sm:p-5 flex flex-col justify-between select-none"
+      className="w-full bg-[#0D121D] border border-[#1A2336] rounded-xl p-3.5 sm:p-5 flex flex-col justify-between select-none"
     >
       {/* Chart Top Telemetry Strip */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 border-b border-[#1A2336] pb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#141B29] border border-[#1F293D] flex items-center justify-center font-mono font-bold text-xs text-emerald-400">
+      <div className="flex items-center justify-between gap-2.5 mb-2.5 border-b border-[#1A2336] pb-2.5">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#141B29] border border-[#1F293D] flex items-center justify-center font-mono font-bold text-xs text-emerald-400 shrink-0">
             {stock.ticker.split("-")[0]}
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white tracking-tight">{stock.name}</h3>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#090D14] text-slate-400 border border-[#1A2336]">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight truncate">{stock.name}</h3>
+              <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#090D14] text-slate-400 border border-[#1A2336] shrink-0">
                 {stock.ticker}
               </span>
             </div>
-            <div className="text-[11px] text-slate-400 font-medium">{stock.sector}</div>
+            <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate">{stock.sector}</div>
           </div>
         </div>
 
         {/* Live Hover Telemetry vs Current Price */}
-        <div className="flex items-center gap-3">
+        <div className="text-right shrink-0">
           {hoverData ? (
-            <div className="text-right">
-              <div className="text-base font-bold font-mono text-white">
+            <div>
+              <div className="text-sm sm:text-base font-bold font-mono text-white">
                 ₹{hoverData.price.toFixed(2)}
               </div>
               <div
-                className={`text-[10px] font-semibold font-mono ${
+                className={`text-[9px] sm:text-[10px] font-semibold font-mono ${
                   hoverData.diff >= 0 ? "text-emerald-400" : "text-rose-400"
                 }`}
               >
                 {hoverData.diff >= 0 ? "+" : ""}
                 {hoverData.diff.toFixed(2)} ({hoverData.diffPct >= 0 ? "+" : ""}
-                {hoverData.diffPct.toFixed(2)}%) • {hoverData.timeStr}
+                {hoverData.diffPct.toFixed(2)}%)
               </div>
             </div>
           ) : (
-            <div className="text-right">
-              <div className="text-base font-bold font-mono text-white">
+            <div>
+              <div className="text-sm sm:text-base font-bold font-mono text-white">
                 ₹{stock.currentPrice.toFixed(2)}
               </div>
               <div
-                className={`text-[10px] font-semibold font-mono inline-flex items-center gap-0.5 ${
+                className={`text-[9px] sm:text-[10px] font-semibold font-mono inline-flex items-center gap-0.5 ${
                   isUp ? "text-emerald-400" : "text-rose-400"
                 }`}
               >
@@ -350,7 +363,7 @@ export default function StockTelemetryChart({
       </div>
 
       {/* Canvas Element with Responsive Sizing */}
-      <div className="relative w-full overflow-hidden" style={{ height: `${height}px` }}>
+      <div className="relative w-full overflow-hidden" style={{ height: `${chartHeight}px` }}>
         <canvas
           ref={canvasRef}
           onMouseMove={handlePointerMove}
@@ -363,9 +376,9 @@ export default function StockTelemetryChart({
 
       {/* Chart Footer Controls & High/Low Telemetry */}
       {showControls && (
-        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-[#1A2336] mt-2 text-xs">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2.5 border-t border-[#1A2336] mt-2 text-xs">
           {/* Day High / Low Stats */}
-          <div className="flex items-center gap-3 text-[11px] font-mono">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-mono">
             <span className="text-slate-400">
               High: <strong className="text-emerald-400">₹{(stock.dayHigh || stock.currentPrice).toFixed(1)}</strong>
             </span>
@@ -380,13 +393,13 @@ export default function StockTelemetryChart({
           </div>
 
           {/* Timeframe & Display Buttons */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 self-end sm:self-auto">
             {["1M", "5M", "15M", "ALL"].map((tf) => (
               <button
                 key={tf}
                 type="button"
                 onClick={() => setTimeframe(tf)}
-                className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors ${
+                className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors cursor-pointer ${
                   timeframe === tf
                     ? "bg-emerald-500 text-slate-950 font-bold"
                     : "bg-[#090D14] text-slate-400 hover:text-white border border-[#1A2336]"
@@ -401,7 +414,7 @@ export default function StockTelemetryChart({
             <button
               type="button"
               onClick={() => setChartType((prev) => (prev === "area" ? "line" : "area"))}
-              className="p-1 rounded bg-[#090D14] text-slate-400 hover:text-white border border-[#1A2336] transition-colors"
+              className="p-1 rounded bg-[#090D14] text-slate-400 hover:text-white border border-[#1A2336] transition-colors cursor-pointer"
               title="Toggle Area/Line Mode"
             >
               <Activity className="w-3 h-3" />

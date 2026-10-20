@@ -8,8 +8,10 @@ import {
   TrendingUp,
   TrendingDown,
   Receipt,
+  Zap,
+  LineChart,
   Layers,
-  Clock
+  ChevronRight
 } from "lucide-react";
 import { useSimulation } from "../context/SimulationContext";
 import { useSEO } from "../hooks/useSEO";
@@ -25,6 +27,9 @@ export default function Trade() {
   const { stocks, raceState, orders } = useSimulation();
 
   useScreenWakeLock(raceState?.status === "GREEN_FLAG");
+
+  // Mobile navigation tab: "trade" (default for mobile) | "chart" | "orders"
+  const [mobileTab, setMobileTab] = useState("trade");
 
   const queryTicker = searchParams.get("ticker");
 
@@ -88,7 +93,7 @@ export default function Trade() {
       <CirculatingBanner />
 
       {/* Horizontal Stock Selection Ribbon */}
-      <div className="bg-[#0B0F17] border-b border-[#182133] px-4 sm:px-6 lg:px-8 py-2 overflow-x-auto scrollbar-none">
+      <div className="bg-[#0B0F17] border-b border-[#182133] px-3 sm:px-6 py-2 overflow-x-auto scrollbar-none">
         <div className="flex items-center gap-1.5 min-w-max">
           {stocks.map((stk) => {
             const isSelected = stk.ticker === activeStock.ticker;
@@ -99,9 +104,9 @@ export default function Trade() {
                 key={stk.ticker}
                 type="button"
                 onClick={() => handleSelectTicker(stk.ticker)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-2 border ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-2 border shrink-0 cursor-pointer ${
                   isSelected
-                    ? "bg-[#161F30] text-white border-emerald-500 shadow-xs"
+                    ? "bg-[#161F30] text-white border-emerald-500 shadow-xs ring-1 ring-emerald-500/30"
                     : "bg-[#090D14] text-slate-400 hover:text-white border-[#182133] hover:border-[#222E46]"
                 }`}
               >
@@ -116,39 +121,32 @@ export default function Trade() {
         </div>
       </div>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
-        {/* Active Stock Telemetry Ribbon */}
-        <div className="p-4 rounded-xl bg-[#0D121D] border border-[#1A2336] flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-5 space-y-4 sm:space-y-5">
+        {/* Active Stock Telemetry Ribbon (Optimized for both mobile and desktop) */}
+        <div className="p-3.5 sm:p-4 rounded-xl bg-[#0D121D] border border-[#1A2336] shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: Ticker & Sector & Company Name */}
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-base font-mono font-bold text-white">
+                <span className="text-base sm:text-lg font-mono font-bold text-white">
                   {activeStock.ticker}
                 </span>
-                <span className="text-[10px] text-slate-400 px-2 py-0.5 rounded bg-[#141B29] border border-[#1F293D]">
+                <span className="text-[10px] text-slate-400 px-2 py-0.5 rounded bg-[#141B29] border border-[#1F293D] truncate max-w-[130px] sm:max-w-none">
                   {activeStock.sector}
                 </span>
               </div>
-              <h2 className="text-xs text-slate-300 font-medium mt-0.5">
+              <h2 className="text-xs text-slate-300 font-medium truncate mt-0.5 max-w-[200px] sm:max-w-none">
                 {activeStock.name}
               </h2>
             </div>
-          </div>
 
-          <div className="flex items-center gap-4 sm:gap-6 text-xs">
-            {/* Price */}
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider">Price</div>
-              <div className="text-base sm:text-lg font-mono font-bold text-white mt-0.5">
+            {/* Right: Live Price & 24h Change */}
+            <div className="text-right shrink-0">
+              <div className="text-base sm:text-lg font-mono font-black text-white">
                 ₹{activeStock.currentPrice.toFixed(2)}
               </div>
-            </div>
-
-            {/* Change */}
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider">24h Change</div>
               <div
-                className={`text-sm sm:text-base font-mono font-bold mt-0.5 flex items-center gap-0.5 ${
+                className={`text-xs font-mono font-bold mt-0.5 inline-flex items-center gap-0.5 ${
                   isPositive ? "text-emerald-400" : "text-rose-400"
                 }`}
               >
@@ -156,27 +154,67 @@ export default function Trade() {
                 <span>{isPositive ? "+" : ""}{activeStock.changePercent}%</span>
               </div>
             </div>
+          </div>
 
-            {/* Day High / Low */}
-            <div className="hidden sm:block">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider">Day Range</div>
-              <div className="text-xs font-mono text-slate-300 mt-0.5">
-                ₹{(activeStock.dayLow || activeStock.currentPrice).toFixed(1)} - ₹{(activeStock.dayHigh || activeStock.currentPrice).toFixed(1)}
-              </div>
+          {/* Secondary Telemetry Strip (visible on sm: screens and above) */}
+          <div className="hidden sm:flex items-center gap-6 pt-2.5 mt-2.5 border-t border-[#182133] text-xs font-mono text-slate-400">
+            <div>
+              Day Range: <strong className="text-slate-200">₹{(activeStock.dayLow || activeStock.currentPrice).toFixed(1)} - ₹{(activeStock.dayHigh || activeStock.currentPrice).toFixed(1)}</strong>
             </div>
-
-            {/* Volatility */}
-            <div className="hidden md:block">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider">Volatility</div>
-              <div className="text-xs font-mono text-amber-400 mt-0.5">
-                {activeStock.volatility ? `${activeStock.volatility}x` : "1.0x"}
-              </div>
+            <div>
+              Open: <strong className="text-slate-200">₹{(activeStock.openingPrice || activeStock.currentPrice).toFixed(1)}</strong>
+            </div>
+            <div>
+              Volatility: <strong className="text-amber-400">{activeStock.volatility ? `${activeStock.volatility}x` : "1.0x"}</strong>
             </div>
           </div>
         </div>
 
-        {/* 2-Column Grid: Chart & Order Ticket (Appropriate balanced sizing & stretch alignment) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        {/* Mobile View Mode Switcher (Visible only on screens < lg) */}
+        {/* Solves mobile inconvenience: users can 1-tap switch between Trade Form, Live Chart, and Order History without endless 1000px scrolling! */}
+        <div className="lg:hidden flex items-center p-1 rounded-xl bg-[#0D121D] border border-[#1A2336] gap-1 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setMobileTab("trade")}
+            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              mobileTab === "trade"
+                ? "bg-[#E10600] text-white shadow-sm"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            <span>Place Order</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab("chart")}
+            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              mobileTab === "chart"
+                ? "bg-[#161F30] text-emerald-400 border border-emerald-500/30"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <LineChart className="w-3.5 h-3.5" />
+            <span>Live Chart</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab("orders")}
+            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              mobileTab === "orders"
+                ? "bg-[#161F30] text-white border border-[#232B3B]"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Receipt className="w-3.5 h-3.5" />
+            <span>Orders ({orders?.length || 0})</span>
+          </button>
+        </div>
+
+        {/* ============================================================== */}
+        {/* DESKTOP LAYOUT (lg: and up): Side-by-Side Dual Cockpit         */}
+        {/* ============================================================== */}
+        <div className="hidden lg:grid lg:grid-cols-12 gap-5 items-stretch">
           {/* Chart View */}
           <div className="lg:col-span-7 xl:col-span-8 flex flex-col">
             <StockTelemetryChart stock={activeStock} height={350} />
@@ -191,8 +229,97 @@ export default function Trade() {
           </div>
         </div>
 
-        {/* Session Orders Table (Stable Min-Height Container to avoid page shake) */}
-        <div className="rounded-xl bg-[#0D121D] border border-[#1A2336] p-4 sm:p-5 min-h-[220px]">
+        {/* ============================================================== */}
+        {/* MOBILE LAYOUT (lg:hidden): Seamless Tab Content               */}
+        {/* ============================================================== */}
+        <div className="lg:hidden space-y-4">
+          {mobileTab === "trade" && (
+            <div className="space-y-3">
+              <TradeForm
+                selectedTicker={activeStock.ticker}
+                onSelectTicker={handleSelectTicker}
+              />
+              <button
+                type="button"
+                onClick={() => setMobileTab("chart")}
+                className="w-full py-2.5 rounded-xl bg-[#0D121D] hover:bg-[#141B29] border border-[#1A2336] text-xs font-mono font-bold text-slate-300 hover:text-white flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <LineChart className="w-3.5 h-3.5 text-emerald-400" />
+                <span>View {activeStock.ticker} Telemetry Chart</span>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+              </button>
+            </div>
+          )}
+
+          {mobileTab === "chart" && (
+            <div className="space-y-3">
+              <StockTelemetryChart stock={activeStock} />
+              <button
+                type="button"
+                onClick={() => setMobileTab("trade")}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#E10600] to-[#B80500] text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-rose-950/50 cursor-pointer"
+              >
+                <Zap className="w-4 h-4" />
+                <span>Open Order Form for {activeStock.ticker} (₹{activeStock.currentPrice.toFixed(2)})</span>
+              </button>
+            </div>
+          )}
+
+          {mobileTab === "orders" && (
+            <div className="rounded-xl bg-[#0D121D] border border-[#1A2336] p-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#1A2336] mb-3">
+                <div className="flex items-center gap-2">
+                  <Receipt className="w-4 h-4 text-emerald-400" />
+                  <h3 className="text-sm font-bold text-white">Order History</h3>
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#141B29] text-slate-400">
+                    {orders ? orders.length : 0}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono">Real-time settlement</span>
+              </div>
+
+              {!orders || orders.length === 0 ? (
+                <div className="py-8 text-center text-xs text-slate-400">
+                  No orders placed in this session yet.
+                </div>
+              ) : (
+                <div className="divide-y divide-[#161F30]">
+                  {orders.map((o) => (
+                    <div key={o.id} className="py-2.5 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                            o.type === "BUY"
+                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                              : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                          }`}>
+                            {o.type}
+                          </span>
+                          <span className="font-bold text-white text-xs">{o.ticker}</span>
+                          <span className="text-[10px] font-mono text-slate-400">
+                            {o.shares} shs @ ₹{o.price.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="font-mono font-bold text-xs text-white">
+                          ₹{o.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                        <span>By: {o.executedBy}</span>
+                        <span>Round {o.lap} • {new Date(o.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ============================================================== */}
+        {/* DESKTOP SESSION ORDERS TABLE (Always visible on desktop lg:)   */}
+        {/* ============================================================== */}
+        <div className="hidden lg:block rounded-xl bg-[#0D121D] border border-[#1A2336] p-4 sm:p-5 min-h-[200px]">
           <div className="flex items-center justify-between pb-3 border-b border-[#1A2336] mb-3">
             <div className="flex items-center gap-2">
               <Receipt className="w-4 h-4 text-emerald-400" />
