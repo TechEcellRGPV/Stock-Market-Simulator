@@ -32,7 +32,7 @@ export default function PaddockWaitingLounge({
   raceState,
   stocks
 }) {
-  const [activeTab, setActiveTab] = useState("scrips"); // "scrips" | "rules" | "schedule"
+  const [activeTab, setActiveTab] = useState("stocks"); // "stocks" | "rules" | "schedule"
   const now = useSyncExternalStore(subscribeToSeconds, getNowSnapshot, getServerSnapshot);
 
   const countdown = useMemo(() => {
@@ -180,13 +180,13 @@ export default function PaddockWaitingLounge({
         {/* Tabbed Info */}
         <div className="border-b border-[#1A2336] flex items-center gap-6">
           <button
-            onClick={() => setActiveTab("scrips")}
+            onClick={() => setActiveTab("stocks")}
             className={`pb-2.5 text-xs font-semibold relative transition-colors ${
-              activeTab === "scrips" ? "text-white" : "text-slate-400 hover:text-slate-200"
+              activeTab === "stocks" ? "text-white" : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <span>Companies ({stocks.length})</span>
-            {activeTab === "scrips" && (
+            <span>Stocks ({stocks.length})</span>
+            {activeTab === "stocks" && (
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400 rounded-full" />
             )}
           </button>
@@ -217,7 +217,7 @@ export default function PaddockWaitingLounge({
         </div>
 
         {/* Content */}
-        {activeTab === "scrips" && (
+        {activeTab === "stocks" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {stocks.map((stock) => (
               <div
@@ -288,7 +288,7 @@ export default function PaddockWaitingLounge({
                 <MapPin className="w-3.5 h-3.5 text-rose-400" />
                 <span>Venue</span>
               </div>
-              <div className="text-sm font-bold text-white">RGPV Conference Hall</div>
+              <div className="text-sm font-bold text-white">KRC, RGPV</div>
               <div className="text-xs text-slate-400">Campus Auditorium</div>
             </div>
 

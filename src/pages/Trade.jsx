@@ -18,7 +18,7 @@ import { useScreenWakeLock } from "../hooks/useScreenWakeLock";
 export default function Trade() {
   useSEO({
     title: "Live Trading Screen",
-    description: "Live order execution terminal for Imprenditore 5.0. Trade 17 equities across 5 sectors with real-time price telemetry."
+    description: "Live order execution terminal for Imprenditore 5.0. Trade real market equities with real-time price telemetry."
   });
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,7 +32,7 @@ export default function Trade() {
     if (queryTicker && stocks.some((s) => s.ticker === queryTicker)) {
       return queryTicker;
     }
-    return stocks[0]?.ticker || "APEX";
+    return stocks[0]?.ticker || "TSLA";
   });
 
   const activeStock = useMemo(() => {
@@ -40,16 +40,16 @@ export default function Trade() {
       stocks.find((s) => s.ticker === selectedTicker) ||
       stocks.find((s) => s.ticker === queryTicker) ||
       stocks[0] || {
-        ticker: "APEX",
-        name: "Apex Dynamics EV",
-        sector: "Powertrain & Electric Vehicles",
-        currentPrice: 850,
-        openingPrice: 830,
-        dayHigh: 865,
-        dayLow: 825,
+        ticker: "TSLA",
+        name: "Tesla, Inc.",
+        sector: "Electric Vehicles & Clean Energy",
+        currentPrice: 368.0,
+        openingPrice: 368.0,
+        dayHigh: 375.0,
+        dayLow: 362.0,
         changePercent: 0,
         volatility: 1.5,
-        sparkline: [830, 850]
+        sparkline: [365, 368]
       }
     );
   }, [stocks, selectedTicker, queryTicker]);
@@ -66,7 +66,7 @@ export default function Trade() {
       <Navbar />
       <CirculatingBanner />
 
-      {/* Horizontal Scrip Selection Ribbon */}
+      {/* Horizontal Stock Selection Ribbon */}
       <div className="bg-[#0B0F17] border-b border-[#182133] px-4 sm:px-6 lg:px-8 py-2 overflow-x-auto scrollbar-none">
         <div className="flex items-center gap-1.5 min-w-max">
           {stocks.map((stk) => {
@@ -96,7 +96,7 @@ export default function Trade() {
       </div>
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
-        {/* Active Scrip Telemetry Ribbon */}
+        {/* Active Stock Telemetry Ribbon */}
         <div className="p-4 rounded-xl bg-[#0D121D] border border-[#1A2336] flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div>

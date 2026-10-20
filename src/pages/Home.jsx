@@ -25,7 +25,7 @@ import { useSEO } from "../hooks/useSEO";
 export default function Home() {
   useSEO({
     title: "Formula 1 Stock Market Simulator",
-    description: "Official Formula 1 Stock Market Simulation presented by E-Cell RGPV for Imprenditore 5.0. Trade 17 scrips across 5 sectors with ₹1,00,000 mock capital."
+    description: "Official Formula 1 Stock Market Simulation presented by E-Cell RGPV for Imprenditore 5.0. Trade 17 stocks across sectors with ₹1,00,000 mock capital."
   });
 
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -44,7 +44,7 @@ export default function Home() {
       icon: Gauge,
       accentColor: "#E10600",
       points: [
-        "Venue: RGPV Conference Hall • Timing: 3:00 PM - 5:30 PM.",
+        "Venue: KRC, RGPV • Timing: 3:00 PM - 5:30 PM.",
         "Stock Market Simulation: 5 synchronized competition laps with dynamic sector price events.",
         "Before you make your move, understand the simulation, trading process and evaluation criteria.",
         "Follow all operational instructions given by the organizers."
@@ -162,7 +162,7 @@ export default function Home() {
           >
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#121720] border border-[#232B3B] text-slate-300 font-mono text-[11px]">
               <MapPin className="w-3.5 h-3.5 text-[#E10600]" />
-              <span>RGPV Conference Hall</span>
+              <span>KRC, RGPV</span>
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#121720] border border-[#232B3B] text-slate-300 font-mono text-[11px]">
               <Clock className="w-3.5 h-3.5 text-[#EAB308]" />
@@ -242,7 +242,7 @@ export default function Home() {
               17
             </div>
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-1">
-              Scrip Equities
+              Stock Equities
             </div>
           </div>
           <div className="p-4 rounded-xl bg-[#121720] border border-[#232B3B] text-center hover:border-[#38455E] transition-colors">
@@ -375,7 +375,7 @@ export default function Home() {
                 </h2>
               </div>
               <p className="text-xs text-slate-400 font-medium mt-0.5">
-                Real-time scrip prices across active laps
+                Real-time stock prices across active laps
               </p>
             </div>
             <Link
@@ -455,7 +455,7 @@ export default function Home() {
             <span className="text-[#E10600] font-black uppercase">E-Cell RGPV</span>
           </div>
           <div className="font-mono text-[11px] text-slate-500">
-            Formula 1 Stock Simulator • RGPV Conference Hall
+            Formula 1 Stock Simulator • KRC, RGPV
           </div>
         </div>
       </footer>

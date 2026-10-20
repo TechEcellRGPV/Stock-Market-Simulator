@@ -50,10 +50,10 @@ export default function Navbar() {
 
   // User requested exact order: Dashboard, Market, Trade, Leaderboard
   const navLinks = [
-    { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-    { label: "Market", path: "/companies", icon: TrendingUp },
-    { label: "Trade", path: "/trade", icon: Activity },
-    { label: "Leaderboard", path: "/leaderboard", icon: Trophy }
+    { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard, color: "text-[#06B6D4]" },
+    { label: "Market", path: "/companies", icon: TrendingUp, color: "text-[#10B981]" },
+    { label: "Trade", path: "/trade", icon: Activity, color: "text-[#E10600]" },
+    { label: "Leaderboard", path: "/leaderboard", icon: Trophy, color: "text-[#F59E0B]" }
   ];
 
   const getStatusBadge = () => {
@@ -92,13 +92,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
         {/* F1 Brand Lockup */}
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-          <div className="relative w-8 h-8 rounded overflow-hidden flex items-center justify-center bg-[#121720] border border-[#232B3B] group-hover:border-[#E10600] transition-colors">
-            <img
-              src="/logo_D.png"
-              alt="Imprenditore 5.0"
-              className="w-6 h-6 object-contain transition-transform duration-200 group-hover:scale-105"
-            />
-          </div>
+          <img
+            src="/logo_D.png"
+            alt="Imprenditore 5.0"
+            className="w-8 h-8 object-contain transition-transform duration-200 group-hover:scale-105"
+          />
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-black uppercase tracking-widest text-[#E10600]">
@@ -126,7 +124,7 @@ export default function Navbar() {
                     : "text-slate-400 hover:text-white hover:bg-[#121720]"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${active ? "text-[#E10600]" : "text-slate-400"}`} />
+                <Icon className={`w-3.5 h-3.5 ${link.color} shrink-0`} />
                 <span>{link.label}</span>
               </Link>
             );
@@ -215,7 +213,7 @@ export default function Navbar() {
                     : "text-slate-300 hover:bg-[#121720]"
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className={`w-4 h-4 ${link.color} shrink-0`} />
                 <span>{link.label}</span>
               </Link>
             );

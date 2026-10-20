@@ -111,14 +111,22 @@ export default function Dashboard() {
     return found ? `#${found.rank}` : "-";
   }, [currentTeam, leaderboard]);
 
-  // Sectors list for distribution bar
-  const sectorColors = {
-    "Powertrain & Electric Vehicles": "#10B981",
-    "Aerodynamics & Advanced Materials": "#06B6D4",
-    "Telemetry, AI & Autonomous Tech": "#3B82F6",
-    "Sustainable Fuels & Energy": "#EAB308",
-    "Logistics & Precision Engineering": "#A855F7"
-  };
+  const sectorColors = useMemo(
+    () => ({
+      "Electric Vehicles & Clean Energy": "#10B981",
+      "AI & Semiconductor Computing": "#3B82F6",
+      "High-Performance Computing": "#8B5CF6",
+      "Aerospace & Aviation Engineering": "#06B6D4",
+      "Hydrogen & Clean Fuel Cells": "#EAB308",
+      "Global Freight & Logistics": "#F97316",
+      "Powertrain & Electric Vehicles": "#10B981",
+      "Aerodynamics & Advanced Materials": "#06B6D4",
+      "Telemetry, AI & Autonomous Tech": "#3B82F6",
+      "Sustainable Fuels & Energy": "#EAB308",
+      "Logistics & Precision Engineering": "#A855F7"
+    }),
+    []
+  );
 
   const sectorSegments = useMemo(() => {
     return Object.entries(sectorColors).map(([name, color]) => {
@@ -126,7 +134,7 @@ export default function Dashboard() {
       const pct = portfolioStats.totalValue > 0 ? (val / portfolioStats.totalValue) * 100 : 0;
       return { name: name.split("&")[0].trim(), fullName: name, value: val, pct, color };
     });
-  }, [portfolioStats]);
+  }, [portfolioStats, sectorColors]);
 
   const activeSectorCount = sectorSegments.filter((s) => s.value > 0).length;
 
@@ -245,7 +253,7 @@ export default function Dashboard() {
               ₹{portfolioStats.invested.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </div>
             <div className="text-[11px] text-slate-400 mt-2">
-              Across {currentHoldings.length} scrips
+              Across {currentHoldings.length} stocks
             </div>
           </div>
 
@@ -267,7 +275,7 @@ export default function Dashboard() {
         <div className="p-4 rounded-xl bg-[#0D121D] border border-[#1A2336] space-y-3">
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-slate-300">Sector Diversification</span>
-            <span className="font-mono text-slate-400">{activeSectorCount} of 5 sectors held</span>
+            <span className="font-mono text-slate-400">{activeSectorCount} sector{activeSectorCount === 1 ? "" : "s"} held</span>
           </div>
 
           {/* Multi-segment horizontal bar */}
@@ -359,7 +367,7 @@ export default function Dashboard() {
                   <table className="w-full text-left text-xs font-sans">
                     <thead>
                       <tr className="border-b border-[#1A2336] text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                        <th className="py-2.5">Scrip</th>
+                        <th className="py-2.5">Stock</th>
                         <th className="py-2.5">Sector</th>
                         <th className="py-2.5 text-right">Shares</th>
                         <th className="py-2.5 text-right">Avg Cost</th>
@@ -428,7 +436,7 @@ export default function Dashboard() {
                     <thead>
                       <tr className="border-b border-[#1A2336] text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                         <th className="py-2.5">Side</th>
-                        <th className="py-2.5">Scrip</th>
+                        <th className="py-2.5">Stock</th>
                         <th className="py-2.5 text-right">Shares</th>
                         <th className="py-2.5 text-right">Price</th>
                         <th className="py-2.5 text-right">Total</th>

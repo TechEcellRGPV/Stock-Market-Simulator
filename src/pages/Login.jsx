@@ -47,12 +47,31 @@ export default function Login() {
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const isTeamRegistered = (t) => {
+    if (!t) return false;
+    if (t.isRegistered) return true;
+    if (t.registeredAt && t.registeredAt > 0) return true;
+    if (
+      t.leaderName &&
+      !t.leaderName.toLowerCase().startsWith("team leader") &&
+      !t.leaderName.toLowerCase().startsWith("driver lead") &&
+      t.leaderName !== "Unassigned"
+    ) {
+      return true;
+    }
+    return false;
+  };
+
   const gridTeams = useMemo(() => {
     if (Array.isArray(teams) && teams.length > 0) {
       return teams.slice(0, 15);
     }
     return FALLBACK_15_GRID;
   }, [teams]);
+
+  const availableTeams = useMemo(() => {
+    return gridTeams.filter((t) => !isTeamRegistered(t));
+  }, [gridTeams]);
 
   const [loginForm, setLoginForm] = useState({
     teamCode: "RBR-01",
@@ -61,13 +80,23 @@ export default function Login() {
     role: "LEADER" // "LEADER" | "MEMBER"
   });
 
-  const [registerForm, setRegisterForm] = useState({
+  const [registerForm, setRegisterForm] = useState(() => ({
     teamCode: "RBR-01",
     teamPin: "",
     leaderName: "",
     member2: "",
     member3: ""
-  });
+  }));
+
+  // Auto-switch register teamCode to first available team if selected is taken
+  const effectiveRegisterTeamCode = useMemo(() => {
+    if (availableTeams.length === 0) return registerForm.teamCode;
+    const isCurrentTaken = gridTeams.some((t) => t.teamCode === registerForm.teamCode && isTeamRegistered(t));
+    if (isCurrentTaken) {
+      return availableTeams[0].teamCode;
+    }
+    return registerForm.teamCode;
+  }, [availableTeams, gridTeams, registerForm.teamCode]);
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -113,6 +142,12 @@ export default function Login() {
       return;
     }
 
+    const selected = gridTeams.find((t) => t.teamCode === effectiveRegisterTeamCode);
+    if (selected && isTeamRegistered(selected)) {
+      setError(`Team "${selected.teamName}" (${selected.teamCode}) is already registered by another player. Please select an available team.`);
+      return;
+    }
+
     if (!registerForm.teamPin || registerForm.teamPin.trim().length !== 4) {
       setError("4-digit Team PIN is required.");
       return;
@@ -126,7 +161,7 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       const team = await registerTeamSlot({
-        teamCode: registerForm.teamCode,
+        teamCode: effectiveRegisterTeamCode,
         teamPin: registerForm.teamPin,
         leaderName: registerForm.leaderName,
         member2: registerForm.member2,
@@ -321,20 +356,40 @@ export default function Login() {
             ) : (
               <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                    Select Available Team
-                  </label>
-                  <select
-                    value={registerForm.teamCode}
-                    onChange={(e) => setRegisterForm({ ...registerForm, teamCode: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white outline-none"
-                  >
-                    {gridTeams.map((team) => (
-                      <option key={team.teamCode} value={team.teamCode} className="bg-[#0D121D] text-white">
-                        {team.teamCode} — {team.teamName}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                      Select Team
+                    </label>
+                    <span className="text-[10px] font-mono text-emerald-400 font-bold">
+                      {availableTeams.length} of {gridTeams.length} available
+                    </span>
+                  </div>
+
+                  {availableTeams.length === 0 ? (
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs text-center">
+                      All 15 teams are already registered! Please switch to the <strong>Sign In</strong> tab.
+                    </div>
+                  ) : (
+                    <select
+                      value={effectiveRegisterTeamCode}
+                      onChange={(e) => setRegisterForm((prev) => ({ ...prev, teamCode: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg bg-[#090D14] border border-[#1A2336] focus:border-emerald-500 text-xs text-white outline-none"
+                    >
+                      {gridTeams.map((team) => {
+                        const registered = isTeamRegistered(team);
+                        return (
+                          <option
+                            key={team.teamCode}
+                            value={team.teamCode}
+                            disabled={registered}
+                            className={`bg-[#0D121D] ${registered ? "text-slate-500" : "text-white"}`}
+                          >
+                            {team.teamCode} — {team.teamName} {registered ? "(Registered - Taken)" : "(Available)"}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
                 </div>
 
                 <div>

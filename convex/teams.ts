@@ -253,6 +253,7 @@ export const seedCanonical15Teams = mutation({
         executionScore: 0,
         tradeCount: 0,
         status: "ACTIVE",
+        isRegistered: false,
         createdAt: now,
       });
     }
@@ -311,13 +312,32 @@ export const registerTeamSlot = mutation({
       throw new Error(`Team ${code} not found on the 15-team grid.`);
     }
 
+    // Check if team is already registered by another player
+    const isAlreadyRegistered = Boolean(
+      team.isRegistered ||
+      (team.registeredAt && team.registeredAt > 0) ||
+      (team.leaderName &&
+        !team.leaderName.toLowerCase().startsWith("team leader") &&
+        !team.leaderName.toLowerCase().startsWith("driver lead") &&
+        team.leaderName !== "Unassigned")
+    );
+
+    if (isAlreadyRegistered) {
+      throw new Error(
+        `Team "${team.teamName}" (${code}) has already been registered by another player. Please select an available team or sign in with your PIN.`
+      );
+    }
+
     const members = [leader, m2, m3];
+    const now = Date.now();
     await ctx.db.patch(team._id, {
       leaderName: leader,
       member2: m2,
       member3: m3,
       members,
       teamPin: pin,
+      isRegistered: true,
+      registeredAt: now,
     });
 
     return {
@@ -416,6 +436,8 @@ export const createTeam = mutation({
       executionScore: 0,
       tradeCount: 0,
       status: "ACTIVE",
+      isRegistered: true,
+      registeredAt: now,
       createdAt: now,
     });
 

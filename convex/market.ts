@@ -13,254 +13,241 @@ import { v } from "convex/values";
  * - Automatic date migration to October 29, 2026 at 3:00 PM
  */
 
-// Initial 15 motorsport and tech grid companies
+// Initial 17 real market companies
 export const INITIAL_STOCKS = [
-  // Powertrain & Electric Vehicles
+  // Electric Vehicles & Clean Energy
   {
-    ticker: "APEX",
-    name: "Apex Dynamics EV",
-    sector: "Powertrain & Electric Vehicles",
-    description:
-      "Next-generation solid-state battery drivetrains and high-output EV racing platforms.",
+    ticker: "TSLA",
+    name: "Tesla, Inc.",
+    sector: "Electric Vehicles & Clean Energy",
+    description: "Global leader in electric cars, solar roof tech, and clean energy battery storage.",
     currentPrice: 850,
-    openingPrice: 830,
+    openingPrice: 835,
     dayHigh: 865,
     dayLow: 825,
-    changePercent: 2.41,
+    changePercent: 1.8,
     volatility: 1.5,
-    sparkline: [830, 835, 842, 838, 848, 850],
+    sparkline: [835, 840, 838, 846, 844, 850],
   },
   {
-    ticker: "REDL",
-    name: "Redline Motors (BMW Motorsport)",
-    sector: "Powertrain & Electric Vehicles",
-    description:
-      "High-performance hybrid powertrains and precision-tuned motorsport engineering.",
+    ticker: "F",
+    name: "Ford Motor Company",
+    sector: "Electric Vehicles & Clean Energy",
+    description: "Historic American automaker producing commercial pickup trucks, SUVs, and electric vehicles.",
+    currentPrice: 260,
+    openingPrice: 256,
+    dayHigh: 268,
+    dayLow: 252,
+    changePercent: 1.56,
+    volatility: 1.2,
+    sparkline: [256, 258, 257, 262, 259, 260],
+  },
+
+  // AI & Semiconductor Computing
+  {
+    ticker: "NVDA",
+    name: "NVIDIA Corporation",
+    sector: "AI & Semiconductor Computing",
+    description: "World leader in graphics chips, AI computing processors, and deep learning platforms.",
     currentPrice: 1250,
     openingPrice: 1228,
     dayHigh: 1265,
     dayLow: 1220,
     changePercent: 1.79,
-    volatility: 1.2,
+    volatility: 1.4,
     sparkline: [1228, 1235, 1240, 1238, 1245, 1250],
   },
   {
-    ticker: "ECOM",
-    name: "EcoMobility High-Speed",
-    sector: "Powertrain & Electric Vehicles",
-    description:
-      "Lightweight urban electric platforms and rapid-charge fleet drivetrains.",
-    currentPrice: 420,
-    openingPrice: 423.4,
-    dayHigh: 428,
-    dayLow: 415,
-    changePercent: -0.8,
-    volatility: 1.8,
-    sparkline: [423, 421, 418, 422, 419, 420],
-  },
-  {
-    ticker: "ETRN",
-    name: "Electric Transport Corp",
-    sector: "Powertrain & Electric Vehicles",
-    description:
-      "Commercial zero-emission transport vehicles and modular battery swapping grids.",
-    currentPrice: 620,
-    openingPrice: 610.8,
-    dayHigh: 628,
-    dayLow: 605,
-    changePercent: 1.51,
-    volatility: 1.4,
-    sparkline: [610, 614, 612, 618, 616, 620],
-  },
-
-  // Aerodynamics & Advanced Materials
-  {
-    ticker: "VRTX",
-    name: "Vortex Aerodynamics",
-    sector: "Aerodynamics & Advanced Materials",
-    description:
-      "Computational fluid dynamics, active aero wings, and ground-effect chassis design.",
-    currentPrice: 740,
-    openingPrice: 717.7,
-    dayHigh: 752,
-    dayLow: 715,
-    changePercent: 3.11,
-    volatility: 2.1,
-    sparkline: [718, 725, 730, 728, 735, 740],
-  },
-  {
-    ticker: "EMAT",
-    name: "Eco Carbon Materials",
-    sector: "Aerodynamics & Advanced Materials",
-    description:
-      "Recycled carbon fiber composites and high-impact sustainable biopolymers.",
-    currentPrice: 380,
-    openingPrice: 375.5,
-    dayHigh: 386,
-    dayLow: 372,
-    changePercent: 1.2,
-    volatility: 1.6,
-    sparkline: [375, 378, 376, 381, 379, 380],
-  },
-  {
-    ticker: "ATC",
-    name: "AeroTech Composites",
-    sector: "Aerodynamics & Advanced Materials",
-    description:
-      "Aerospace-grade ultra-light alloys and ceramic thermal barrier coatings.",
-    currentPrice: 910,
-    openingPrice: 922.9,
-    dayHigh: 930,
-    dayLow: 902,
-    changePercent: -1.4,
-    volatility: 1.3,
-    sparkline: [923, 920, 915, 918, 912, 910],
-  },
-
-  // Telemetry, AI & Autonomous Tech
-  {
-    ticker: "CTEL",
-    name: "CyberTelemetry AI",
-    sector: "Telemetry, AI & Autonomous Tech",
-    description:
-      "Real-time edge telemetry sensors, predictive tire degradation, and AI race strategy engines.",
-    currentPrice: 1150,
-    openingPrice: 1102.6,
-    dayHigh: 1165,
-    dayLow: 1095,
-    changePercent: 4.3,
-    volatility: 2.4,
-    sparkline: [1102, 1115, 1130, 1125, 1140, 1150],
-  },
-  {
-    ticker: "GCHP",
-    name: "GreenChip Semiconductors",
-    sector: "Telemetry, AI & Autonomous Tech",
-    description:
-      "Ultra-low power microcontrollers and optical sensors for automotive telemetry.",
-    currentPrice: 980,
-    openingPrice: 953.3,
-    dayHigh: 995,
-    dayLow: 948,
-    changePercent: 2.8,
-    volatility: 1.9,
-    sparkline: [953, 960, 972, 968, 975, 980],
-  },
-  {
-    ticker: "TECH",
-    name: "Tech Solutions Global",
-    sector: "Telemetry, AI & Autonomous Tech",
-    description:
-      "Cloud-native fleet management, digital twin simulation, and telemetry visualization.",
+    ticker: "AMD",
+    name: "Advanced Micro Devices, Inc.",
+    sector: "AI & Semiconductor Computing",
+    description: "Innovator in computer processors, gaming graphics cards, and cloud data center chips.",
     currentPrice: 540,
-    openingPrice: 537.3,
+    openingPrice: 532,
     dayHigh: 548,
-    dayLow: 532,
-    changePercent: 0.5,
-    volatility: 1.1,
-    sparkline: [537, 539, 536, 542, 538, 540],
-  },
-
-  // Sustainable Fuels & Energy
-  {
-    ticker: "SFEL",
-    name: "SynthoFuel Energy",
-    sector: "Sustainable Fuels & Energy",
-    description:
-      "Drop-in 100% synthetic e-fuels capturing carbon directly from the atmosphere.",
-    currentPrice: 310,
-    openingPrice: 316.6,
-    dayHigh: 322,
-    dayLow: 305,
-    changePercent: -2.08,
-    volatility: 2.2,
-    sparkline: [317, 314, 310, 312, 308, 310],
-  },
-  {
-    ticker: "CBST",
-    name: "Clean Energy Storage",
-    sector: "Sustainable Fuels & Energy",
-    description:
-      "Grid-scale flow batteries and high-density capacitors for pit lane charging.",
-    currentPrice: 780,
-    openingPrice: 761,
-    dayHigh: 792,
-    dayLow: 755,
-    changePercent: 2.5,
-    volatility: 1.7,
-    sparkline: [761, 768, 775, 770, 776, 780],
-  },
-  {
-    ticker: "GNRG",
-    name: "Green Energy Corp",
-    sector: "Sustainable Fuels & Energy",
-    description:
-      "Zero-emission hydrogen production facilities and high-pressure cryogenic fuel cells.",
-    currentPrice: 650,
-    openingPrice: 642.9,
-    dayHigh: 660,
-    dayLow: 638,
-    changePercent: 1.1,
-    volatility: 1.4,
-    sparkline: [643, 646, 652, 648, 651, 650],
-  },
-  {
-    ticker: "CWS",
-    name: "Clean Water & Coolants",
-    sector: "Sustainable Fuels & Energy",
-    description:
-      "Eco-friendly dielectric cooling liquids and high-performance closed-loop radiator fluids.",
-    currentPrice: 290,
-    openingPrice: 288.8,
-    dayHigh: 296,
-    dayLow: 284,
-    changePercent: 0.42,
-    volatility: 1.0,
-    sparkline: [289, 291, 288, 292, 289, 290],
-  },
-
-  // Logistics & Precision Engineering
-  {
-    ticker: "PITP",
-    name: "Pitstop Precision Labs",
-    sector: "Logistics & Precision Engineering",
-    description:
-      "Ultra-fast automated pit stop pneumatic tooling and robotic chassis alignment rigs.",
-    currentPrice: 490,
-    openingPrice: 481.8,
-    dayHigh: 498,
-    dayLow: 478,
-    changePercent: 1.7,
-    volatility: 1.5,
-    sparkline: [482, 485, 488, 486, 492, 490],
-  },
-  {
-    ticker: "CEI",
-    name: "Circular Logistics Inc",
-    sector: "Logistics & Precision Engineering",
-    description:
-      "Carbon-neutral freight tracking, route optimization AI, and returnable packaging networks.",
-    currentPrice: 510,
-    openingPrice: 515.7,
-    dayHigh: 522,
-    dayLow: 504,
-    changePercent: -1.11,
-    volatility: 1.3,
-    sparkline: [516, 514, 511, 513, 508, 510],
-  },
-  {
-    ticker: "HLTH",
-    name: "BioTelemetry Healthcare",
-    sector: "Logistics & Precision Engineering",
-    description:
-      "Driver biometric telemetry, hydration sensors, and g-force impact monitoring suits.",
-    currentPrice: 820,
-    openingPrice: 805.5,
-    dayHigh: 832,
-    dayLow: 800,
-    changePercent: 1.8,
+    dayLow: 528,
+    changePercent: 1.5,
     volatility: 1.6,
-    sparkline: [806, 810, 818, 815, 822, 820],
+    sparkline: [532, 535, 534, 538, 537, 540],
+  },
+  {
+    ticker: "INTC",
+    name: "Intel Corporation",
+    sector: "AI & Semiconductor Computing",
+    description: "Major designer and manufacturer of central microprocessors for PCs and server centers.",
+    currentPrice: 310,
+    openingPrice: 305,
+    dayHigh: 318,
+    dayLow: 300,
+    changePercent: 1.64,
+    volatility: 1.3,
+    sparkline: [305, 307, 306, 312, 309, 310],
+  },
+
+  // Technology & Consumer Devices
+  {
+    ticker: "AAPL",
+    name: "Apple Inc.",
+    sector: "Technology & Consumer Devices",
+    description: "Iconic maker of iPhone, Mac computers, wearables, and digital subscription services.",
+    currentPrice: 720,
+    openingPrice: 712,
+    dayHigh: 730,
+    dayLow: 708,
+    changePercent: 1.12,
+    volatility: 1.2,
+    sparkline: [712, 715, 714, 722, 718, 720],
+  },
+  {
+    ticker: "MSFT",
+    name: "Microsoft Corporation",
+    sector: "Technology & Consumer Devices",
+    description: "Global tech giant powering Windows, cloud computing services, enterprise software, and gaming.",
+    currentPrice: 1100,
+    openingPrice: 1085,
+    dayHigh: 1115,
+    dayLow: 1080,
+    changePercent: 1.38,
+    volatility: 1.3,
+    sparkline: [1085, 1090, 1088, 1098, 1095, 1100],
+  },
+  {
+    ticker: "GOOGL",
+    name: "Alphabet Inc. (Google)",
+    sector: "Technology & Consumer Devices",
+    description: "Parent company of Google search, Android mobile OS, YouTube video streaming, and smart AI.",
+    currentPrice: 580,
+    openingPrice: 572,
+    dayHigh: 588,
+    dayLow: 568,
+    changePercent: 1.4,
+    volatility: 1.4,
+    sparkline: [572, 575, 574, 582, 578, 580],
+  },
+  {
+    ticker: "META",
+    name: "Meta Platforms, Inc.",
+    sector: "Technology & Consumer Devices",
+    description: "Connects billions of users across Instagram, WhatsApp, Facebook, and VR metaverse tech.",
+    currentPrice: 890,
+    openingPrice: 875,
+    dayHigh: 902,
+    dayLow: 870,
+    changePercent: 1.71,
+    volatility: 1.5,
+    sparkline: [875, 880, 878, 886, 884, 890],
+  },
+
+  // Aerospace & Healthcare
+  {
+    ticker: "BA",
+    name: "The Boeing Company",
+    sector: "Aerospace & Aviation",
+    description: "Premier aerospace manufacturer building commercial jetliners, defense platforms, and space flight systems.",
+    currentPrice: 680,
+    openingPrice: 685,
+    dayHigh: 692,
+    dayLow: 674,
+    changePercent: -0.73,
+    volatility: 1.2,
+    sparkline: [685, 682, 686, 680, 678, 680],
+  },
+  {
+    ticker: "PFE",
+    name: "Pfizer Inc.",
+    sector: "Healthcare & Pharmaceuticals",
+    description: "Global biopharmaceutical leader researching life-saving medicines, vaccines, and medical therapies.",
+    currentPrice: 290,
+    openingPrice: 288,
+    dayHigh: 295,
+    dayLow: 284,
+    changePercent: 0.69,
+    volatility: 1.1,
+    sparkline: [288, 290, 289, 292, 289, 290],
+  },
+
+  // Clean Energy & Hydrogen
+  {
+    ticker: "PLUG",
+    name: "Plug Power Inc.",
+    sector: "Clean Energy & Hydrogen",
+    description: "Innovator in green hydrogen turnkey solutions, zero-emission fuel cell mobility, and clean energy storage.",
+    currentPrice: 380,
+    openingPrice: 372,
+    dayHigh: 388,
+    dayLow: 368,
+    changePercent: 2.15,
+    volatility: 1.8,
+    sparkline: [372, 375, 374, 381, 378, 380],
+  },
+
+  // Global Logistics & E-Commerce
+  {
+    ticker: "FDX",
+    name: "FedEx Corporation",
+    sector: "Global Logistics & Delivery",
+    description: "Global leader in express courier delivery, automated freight logistics, and enterprise supply chain solutions.",
+    currentPrice: 920,
+    openingPrice: 912,
+    dayHigh: 928,
+    dayLow: 906,
+    changePercent: 0.88,
+    volatility: 1.1,
+    sparkline: [912, 915, 914, 918, 916, 920],
+  },
+  {
+    ticker: "AMZN",
+    name: "Amazon.com, Inc.",
+    sector: "Global Logistics & Delivery",
+    description: "Largest global online retail marketplace and leader in cloud computing and logistics.",
+    currentPrice: 640,
+    openingPrice: 630,
+    dayHigh: 648,
+    dayLow: 625,
+    changePercent: 1.59,
+    volatility: 1.3,
+    sparkline: [630, 634, 632, 642, 638, 640],
+  },
+  {
+    ticker: "NKE",
+    name: "NIKE, Inc.",
+    sector: "Consumer Retail & Apparel",
+    description: "World leader in athletic footwear, sportswear apparel, sports equipment, and fitness accessories.",
+    currentPrice: 350,
+    openingPrice: 345,
+    dayHigh: 358,
+    dayLow: 342,
+    changePercent: 1.45,
+    volatility: 1.2,
+    sparkline: [345, 348, 346, 352, 349, 350],
+  },
+
+  // Media & Entertainment
+  {
+    ticker: "NFLX",
+    name: "Netflix, Inc.",
+    sector: "Media & Entertainment",
+    description: "Leading global internet entertainment service with movies, TV shows, and original streaming series.",
+    currentPrice: 460,
+    openingPrice: 452,
+    dayHigh: 468,
+    dayLow: 448,
+    changePercent: 1.77,
+    volatility: 1.4,
+    sparkline: [452, 455, 454, 462, 458, 460],
+  },
+  {
+    ticker: "DIS",
+    name: "The Walt Disney Company",
+    sector: "Media & Entertainment",
+    description: "World-renowned entertainment company with Disney theme parks, Pixar, Marvel, and streaming networks.",
+    currentPrice: 410,
+    openingPrice: 405,
+    dayHigh: 418,
+    dayLow: 400,
+    changePercent: 1.23,
+    volatility: 1.2,
+    sparkline: [405, 408, 406, 412, 409, 410],
   },
 ];
 
@@ -299,6 +286,7 @@ export const getLiveGrid = query({
         updatedAt: Date.now(),
       },
       latestEvent,
+      recentEvents: await ctx.db.query("trackEvents").order("desc").take(30),
     };
   },
 });
@@ -630,6 +618,9 @@ async function getOrCreateRaceState(ctx: MutationCtx) {
     });
     raceState = await ctx.db.get(raceState._id);
   }
+  if (!raceState) {
+    throw new Error("Failed to initialize raceState document.");
+  }
   return raceState;
 }
 
@@ -849,5 +840,21 @@ export const resetGrid = mutation({
     }
 
     return { success: true };
+  },
+});
+
+// Mutation: Sync live stocks table to Twelve Data API stocks
+export const syncStocksToApiSymbols = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const existingStocks = await ctx.db.query("stocks").collect();
+    for (const s of existingStocks) {
+      await ctx.db.delete(s._id);
+    }
+    const now = Date.now();
+    for (const s of INITIAL_STOCKS) {
+      await ctx.db.insert("stocks", { ...s, updatedAt: now });
+    }
+    return { success: true, count: INITIAL_STOCKS.length };
   },
 });

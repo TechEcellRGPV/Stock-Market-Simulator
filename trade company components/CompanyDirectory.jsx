@@ -21,14 +21,16 @@ export default function CompanyDirectory() {
   const [selectedSector, setSelectedSector] = useState("ALL");
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
 
-  const sectors = [
-    { label: "ALL SECTORS", value: "ALL" },
-    { label: "POWERTRAIN & EV", value: "Powertrain & Electric Vehicles" },
-    { label: "AERODYNAMICS", value: "Aerodynamics & Advanced Materials" },
-    { label: "AI & TELEMETRY", value: "Telemetry, AI & Autonomous Tech" },
-    { label: "FUELS & ENERGY", value: "Sustainable Fuels & Energy" },
-    { label: "LOGISTICS & LABS", value: "Logistics & Precision Engineering" }
-  ];
+  const sectors = useMemo(() => {
+    const unique = Array.from(new Set(stocks.map((s) => s.sector).filter(Boolean)));
+    return [
+      { label: "ALL SECTORS", value: "ALL" },
+      ...unique.map((sec) => ({
+        label: sec.length > 20 ? sec.split("&")[0].trim().toUpperCase() : sec.toUpperCase(),
+        value: sec,
+      })),
+    ];
+  }, [stocks]);
 
   const filteredStocks = useMemo(() => {
     return stocks.filter((stock) => {
@@ -50,7 +52,7 @@ export default function CompanyDirectory() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-[#E10600]">
-              Scrip Catalog
+              Stock Catalog
             </div>
             <h1 className="text-xl sm:text-2xl font-black uppercase italic tracking-tight text-white">
               Market Equities &amp; Sectors
@@ -97,7 +99,7 @@ export default function CompanyDirectory() {
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="Search scrip or ticker (e.g. APEX)..."
+              placeholder="Search company or ticker (e.g. TSLA, NVDA)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-8 py-2 rounded-lg bg-[#0A0D12] border border-[#232B3B] focus:border-[#E10600] text-xs text-white placeholder:text-slate-500 outline-none transition-colors"
@@ -136,8 +138,8 @@ export default function CompanyDirectory() {
         {/* Empty Search Results */}
         {filteredStocks.length === 0 && (
           <div className="text-center py-12 rounded-xl bg-[#121720] border border-[#232B3B]">
-            <p className="text-sm font-bold text-slate-300">No scrips match your search query</p>
-            <p className="text-xs text-slate-500 mt-1">Try another ticker name or clear sector filters</p>
+            <p className="text-sm font-bold text-slate-300">No stocks match your search query</p>
+            <p className="text-xs text-slate-500 mt-1">Try another stock name or clear sector filters</p>
             <button
               type="button"
               onClick={() => { setSearchQuery(""); setSelectedSector("ALL"); }}
@@ -243,7 +245,7 @@ export default function CompanyDirectory() {
               <table className="w-full text-left text-xs font-sans">
                 <thead>
                   <tr className="border-b border-[#232B3B] text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-[#0E131C]">
-                    <th className="py-3 px-4">Scrip</th>
+                    <th className="py-3 px-4">Stock</th>
                     <th className="py-3 px-4">Sector</th>
                     <th className="py-3 px-4 text-right">Price</th>
                     <th className="py-3 px-4 text-right">24h Change</th>

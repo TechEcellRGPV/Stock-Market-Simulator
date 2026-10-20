@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ShieldCheck,
@@ -15,7 +15,6 @@ import {
   Pause,
   StopCircle,
   Clock,
-  Calendar,
   Trash2,
   Lock,
   Unlock,
@@ -26,10 +25,17 @@ import {
   TrendingDown,
   RefreshCw,
   Layers,
-  Building2
+  Building2,
+  Database,
+  Radio,
+  Sparkles,
+  Activity,
+  FastForward,
+  RotateCcw,
+  SlidersHorizontal,
+  Info
 } from "lucide-react";
 import { useSimulation } from "../../context/SimulationContext";
-import EventCountdown from "../../components/EventCountdown";
 import { useSEO } from "../../hooks/useSEO";
 
 /**
@@ -43,9 +49,10 @@ import { useSEO } from "../../hooks/useSEO";
  * 5. Default Team Starting Capital: Initial wallet credit for newly registered teams
  * 6. Live Track Alert Broadcaster: Sector price shocks (+25%, -11%) and 1-click breaking news
  * 7. Active Teams Grid: Live participant monitoring, cash adjustments, and disqualification
- * 8. Individual Stocks Operations: Edit scrip prices, day range, and volatility
+ * 8. Individual Stocks Operations: Edit stock prices, day range, and volatility
  * 9. Industry Sector Shock Controller: Hitting industries with macro rallies & supply crunches
  * 10. Canonical 15-Team Grid Manager: Seed 15 pre-decided motorsport teams, enforce 3 members per team, and clear leader session locks.
+ * 11. Historical Market Engine (Twelve Data): 120-min authentic historical OHLC timeline & valid news ticker streams.
  *
  * @returns {JSX.Element} Cryptographically locked admin console or control dashboard
  */
@@ -70,7 +77,6 @@ export default function Admin() {
     stageLap,
     toggleRegistration,
     toggleSimulationEntry,
-    setTargetEventDate,
     adminSetDefaultStartingCapital,
     broadcastTrackEvent,
     adminUpdateStock,
@@ -82,35 +88,38 @@ export default function Admin() {
     adminUpdateTeamCash,
     adminDeleteTeam,
     adminLogout,
-    resetGrid
+    resetGrid,
+    historicalStatus,
+    generateHistoricalData,
+    startHistoricalSimulation,
+    pauseHistoricalSimulation,
+    stepHistoricalSimulation,
+    resetHistoricalSimulation,
+    updateHistoricalSettings
   } = useSimulation();
 
   // Login Gate State (for unauthenticated /admin visits)
   const [adminPasscode, setAdminPasscode] = useState("");
   const [authError, setAuthError] = useState("");
 
-  // Target Date / Time State
-  const [targetDateInput, setTargetDateInput] = useState(
-    raceState.targetEventDate ? raceState.targetEventDate.slice(0, 16) : ""
-  );
-  const [dateSummaryText, setDateSummaryText] = useState(raceState.scheduledStartTime || "");
-  const [dateNotice, setDateNotice] = useState("");
+  // Historical Engine State
+  const [isGeneratingHistorical, setIsGeneratingHistorical] = useState(false);
+  const [historicalNotice, setHistoricalNotice] = useState("");
+  const [historicalError, setHistoricalError] = useState("");
+  const [selectedSpeedSeconds, setSelectedSpeedSeconds] = useState(30);
+  const [selectedVolMultiplier, setSelectedVolMultiplier] = useState(1.5);
 
-  // Starting Capital Form State
-  const [startingCapitalInput, setStartingCapitalInput] = useState(
-    raceState.defaultStartingCapital || 100000
-  );
+  // Starting Capital Notification State
   const [capitalNotice, setCapitalNotice] = useState("");
 
   // Custom Timer Form State
   const [customMinutes, setCustomMinutes] = useState(15);
-  const [customSeconds, setCustomSeconds] = useState(0);
   const [timerSuccess, setTimerSuccess] = useState("");
 
   // News Broadcast Form State
   const [newsTitle, setNewsTitle] = useState("");
   const [newsDesc, setNewsDesc] = useState("");
-  const [selectedSector, setSelectedSector] = useState("Powertrain & Electric Vehicles");
+  const [selectedSector, setSelectedSector] = useState("Electric Vehicles & Clean Energy");
   const [impactPercent, setImpactPercent] = useState(10);
   const [broadcastSuccess, setBroadcastSuccess] = useState("");
 
@@ -133,45 +142,52 @@ export default function Admin() {
   const [editTeamPin, setEditTeamPin] = useState("");
   const [rosterNotice, setRosterNotice] = useState("");
 
-  const sectors = [
-    "Powertrain & Electric Vehicles",
-    "Aerodynamics & Advanced Materials",
-    "Telemetry, AI & Autonomous Tech",
-    "Sustainable Fuels & Energy",
-    "Logistics & Precision Engineering"
-  ];
+  const sectors = useMemo(() => {
+    const list = Array.from(new Set((stocks || []).map((s) => s.sector).filter(Boolean)));
+    return list.length > 0 ? list : [
+      "Electric Vehicles & Clean Energy",
+      "AI & Semiconductor Computing",
+      "Technology & Consumer Devices",
+      "Aerospace & Aviation",
+      "Clean Energy & Hydrogen",
+      "Global Logistics & Delivery",
+      "Consumer Retail & Apparel",
+      "Media & Entertainment",
+      "Healthcare & Pharmaceuticals"
+    ];
+  }, [stocks]);
 
-  // Presets
+  // Real Market Story Presets
   const presets = [
     {
-      title: "Solid-State Battery Breakthrough",
-      description: "Powertrain EV manufacturers report 40% range increase.",
-      sector: "Powertrain & Electric Vehicles",
+      title: "Clean Energy Tax Credits Approved",
+      description: "Government incentives trigger widespread rally for electric vehicle and solar charging networks.",
+      sector: "Electric Vehicles & Clean Energy",
       impact: 12
     },
     {
-      title: "Raw Lithium Supply Chain Crunch",
-      description: "Material delays slow down high-performance EV battery assembly.",
-      sector: "Powertrain & Electric Vehicles",
-      impact: -10
-    },
-    {
-      title: "FIA Aerodynamics Rule Revision",
-      description: "New vortex airflow guidelines boost demand for advanced composites.",
-      sector: "Aerodynamics & Advanced Materials",
+      title: "AI Enterprise Supercluster Deal",
+      description: "Cloud hyperscalers sign massive orders for next-gen AI accelerator chips.",
+      sector: "AI & Semiconductor Computing",
       impact: 15
     },
     {
-      title: "AI Telemetry Quantum Microchip Release",
-      description: "Real-time edge telemetry computing stocks surge.",
-      sector: "Telemetry, AI & Autonomous Tech",
+      title: "Commercial Jetliner Fleet Order",
+      description: "Major international airlines confirm multi-billion dollar agreements for commercial jetliners.",
+      sector: "Aerospace & Aviation",
       impact: 14
     },
     {
-      title: "100% Synthetic Fuel Mandate Approved",
-      description: "Carbon-neutral drop-in e-fuels receive major green subsidies.",
-      sector: "Sustainable Fuels & Energy",
-      impact: 18
+      title: "Global Supply Chain Delays",
+      description: "Temporary port congestions and freight bottlenecks slow package logistics hubs.",
+      sector: "Global Logistics & Delivery",
+      impact: -10
+    },
+    {
+      title: "Streaming Platform Viewership Record",
+      description: "Global entertainment subscriber numbers break previous quarterly records.",
+      sector: "Media & Entertainment",
+      impact: 11
     }
   ];
 
@@ -186,67 +202,101 @@ export default function Admin() {
     }
   };
 
-  const handleSetTargetDate = (e) => {
-    e.preventDefault();
-    if (!targetDateInput) return;
-    const d = new Date(targetDateInput);
-    const dateDerived = !isNaN(d.getTime())
-      ? d.toLocaleString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true
-      })
-      : "";
-
-    const isExplicitSummary =
-      dateSummaryText.trim() &&
-      dateSummaryText.trim() !== raceState.scheduledStartTime &&
-      !dateSummaryText.trim().includes("10:00 AM");
-
-    const formattedSummary = isExplicitSummary
-      ? dateSummaryText.trim()
-      : (dateDerived || dateSummaryText.trim());
-
-    setTargetEventDate(targetDateInput, formattedSummary);
-    setDateNotice(`Countdown set to: ${formattedSummary}`);
-    setTimeout(() => setDateNotice(""), 3500);
-  };
-
-  const handlePresetDate = (isoString, label) => {
-    setTargetDateInput(isoString.slice(0, 16));
-    setDateSummaryText(label);
-    setTargetEventDate(isoString, label);
-    setDateNotice(`Countdown set to: ${label}`);
-    setTimeout(() => setDateNotice(""), 3500);
-  };
-
-  const handleSetCapital = (e) => {
-    e.preventDefault();
-    const amount = Number(startingCapitalInput);
-    if (!amount || amount < 1000) return;
-    adminSetDefaultStartingCapital(amount);
-    setCapitalNotice(`Default capital updated to ₹${amount.toLocaleString("en-IN")}`);
-    setTimeout(() => setCapitalNotice(""), 3000);
-  };
-
   const handleSetTimer = (e) => {
     e.preventDefault();
-    const totalSecs = (parseInt(customMinutes) || 0) * 60 + (parseInt(customSeconds) || 0);
-    if (totalSecs < 10) return;
+    const totalSecs = (parseInt(customMinutes) || 0) * 60;
+    if (totalSecs < 60) return;
     setRaceTimer(totalSecs);
-    setTimerSuccess(`Timer set to ${customMinutes}m ${customSeconds}s!`);
+    setTimerSuccess(`Lap duration set to ${customMinutes} minutes!`);
     setTimeout(() => setTimerSuccess(""), 3000);
   };
 
   const handlePresetTimer = (mins) => {
     setCustomMinutes(mins);
-    setCustomSeconds(0);
     setRaceTimer(mins * 60);
-    setTimerSuccess(`Timer set to ${mins} minutes!`);
+    setTimerSuccess(`Lap duration set to ${mins} minutes!`);
     setTimeout(() => setTimerSuccess(""), 3000);
+  };
+
+  // Historical Market Handlers (Twelve Data Engine)
+  const handleGenerateHistorical = async () => {
+    try {
+      setIsGeneratingHistorical(true);
+      setHistoricalNotice("");
+      setHistoricalError("");
+      const res = await generateHistoricalData({
+        totalMinutes: 120,
+        volatilityMultiplier: Number(selectedVolMultiplier) || 1.5,
+      });
+      if (res && res.success) {
+        setHistoricalNotice(res.message || "Successfully generated 120 minutes of authentic historical data from Twelve Data! Competition lap is unchanged.");
+      } else {
+        setHistoricalNotice("Historical market data generated and stored. Competition lap is unchanged.");
+      }
+    } catch (err) {
+      console.error("Generate historical data error:", err);
+      setHistoricalError(err?.message || "Failed to generate historical data");
+    } finally {
+      setIsGeneratingHistorical(false);
+    }
+  };
+
+  const handleStartHistorical = async () => {
+    try {
+      setHistoricalError("");
+      await startHistoricalSimulation(selectedSpeedSeconds);
+      setHistoricalNotice(`Historical auto-play started! Streaming stock price ticks every ${selectedSpeedSeconds}s. Competition lap is unaffected.`);
+      setTimeout(() => setHistoricalNotice(""), 4000);
+    } catch (err) {
+      setHistoricalError(err?.message || "Failed to start historical simulation");
+    }
+  };
+
+  const handlePauseHistorical = async () => {
+    try {
+      await pauseHistoricalSimulation();
+      setHistoricalNotice("Historical price stream paused. Current competition lap remains active.");
+      setTimeout(() => setHistoricalNotice(""), 4000);
+    } catch (err) {
+      setHistoricalError(err?.message || "Failed to pause simulation");
+    }
+  };
+
+  const handleStepHistorical = async (targetMinute) => {
+    try {
+      await stepHistoricalSimulation(targetMinute);
+      setHistoricalNotice(`Advanced market prices to minute ${targetMinute} of 120. Competition lap is unchanged.`);
+      setTimeout(() => setHistoricalNotice(""), 3000);
+    } catch (err) {
+      setHistoricalError(err?.message || "Failed to step simulation");
+    }
+  };
+
+  const handleResetHistorical = async () => {
+    if (!window.confirm("Reset historical stock prices back to Minute 0 baseline? (Your current competition lap will NOT be changed)")) return;
+    try {
+      await resetHistoricalSimulation();
+      setHistoricalNotice("Stock prices reset to Minute 0 opening baseline. Competition lap remains unchanged.");
+      setTimeout(() => setHistoricalNotice(""), 3000);
+    } catch (err) {
+      setHistoricalError(err?.message || "Failed to reset simulation");
+    }
+  };
+
+  const handleBroadcastNewsItem = async (newsItem) => {
+    try {
+      await broadcastTrackEvent({
+        title: newsItem.title,
+        description: newsItem.description,
+        type: newsItem.type,
+        affectedSectors: newsItem.sector ? [newsItem.sector] : [],
+        priceImpactPercent: newsItem.priceImpactPercent,
+      });
+      setHistoricalNotice(`Broadcasted: "${newsItem.title}"`);
+      setTimeout(() => setHistoricalNotice(""), 4000);
+    } catch (err) {
+      setHistoricalError(err?.message || "Failed to broadcast news item");
+    }
   };
 
   const handleBroadcast = (e) => {
@@ -543,270 +593,118 @@ export default function Admin() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Section 1: Pre-Event Access Gates & Countdown Orchestrator */}
-        <section className="p-5 sm:p-6 rounded-xl bg-[#121720] border border-[#232B3B] space-y-5">
-          <div className="flex items-center gap-2 border-b border-[#232B3B] pb-3.5">
+        {/* Section 1: Access Controls & Starting Balance */}
+        <section className="p-5 sm:p-6 rounded-xl bg-[#121720] border border-[#232B3B] space-y-4">
+          <div className="flex items-center gap-2 border-b border-[#232B3B] pb-3">
             <Sliders className="w-4 h-4 text-[#06B6D4]" />
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">
-              Pre-Event Access Gates & Countdown Orchestrator
+              Access Controls &amp; Starting Balance
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Gate 1: Team Registration Gate */}
             <div className="p-4 rounded-lg bg-[#0A0D12] border border-[#1A202C] flex flex-col justify-between gap-3">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                     {raceState.isRegistrationOpen ? <Unlock className="w-4 h-4 text-[#10B981]" /> : <Lock className="w-4 h-4 text-[#E10600]" />}
-                    <span>Team Registration Gate</span>
+                    <span>Team Registration</span>
                   </span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${raceState.isRegistrationOpen ? "bg-[#10B981]/20 text-[#10B981]" : "bg-[#E10600]/20 text-[#FF8080]"
-                    }`}>
-                    {raceState.isRegistrationOpen ? "OPEN FOR REGISTRATION" : "LOCKED (CLOSED)"}
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                    raceState.isRegistrationOpen ? "bg-[#10B981]/20 text-[#10B981]" : "bg-[#E10600]/20 text-[#FF8080]"
+                  }`}>
+                    {raceState.isRegistrationOpen ? "Open" : "Locked"}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  Control whether participants can register new teams on the login page. Keep locked until the official event day.
+                  Allow players to claim and register their team on the sign-up page.
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => toggleRegistration(!raceState.isRegistrationOpen)}
-                className={`w-full py-2 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${raceState.isRegistrationOpen
+                className={`w-full py-2 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
+                  raceState.isRegistrationOpen
                     ? "bg-[#E10600]/20 hover:bg-[#E10600] text-[#FF8080] hover:text-white border border-[#E10600]/40"
                     : "bg-[#10B981] hover:bg-[#059669] text-slate-950"
-                  }`}
+                }`}
               >
-                {raceState.isRegistrationOpen ? (
-                  <>
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Lock Team Registration Now</span>
-                  </>
-                ) : (
-                  <>
-                    <Unlock className="w-3.5 h-3.5" />
-                    <span>Open Team Registration</span>
-                  </>
-                )}
+                {raceState.isRegistrationOpen ? "Lock Registration" : "Open Registration"}
               </button>
             </div>
 
-            {/* Gate 2: Paddock / Cockpit Access Gate */}
+            {/* Gate 2: Trading Access Gate */}
             <div className="p-4 rounded-lg bg-[#0A0D12] border border-[#1A202C] flex flex-col justify-between gap-3">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                     {raceState.isSimulationEntryOpen ? <Unlock className="w-4 h-4 text-[#06B6D4]" /> : <Lock className="w-4 h-4 text-slate-400" />}
-                    <span>Simulation Cockpit Access</span>
+                    <span>Trading Dashboard Access</span>
                   </span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${raceState.isSimulationEntryOpen ? "bg-[#06B6D4]/20 text-[#06B6D4]" : "bg-slate-800 text-slate-400"
-                    }`}>
-                    {raceState.isSimulationEntryOpen ? "PADDOCK ACCESS OPEN" : "PADDOCK LOCKED"}
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                    raceState.isSimulationEntryOpen ? "bg-[#06B6D4]/20 text-[#06B6D4]" : "bg-slate-800 text-slate-400"
+                  }`}>
+                    {raceState.isSimulationEntryOpen ? "Unlocked" : "Locked"}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  Control whether logged-in drivers can enter the Cockpit Dashboard. Lock to keep participants in the waiting lounge.
+                  Allow logged-in teams to enter their dashboard and trade stocks.
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => toggleSimulationEntry(!raceState.isSimulationEntryOpen)}
-                className={`w-full py-2 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${raceState.isSimulationEntryOpen
+                className={`w-full py-2 rounded-lg font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
+                  raceState.isSimulationEntryOpen
                     ? "bg-[#F59E0B]/20 hover:bg-[#F59E0B] text-[#F59E0B] hover:text-slate-950 border border-[#F59E0B]/40"
                     : "bg-[#06B6D4] hover:bg-[#0891B2] text-slate-950"
-                  }`}
+                }`}
               >
-                {raceState.isSimulationEntryOpen ? (
-                  <>
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Lock Cockpit Access</span>
-                  </>
-                ) : (
-                  <>
-                    <Unlock className="w-3.5 h-3.5" />
-                    <span>Unlock Cockpit Access</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Target Event Date & Time Countdown Scheduler */}
-          <div className="p-4 rounded-lg bg-[#0A0D12] border border-[#1A202C] space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#EAB308]" />
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                  Event Target Date & Countdown Scheduler (Days, Hours, Minutes, Seconds)
-                </span>
-              </div>
-              {dateNotice && (
-                <span className="text-xs font-bold text-[#10B981] flex items-center gap-1">
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  <span>{dateNotice}</span>
-                </span>
-              )}
-            </div>
-
-            {/* Quick Presets */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-slate-400 font-medium mr-1">Quick Presets:</span>
-              <button
-                type="button"
-                onClick={() => {
-                  const d = new Date();
-                  d.setMinutes(d.getMinutes() + 15);
-                  handlePresetDate(d.toISOString(), "Flag-Off in 15 Minutes");
-                }}
-                className="px-2.5 py-1 rounded bg-[#161B24] hover:bg-[#1D232E] text-slate-300 text-xs font-bold border border-[#232B3B]"
-              >
-                In 15 Minutes
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const d = new Date();
-                  d.setHours(d.getHours() + 2);
-                  handlePresetDate(d.toISOString(), "Flag-Off in 2 Hours");
-                }}
-                className="px-2.5 py-1 rounded bg-[#161B24] hover:bg-[#1D232E] text-slate-300 text-xs font-bold border border-[#232B3B]"
-              >
-                In 2 Hours
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const d = new Date();
-                  d.setDate(d.getDate() + 1);
-                  d.setHours(10, 0, 0, 0);
-                  handlePresetDate(d.toISOString(), "Tomorrow at 10:00 AM");
-                }}
-                className="px-2.5 py-1 rounded bg-[#161B24] hover:bg-[#1D232E] text-slate-300 text-xs font-bold border border-[#232B3B]"
-              >
-                Tomorrow 10:00 AM
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePresetDate("2026-10-29T15:00:00", "October 29, 2026 at 3:00 PM")}
-                className="px-2.5 py-1 rounded bg-[#161B24] hover:bg-[#E10600]/20 text-[#EAB308] text-xs font-bold border border-[#EAB308]/40"
-              >
-                Official Event: Oct 29, 3:00 PM (RGPV Hall)
+                {raceState.isSimulationEntryOpen ? "Lock Dashboard" : "Unlock Dashboard"}
               </button>
             </div>
 
-            <form onSubmit={handleSetTargetDate} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 pt-1">
-              <div className="sm:col-span-4">
-                <input
-                  type="datetime-local"
-                  required
-                  value={targetDateInput}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setTargetDateInput(val);
-                    if (val) {
-                      const d = new Date(val);
-                      if (!isNaN(d.getTime())) {
-                        setDateSummaryText(
-                          d.toLocaleString("en-US", {
-                            month: "long",
-                            day: "numeric",
-                            year: "numeric",
-                            hour: "numeric",
-                            minute: "2-digit",
-                            hour12: true
-                          })
-                        );
-                      }
-                    }
-                  }}
-                  className="w-full px-3 py-1.5 rounded bg-[#121720] border border-[#232B3B] focus:border-[#EAB308] text-xs text-white outline-none"
-                />
+            {/* Starting Balance Configurator */}
+            <div className="p-4 rounded-lg bg-[#0A0D12] border border-[#1A202C] flex flex-col justify-between gap-3">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                    <DollarSign className="w-4 h-4 text-[#10B981]" />
+                    <span>Default Starting Balance</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#10B981]/20 text-[#10B981]">
+                    {capitalNotice || `₹${(raceState.defaultStartingCapital || 100000).toLocaleString("en-IN")}`}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Default cash balance credited to new teams.
+                </p>
               </div>
 
-              <div className="sm:col-span-5">
-                <input
-                  type="text"
-                  placeholder="Summary text (e.g. October 29, 2026 at 3:00 PM)"
-                  value={dateSummaryText}
-                  onChange={(e) => setDateSummaryText(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded bg-[#121720] border border-[#232B3B] focus:border-[#EAB308] text-xs text-white placeholder:text-slate-600 outline-none"
-                />
-              </div>
-
-              <div className="sm:col-span-3">
-                <button
-                  type="submit"
-                  className="w-full py-1.5 rounded bg-[#EAB308] hover:bg-[#CA8A04] text-slate-950 font-black text-xs uppercase tracking-wider transition-colors"
-                >
-                  Save Countdown
-                </button>
-              </div>
-            </form>
-
-            {/* Live Countdown Preview */}
-            <div className="pt-2">
-              <EventCountdown />
-            </div>
-          </div>
-
-          {/* Default Team Starting Capital Configurator */}
-          <div className="p-4 rounded-lg bg-[#0A0D12] border border-[#1A202C] space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-[#10B981]" />
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                  Default Team Starting Capital Configuration
-                </span>
-              </div>
-              {capitalNotice && (
-                <span className="text-xs font-bold text-[#10B981] flex items-center gap-1">
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  <span>{capitalNotice}</span>
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-slate-400">
-              New teams registered on the grid will automatically be credited with this initial wallet balance. Current: <strong className="text-white">₹{(raceState.defaultStartingCapital || 100000).toLocaleString("en-IN")}</strong>
-            </p>
-            <form onSubmit={handleSetCapital} className="flex flex-wrap items-center gap-2.5">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-slate-400 font-bold">₹</span>
-                <input
-                  type="number"
-                  min="1000"
-                  step="5000"
-                  value={startingCapitalInput}
-                  onChange={(e) => setStartingCapitalInput(e.target.value)}
-                  className="w-32 px-2.5 py-1.5 rounded bg-[#121720] border border-[#232B3B] text-xs text-white font-mono outline-none"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-4 py-1.5 rounded bg-[#10B981] hover:bg-[#059669] text-slate-950 font-black text-xs uppercase tracking-wider transition-colors"
-              >
-                Update Default Capital
-              </button>
-              <div className="flex gap-1.5">
                 {[50000, 100000, 200000].map((amt) => (
                   <button
                     key={amt}
                     type="button"
                     onClick={() => {
-                      setStartingCapitalInput(amt);
                       adminSetDefaultStartingCapital(amt);
                       setCapitalNotice(`Set to ₹${amt.toLocaleString("en-IN")}`);
                       setTimeout(() => setCapitalNotice(""), 3000);
                     }}
-                    className="px-2 py-1 rounded bg-[#161B24] hover:bg-[#1D232E] text-slate-300 text-[11px] font-mono border border-[#232B3B]"
+                    className={`flex-1 py-1.5 rounded text-xs font-mono font-bold border transition-colors ${
+                      (raceState.defaultStartingCapital || 100000) === amt
+                        ? "bg-[#10B981] text-slate-950 border-[#10B981]"
+                        : "bg-[#161B24] text-slate-300 hover:text-white border-[#232B3B]"
+                    }`}
                   >
                     ₹{(amt / 1000).toFixed(0)}k
                   </button>
                 ))}
               </div>
-            </form>
+            </div>
           </div>
         </section>
 
@@ -945,12 +843,13 @@ export default function Admin() {
           </div>
 
           {/* Custom Lap Duration & Timer Setter */}
+          {/* Lap Duration Configurator */}
           <div className="p-4 rounded-lg bg-[#0A0D12] border border-[#1A202C] space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#06B6D4]" />
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                  Custom Lap Duration Configurator
+                  Lap Duration Configurator
                 </span>
               </div>
               {timerSuccess && (
@@ -968,45 +867,437 @@ export default function Admin() {
                   key={m}
                   type="button"
                   onClick={() => handlePresetTimer(m)}
-                  className="px-2.5 py-1 rounded bg-[#161B24] hover:bg-[#1D232E] text-slate-300 text-xs font-mono font-bold border border-[#232B3B] transition-colors"
+                  className={`px-3 py-1 rounded text-xs font-mono font-bold border transition-colors ${
+                    customMinutes === m
+                      ? "bg-[#06B6D4] text-slate-950 border-[#06B6D4]"
+                      : "bg-[#161B24] hover:bg-[#1D232E] text-slate-300 border-[#232B3B]"
+                  }`}
                 >
                   {m} Min
                 </button>
               ))}
             </div>
 
-            <form onSubmit={handleSetTimer} className="flex flex-wrap items-center gap-2.5 pt-1">
+            <form onSubmit={handleSetTimer} className="flex items-center gap-2 pt-1">
               <div className="flex items-center gap-1.5">
                 <input
                   type="number"
-                  min="0"
+                  min="1"
                   max="120"
                   value={customMinutes}
-                  onChange={(e) => setCustomMinutes(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-16 px-2.5 py-1.5 rounded bg-[#121720] border border-[#232B3B] text-xs text-white font-mono text-center outline-none"
+                  onChange={(e) => setCustomMinutes(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-20 px-2.5 py-1.5 rounded bg-[#121720] border border-[#232B3B] text-xs text-white font-mono text-center outline-none"
                 />
-                <span className="text-xs text-slate-400 font-bold">min</span>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number"
-                  min="0"
-                  max="59"
-                  value={customSeconds}
-                  onChange={(e) => setCustomSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                  className="w-16 px-2.5 py-1.5 rounded bg-[#121720] border border-[#232B3B] text-xs text-white font-mono text-center outline-none"
-                />
-                <span className="text-xs text-slate-400 font-bold">sec</span>
+                <span className="text-xs text-slate-400 font-bold">minutes</span>
               </div>
 
               <button
                 type="submit"
                 className="px-4 py-1.5 rounded bg-[#06B6D4] hover:bg-[#0891B2] text-slate-950 font-black text-xs uppercase tracking-wider transition-colors"
               >
-                Apply Custom Time
+                Set Lap Duration
               </button>
             </form>
+          </div>
+        </section>
+
+        {/* Section 2.5: Historical Market Engine (Twelve Data 120-Minute Stream) */}
+        <section className="p-5 sm:p-6 rounded-xl bg-[#121720] border border-[#232B3B] space-y-5">
+          {/* Section Header */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-[#232B3B] pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Database className="w-5 h-5 text-[#06B6D4]" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#06B6D4]">
+                  Twelve Data Stock Feed
+                </span>
+                {historicalStatus?.session?.status === "RUNNING" && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 animate-pulse">
+                    <Radio className="w-3 h-3" />
+                    Auto-Play Active
+                  </span>
+                )}
+              </div>
+              <h2 className="text-xl font-black uppercase italic tracking-tight text-white flex items-center gap-2 mt-1">
+                <span>Historical Stock Market Data (Twelve Data)</span>
+                <span className={`px-2.5 py-0.5 rounded text-xs font-black uppercase tracking-wider ${
+                  historicalStatus?.session?.status === "RUNNING"
+                    ? "bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40"
+                    : historicalStatus?.session?.status === "PAUSED"
+                      ? "bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40"
+                      : historicalStatus?.isLoaded
+                        ? "bg-[#06B6D4]/20 text-[#06B6D4] border border-[#06B6D4]/40"
+                        : "bg-[#E10600]/20 text-[#FF4D4D] border border-[#E10600]/40"
+                }`}>
+                  {historicalStatus?.session?.status === "RUNNING"
+                    ? `PLAYING • MINUTE ${(historicalStatus?.session?.currentMinuteIndex ?? 0) + 1} OF ${historicalStatus?.session?.totalMinutes || 120}`
+                    : historicalStatus?.session?.status === "PAUSED"
+                      ? "PAUSED"
+                      : historicalStatus?.isLoaded
+                        ? "120-MIN DATASET READY"
+                        : "NO DATA GENERATED YET"}
+                </span>
+              </h2>
+              <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+                Uses real historical stock data from Twelve Data. Generates 120 minutes of realistic market price movements and clear news updates. Changing or resetting this data updates stock prices without affecting your competition lap.
+              </p>
+            </div>
+
+            {/* Status Telemetry Pill */}
+            <div className="flex items-center gap-3 bg-[#0A0D12] p-3 rounded-lg border border-[#232B3B] shrink-0">
+              <Activity className="w-5 h-5 text-[#10B981]" />
+              <div>
+                <div className="text-[10px] font-bold uppercase text-slate-400">
+                  Market Timeline
+                </div>
+                <div className="text-sm font-black font-mono text-white">
+                  Min {historicalStatus?.session?.currentMinuteIndex ?? 0} / {historicalStatus?.session?.totalMinutes || 120}
+                  <span className="text-slate-400 text-xs ml-1 font-normal">
+                    ({Math.round(((historicalStatus?.session?.currentMinuteIndex ?? 0) / (historicalStatus?.session?.totalMinutes || 120)) * 100)}%)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Independent Lap Reassurance Banner */}
+          <div className="p-3 rounded-lg bg-[#06B6D4]/10 border border-[#06B6D4]/30 flex items-start gap-2.5 text-xs text-slate-300">
+            <Info className="w-4 h-4 text-[#06B6D4] shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-white">Independent Stock Data Feed:</strong> Changing, stepping, or resetting this historical market dataset updates stock prices across the market, but will <span className="text-[#10B981] font-bold">never restart or alter your current competition lap</span> (Lap {raceState?.currentLap || 1} stays intact).
+            </div>
+          </div>
+
+          {/* Feedback Notices */}
+          {historicalNotice && (
+            <div className="p-3 rounded-lg bg-[#10B981]/15 border border-[#10B981]/30 text-xs text-[#10B981] flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 shrink-0" />
+                <span className="font-medium">{historicalNotice}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHistoricalNotice("")}
+                className="text-[10px] text-slate-400 hover:text-white"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          {historicalError && (
+            <div className="p-3 rounded-lg bg-[#E10600]/15 border border-[#E10600]/30 text-xs text-[#FF4D4D] flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span className="font-medium">{historicalError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHistoricalError("")}
+                className="text-[10px] text-slate-400 hover:text-white"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          {/* 120-Minute Timeline Visual Progress Bar */}
+          <div className="space-y-1.5 bg-[#0A0D12] p-3.5 rounded-xl border border-[#1D2533]">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#06B6D4]" />
+                120-Minute Timeline Progress
+              </span>
+              <span className="font-mono text-xs text-[#06B6D4] font-bold">
+                Minute {historicalStatus?.session?.currentMinuteIndex ?? 0} of {historicalStatus?.session?.totalMinutes || 120} • Competition Lap {raceState?.currentLap || 1} Intact
+              </span>
+            </div>
+
+            {/* Interactive Timeline Progress Bar */}
+            <div className="relative w-full h-3 bg-[#161B24] rounded-full overflow-hidden border border-[#232B3B]">
+              <div
+                className="h-full bg-linear-to-r from-[#06B6D4] via-[#10B981] to-[#E10600] transition-all duration-300"
+                style={{
+                  width: `${Math.min(100, (((historicalStatus?.session?.currentMinuteIndex ?? 0) + 1) / (historicalStatus?.session?.totalMinutes || 120)) * 100)}%`
+                }}
+              />
+            </div>
+
+            {/* Clear quarter markers */}
+            <div className="flex justify-between text-[10px] font-mono text-slate-500 pt-0.5 px-1">
+              <span>Start (0m)</span>
+              <span>Quarter 1 (30m)</span>
+              <span>Midpoint (60m)</span>
+              <span>Quarter 3 (90m)</span>
+              <span>Finish (120m)</span>
+            </div>
+          </div>
+
+          {/* Master Historical Playback Controls */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {/* Generate Data Button */}
+            <button
+              type="button"
+              onClick={handleGenerateHistorical}
+              disabled={isGeneratingHistorical}
+              className={`p-3.5 rounded-lg font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border ${
+                isGeneratingHistorical
+                  ? "bg-[#06B6D4]/20 text-[#06B6D4] border-[#06B6D4]/40 cursor-wait"
+                  : "bg-linear-to-r from-[#0891B2] to-[#06B6D4] hover:from-[#06B6D4] hover:to-[#22D3EE] text-slate-950 border-[#06B6D4] shadow-sm hover:shadow-cyan-500/20"
+              }`}
+            >
+              <RefreshCw className={`w-4 h-4 ${isGeneratingHistorical ? "animate-spin" : ""}`} />
+              <span>{isGeneratingHistorical ? "Fetching Twelve Data..." : "Generate 120-Min Data"}</span>
+            </button>
+
+            {/* Start Auto-Play */}
+            <button
+              type="button"
+              onClick={handleStartHistorical}
+              disabled={!historicalStatus?.isLoaded || historicalStatus?.session?.status === "RUNNING"}
+              className={`p-3.5 rounded-lg font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                historicalStatus?.session?.status === "RUNNING"
+                  ? "bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/50 cursor-default"
+                  : !historicalStatus?.isLoaded
+                    ? "bg-[#161B24] text-slate-500 border border-[#232B3B] cursor-not-allowed"
+                    : "bg-[#10B981] hover:bg-[#059669] text-slate-950 shadow-sm hover:shadow-emerald-500/20"
+              }`}
+            >
+              <Play className="w-4 h-4 fill-current" />
+              <span>
+                {historicalStatus?.session?.status === "RUNNING"
+                  ? "Auto-Playing Prices"
+                  : "Start Auto-Play"}
+              </span>
+            </button>
+
+            {/* Pause Auto-Play */}
+            <button
+              type="button"
+              onClick={handlePauseHistorical}
+              disabled={historicalStatus?.session?.status !== "RUNNING"}
+              className={`p-3.5 rounded-lg font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                historicalStatus?.session?.status === "PAUSED"
+                  ? "bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/50 cursor-default"
+                  : historicalStatus?.session?.status !== "RUNNING"
+                    ? "bg-[#161B24] text-slate-500 border border-[#232B3B] cursor-not-allowed"
+                    : "bg-[#F59E0B] hover:bg-[#D97706] text-slate-950"
+              }`}
+            >
+              <Pause className="w-4 h-4 fill-current" />
+              <span>Pause Auto-Play</span>
+            </button>
+
+            {/* Step +1 Minute */}
+            <button
+              type="button"
+              onClick={() => handleStepHistorical((historicalStatus?.session?.currentMinuteIndex ?? 0) + 1)}
+              disabled={!historicalStatus?.isLoaded}
+              className={`p-3.5 rounded-lg font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border ${
+                !historicalStatus?.isLoaded
+                  ? "bg-[#161B24] text-slate-500 border-[#232B3B] cursor-not-allowed"
+                  : "bg-[#161B24] hover:bg-[#202736] text-white border-[#2A3447]"
+              }`}
+            >
+              <FastForward className="w-4 h-4 text-[#06B6D4]" />
+              <span>Next Minute (+1m)</span>
+            </button>
+
+            {/* Reset to Min 0 */}
+            <button
+              type="button"
+              onClick={handleResetHistorical}
+              disabled={!historicalStatus?.isLoaded}
+              className={`p-3.5 rounded-lg font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border ${
+                !historicalStatus?.isLoaded
+                  ? "bg-[#161B24] text-slate-500 border-[#232B3B] cursor-not-allowed"
+                  : "bg-[#161B24] hover:bg-[#202736] text-slate-300 hover:text-white border-[#2A3447]"
+              }`}
+            >
+              <RotateCcw className="w-4 h-4 text-[#E10600]" />
+              <span>Reset Prices to Min 0</span>
+            </button>
+          </div>
+
+          {/* Playback Configuration & Scrubber Ribbon */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 pt-2">
+            {/* Speed Presets */}
+            <div className="p-3.5 rounded-xl bg-[#0A0D12] border border-[#1D2533] space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-slate-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#06B6D4]" />
+                  Auto-Play Speed
+                </span>
+                <span className="text-[11px] font-mono text-[#06B6D4]">
+                  {selectedSpeedSeconds}s per minute
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {[
+                  { label: "10s (Fast)", secs: 10 },
+                  { label: "30s (Default)", secs: 30 },
+                  { label: "60s (Realtime)", secs: 60 }
+                ].map((item) => (
+                  <button
+                    key={item.secs}
+                    type="button"
+                    onClick={() => {
+                      setSelectedSpeedSeconds(item.secs);
+                      updateHistoricalSettings({ tickIntervalSeconds: item.secs });
+                      setHistoricalNotice(`Tick speed updated to ${item.secs}s per market minute.`);
+                      setTimeout(() => setHistoricalNotice(""), 3000);
+                    }}
+                    className={`py-1.5 px-2 rounded text-[11px] font-bold font-mono transition-colors border ${
+                      selectedSpeedSeconds === item.secs
+                        ? "bg-[#06B6D4] text-slate-950 border-[#06B6D4]"
+                        : "bg-[#121720] text-slate-400 hover:text-white border-[#232B3B]"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Volatility Multiplier Presets */}
+            <div className="p-3.5 rounded-xl bg-[#0A0D12] border border-[#1D2533] space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-slate-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-[#EAB308]" />
+                  Price Fluctuation Scale
+                </span>
+                <span className="text-[11px] font-mono text-[#EAB308]">
+                  {selectedVolMultiplier}x swing action
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {[
+                  { label: "1.0x (Normal)", val: 1.0 },
+                  { label: "1.5x (Recommended)", val: 1.5 },
+                  { label: "2.0x (High Swings)", val: 2.0 }
+                ].map((item) => (
+                  <button
+                    key={item.val}
+                    type="button"
+                    onClick={() => {
+                      setSelectedVolMultiplier(item.val);
+                      updateHistoricalSettings({ volatilityMultiplier: item.val });
+                      setHistoricalNotice(`Price fluctuation scale set to ${item.val}x.`);
+                      setTimeout(() => setHistoricalNotice(""), 3000);
+                    }}
+                    className={`py-1.5 px-2 rounded text-[11px] font-bold font-mono transition-colors border ${
+                      selectedVolMultiplier === item.val
+                        ? "bg-[#EAB308] text-slate-950 border-[#EAB308]"
+                        : "bg-[#121720] text-slate-400 hover:text-white border-[#232B3B]"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Timeline Minute Scrubber */}
+            <div className="p-3.5 rounded-xl bg-[#0A0D12] border border-[#1D2533] space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-slate-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                  <Sliders className="w-3.5 h-3.5 text-[#10B981]" />
+                  Jump to Any Minute
+                </span>
+                <span className="text-[11px] font-mono text-[#10B981] font-bold">
+                  Minute {historicalStatus?.session?.currentMinuteIndex ?? 0} of 120
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max={Math.max(0, (historicalStatus?.session?.totalMinutes || 120) - 1)}
+                value={historicalStatus?.session?.currentMinuteIndex ?? 0}
+                onChange={(e) => handleStepHistorical(parseInt(e.target.value, 10))}
+                disabled={!historicalStatus?.isLoaded}
+                className="w-full accent-[#10B981] cursor-pointer"
+              />
+            </div>
+          </div>
+
+          {/* Scheduled News Tickers Feed */}
+          <div className="pt-2 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Radio className="w-4 h-4 text-[#06B6D4]" />
+                <span className="text-xs font-black uppercase tracking-widest text-slate-200">
+                  Scheduled News Tickers (120-Minute Timeline)
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-400 font-mono">
+                {historicalStatus?.validNewsSchedule?.length || 10} Scheduled Events
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-72 overflow-y-auto pr-1">
+              {(historicalStatus?.validNewsSchedule || []).map((news, idx) => {
+                const isPassed = (historicalStatus?.session?.currentMinuteIndex ?? 0) >= news.minuteIndex;
+                const isPositive = (news.priceImpactPercent || 0) >= 0;
+
+                return (
+                  <div
+                    key={news.title + idx}
+                    className={`p-3 rounded-lg border transition-all flex flex-col justify-between gap-2 ${
+                      isPassed
+                        ? "bg-[#0D121B] border-[#10B981]/30 opacity-90"
+                        : "bg-[#0A0D12] border-[#1D2533] hover:border-[#2A3447]"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-black uppercase ${
+                          news.type === "GREEN_FLAG"
+                            ? "bg-[#10B981]/20 text-[#10B981]"
+                            : news.type === "YELLOW_FLAG"
+                              ? "bg-[#F59E0B]/20 text-[#F59E0B]"
+                              : news.type === "SAFETY_CAR"
+                                ? "bg-[#E10600]/20 text-[#FF4D4D]"
+                                : "bg-[#06B6D4]/20 text-[#06B6D4]"
+                        }`}>
+                          Min {String(news.minuteIndex).padStart(2, "0")}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400">
+                          {news.ticker} • {news.sector}
+                        </span>
+                      </div>
+
+                      <span className={`text-[10px] font-mono font-bold ${
+                        isPositive ? "text-[#10B981]" : "text-[#E10600]"
+                      }`}>
+                        {isPositive ? "+" : ""}{news.priceImpactPercent}%
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="text-xs font-bold text-white line-clamp-1">
+                        {news.title}
+                      </h4>
+                      <p className="text-[11px] text-slate-400 line-clamp-2 mt-0.5">
+                        {news.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 border-t border-[#18202E]">
+                      <span className="text-[9px] text-slate-500 font-mono">
+                        Source: {news.source}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleBroadcastNewsItem(news)}
+                        className="px-2 py-0.5 rounded bg-[#161B24] hover:bg-[#10B981] text-slate-300 hover:text-slate-950 text-[10px] font-bold uppercase transition-colors"
+                      >
+                        Send Alert Now
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
 
@@ -1032,7 +1323,7 @@ export default function Admin() {
             )}
           </div>
 
-          {/* 5 Industry Sector Shock Cards */}
+          {/* Industry Sector Shock Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {sectors.map((sec) => {
               const sectorStocks = (stocks || []).filter((s) => s.sector === sec);
@@ -1044,43 +1335,29 @@ export default function Admin() {
                         {sec}
                       </div>
                       <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                        {sectorStocks.map((s) => s.ticker).join(", ") || "No scrips"}
+                        {sectorStocks.map((s) => s.ticker).join(", ") || "No stocks"}
                       </div>
                     </div>
                     <span className="px-1.5 py-0.5 rounded bg-[#161B24] text-[10px] font-mono text-[#06B6D4] shrink-0">
-                      {sectorStocks.length} Equities
+                      {sectorStocks.length} Stocks
                     </span>
                   </div>
 
-                  {/* 1-Click Sector Shocks */}
-                  <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-[#161B24]">
+                  {/* 1-Click Sector Shocks: +15% Surge & -10% Dip */}
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#161B24]">
                     <button
                       type="button"
                       onClick={() => handleFireSectorShock(sec, 15, `${sec.split("&")[0].trim()} Bull Surge`, "Surge in industrial order books triggers market-wide rally.")}
-                      className="px-2 py-1.5 rounded bg-[#10B981]/10 hover:bg-[#10B981]/25 border border-[#10B981]/30 text-[#10B981] text-[10px] font-bold uppercase transition-colors"
+                      className="px-2 py-1.5 rounded bg-[#10B981]/10 hover:bg-[#10B981]/25 border border-[#10B981]/30 text-[#10B981] text-[10px] font-bold uppercase transition-colors text-center"
                     >
-                      +15% Bull Surge
+                      +15% Surge
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleFireSectorShock(sec, 25, `${sec.split("&")[0].trim()} Breakthrough`, "Groundbreaking technological milestone drives explosive gains.")}
-                      className="px-2 py-1.5 rounded bg-[#06B6D4]/10 hover:bg-[#06B6D4]/25 border border-[#06B6D4]/30 text-[#06B6D4] text-[10px] font-bold uppercase transition-colors"
+                      onClick={() => handleFireSectorShock(sec, -10, `${sec.split("&")[0].trim()} Market Correction`, "Component bottlenecks and cautious guidance trigger a dip.")}
+                      className="px-2 py-1.5 rounded bg-[#E10600]/10 hover:bg-[#E10600]/25 border border-[#E10600]/30 text-[#FF8080] text-[10px] font-bold uppercase transition-colors text-center"
                     >
-                      +25% Breakthrough
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleFireSectorShock(sec, -10, `${sec.split("&")[0].trim()} Supply Crunch`, "Supply bottlenecks and component delays squeeze operating margins.")}
-                      className="px-2 py-1.5 rounded bg-[#F59E0B]/10 hover:bg-[#F59E0B]/25 border border-[#F59E0B]/30 text-[#F59E0B] text-[10px] font-bold uppercase transition-colors"
-                    >
-                      -10% Crunch
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleFireSectorShock(sec, -20, `${sec.split("&")[0].trim()} Regulatory Ban`, "Tightened compliance standards and component recall trigger selloff.")}
-                      className="px-2 py-1.5 rounded bg-[#E10600]/10 hover:bg-[#E10600]/25 border border-[#E10600]/30 text-[#FF8080] text-[10px] font-bold uppercase transition-colors"
-                    >
-                      -20% Sector Crash
+                      -10% Dip
                     </button>
                   </div>
                 </div>
@@ -1189,11 +1466,11 @@ export default function Admin() {
               <div className="flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-[#10B981]" />
                 <h2 className="text-sm font-black uppercase tracking-widest text-white">
-                  Individual Company Stocks Operations ({stocks?.length || 0} Scrips)
+                  Stock Price Controls ({stocks?.length || 0} Stocks)
                 </h2>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Adjust prices, day ranges, and volatility for specific equities directly in real time.
+                Adjust prices and volatility for specific equities directly in real time.
               </p>
             </div>
             {stockNotice && (
@@ -1208,7 +1485,7 @@ export default function Admin() {
             <table className="w-full min-w-160 text-left text-xs font-sans">
               <thead>
                 <tr className="border-b border-[#232B3B] text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  <th className="pb-2.5">Ticker & Company</th>
+                  <th className="pb-2.5">Ticker &amp; Company</th>
                   <th className="pb-2.5">Sector</th>
                   <th className="pb-2.5 text-right">Current Price</th>
                   <th className="pb-2.5 text-right">Day Change</th>
@@ -1243,11 +1520,11 @@ export default function Admin() {
                       {s.volatility ?? 1.0}x
                     </td>
                     <td className="py-2.5 text-center">
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => handleNudgeStockPrice(s, 5)}
-                          className="px-1.5 py-0.5 rounded bg-[#10B981]/15 hover:bg-[#10B981]/30 text-[#10B981] font-mono text-[10px] font-bold"
+                          className="px-2 py-0.5 rounded bg-[#10B981]/15 hover:bg-[#10B981]/30 text-[#10B981] font-mono text-[10px] font-bold"
                           title="Increase price by 5%"
                         >
                           +5%
@@ -1255,26 +1532,10 @@ export default function Admin() {
                         <button
                           type="button"
                           onClick={() => handleNudgeStockPrice(s, -5)}
-                          className="px-1.5 py-0.5 rounded bg-[#E10600]/15 hover:bg-[#E10600]/30 text-[#FF8080] font-mono text-[10px] font-bold"
+                          className="px-2 py-0.5 rounded bg-[#E10600]/15 hover:bg-[#E10600]/30 text-[#FF8080] font-mono text-[10px] font-bold"
                           title="Decrease price by 5%"
                         >
                           -5%
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleNudgeStockPrice(s, 10)}
-                          className="px-1.5 py-0.5 rounded bg-[#06B6D4]/15 hover:bg-[#06B6D4]/30 text-[#06B6D4] font-mono text-[10px] font-bold"
-                          title="Increase price by 10%"
-                        >
-                          +10%
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleNudgeStockPrice(s, -10)}
-                          className="px-1.5 py-0.5 rounded bg-[#F59E0B]/15 hover:bg-[#F59E0B]/30 text-[#F59E0B] font-mono text-[10px] font-bold"
-                          title="Decrease price by 10%"
-                        >
-                          -10%
                         </button>
                       </div>
                     </td>
@@ -1329,18 +1590,18 @@ export default function Admin() {
           </div>
         </section>
 
-        {/* Section 5: Canonical 15-Team Grid & Roster Manager */}
+        {/* Section 5: Teams & Player Management */}
         <section className="p-5 sm:p-6 rounded-xl bg-[#121720] border border-[#232B3B] space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#232B3B] pb-3">
             <div>
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-[#E10600]" />
                 <h2 className="text-sm font-black uppercase tracking-widest text-white">
-                  Canonical 15-Team Grid &amp; 3-Member Roster Controller
+                  Teams &amp; Player Management (15 Teams)
                 </h2>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Hard-capped grid of 15 pre-decided motorsport teams. Each team is strictly limited to 3 members with leader-only bidding.
+                Manage all 15 motorsport teams. Each team has up to 3 members with team leader order placement.
               </p>
             </div>
 

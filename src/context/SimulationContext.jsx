@@ -7,7 +7,7 @@ import {
   useMemo,
   useRef
 } from "react";
-import { useQuery, useMutation, useConvexConnectionState } from "convex/react";
+import { useQuery, useMutation, useAction, useConvexConnectionState } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { INITIAL_STOCKS as CANONICAL_INITIAL_STOCKS } from "../data/stocks";
 
@@ -55,8 +55,9 @@ export function SimulationProvider({ children }) {
   const convexLiveGrid = useQuery(api.market.getLiveGrid, {});
   const convexTeams = useQuery(api.teams.adminListTeams, {});
   const convexLeaderboard = useQuery(api.leaderboard.getLeaderboard, {});
+  const historicalStatus = useQuery(api.historical.getHistoricalStatus, {});
 
-  // Convex Cloud Mutations
+  // Convex Cloud Mutations & Actions
   const toggleRegistrationMutation = useMutation(api.market.toggleRegistration);
   const toggleSimulationEntryMutation = useMutation(api.market.toggleSimulationEntry);
   const setTargetEventDateMutation = useMutation(api.market.setTargetEventDate);
@@ -81,13 +82,21 @@ export function SimulationProvider({ children }) {
   const adminUpdateStockMutation = useMutation(api.market.adminUpdateStock);
   const adminTriggerSectorShockMutation = useMutation(api.market.adminTriggerSectorShock);
 
+  // Historical Market Mutations & Actions (Twelve Data 120-min Engine)
+  const generateHistoricalDataAction = useAction(api.historical.generateHistoricalData);
+  const startHistoricalSimulationMutation = useMutation(api.historical.startHistoricalSimulation);
+  const pauseHistoricalSimulationMutation = useMutation(api.historical.pauseHistoricalSimulation);
+  const stepHistoricalSimulationMutation = useMutation(api.historical.stepHistoricalSimulation);
+  const resetHistoricalSimulationMutation = useMutation(api.historical.resetHistoricalSimulation);
+  const updateHistoricalSettingsMutation = useMutation(api.historical.updateHistoricalSettings);
+
   // 1. Stocks State
   const [stocks, setStocks] = useState(() => {
     const saved = localStorage.getItem("imprenditore_stocks");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0 && parsed.some((s) => s.ticker === "APEX")) {
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed.some((s) => s.ticker === "TSLA")) {
           return parsed;
         }
       } catch {
@@ -325,7 +334,10 @@ export function SimulationProvider({ children }) {
         localStorage.setItem("imprenditore_stocks", JSON.stringify(cloudStocks));
       }
 
-      if (cloudEvent) {
+      if (Array.isArray(convexLiveGrid.recentEvents) && convexLiveGrid.recentEvents.length > 0) {
+        setTrackEvents(convexLiveGrid.recentEvents);
+        localStorage.setItem("imprenditore_events", JSON.stringify(convexLiveGrid.recentEvents));
+      } else if (cloudEvent) {
         setTrackEvents((prev) => {
           if (prev.some((e) => e.title === cloudEvent.title && e.timestamp === cloudEvent.timestamp)) {
             return prev;
@@ -1865,6 +1877,49 @@ export function SimulationProvider({ children }) {
     [adminTriggerSectorShockMutation]
   );
 
+  // Historical Market Operations (Twelve Data 120-Minute Engine)
+  const generateHistoricalData = useCallback(
+    async (options = {}) => {
+      return await generateHistoricalDataAction({
+        apiKey: options.apiKey || undefined,
+        totalMinutes: options.totalMinutes || 120,
+        volatilityMultiplier: options.volatilityMultiplier || 1.5,
+      });
+    },
+    [generateHistoricalDataAction]
+  );
+
+  const startHistoricalSimulation = useCallback(
+    async (tickIntervalSeconds = null) => {
+      return await startHistoricalSimulationMutation({
+        tickIntervalSeconds: tickIntervalSeconds || undefined,
+      });
+    },
+    [startHistoricalSimulationMutation]
+  );
+
+  const pauseHistoricalSimulation = useCallback(async () => {
+    return await pauseHistoricalSimulationMutation({});
+  }, [pauseHistoricalSimulationMutation]);
+
+  const stepHistoricalSimulation = useCallback(
+    async (targetMinuteIndex) => {
+      return await stepHistoricalSimulationMutation({ targetMinuteIndex });
+    },
+    [stepHistoricalSimulationMutation]
+  );
+
+  const resetHistoricalSimulation = useCallback(async () => {
+    return await resetHistoricalSimulationMutation({});
+  }, [resetHistoricalSimulationMutation]);
+
+  const updateHistoricalSettings = useCallback(
+    async (settings) => {
+      return await updateHistoricalSettingsMutation(settings);
+    },
+    [updateHistoricalSettingsMutation]
+  );
+
   const value = {
     isConnected,
     isWebSocketConnected: isConnected,
@@ -1880,6 +1935,13 @@ export function SimulationProvider({ children }) {
     raceState,
     trackEvents,
     leaderboard: (Array.isArray(convexLeaderboard) && convexLeaderboard.length > 0) ? convexLeaderboard : leaderboard,
+    historicalStatus,
+    generateHistoricalData,
+    startHistoricalSimulation,
+    pauseHistoricalSimulation,
+    stepHistoricalSimulation,
+    resetHistoricalSimulation,
+    updateHistoricalSettings,
     isAdmin,
     hasEnvAdminKey: Boolean(getCleanAdminKeys().hasEnvKey),
     createTeam,

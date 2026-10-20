@@ -15,7 +15,7 @@ import { useSimulation } from "../src/context/SimulationContext";
 export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }) {
   const { stocks, currentTeam, currentHoldings, executeTrade, raceState, isConnected } = useSimulation();
 
-  const [internalTicker, setInternalTicker] = useState(() => propTicker || "APEX");
+  const [internalTicker, setInternalTicker] = useState(() => propTicker || "TSLA");
   const [orderType, setOrderType] = useState("BUY"); // "BUY" | "SELL"
   const [shares, setShares] = useState(10);
   const [error, setError] = useState("");
@@ -192,7 +192,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
           }`}
         >
           <TrendingUp className="w-3.5 h-3.5" />
-          <span>Buy Scrip</span>
+          <span>Buy Stock</span>
         </button>
         <button
           type="button"
@@ -204,7 +204,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
           }`}
         >
           <TrendingDown className="w-3.5 h-3.5" />
-          <span>Sell Scrip</span>
+          <span>Sell Stock</span>
         </button>
       </div>
 
@@ -224,7 +224,7 @@ export default function TradeForm({ selectedTicker: propTicker, onSelectTicker }
 
       {/* Order Form */}
       <form onSubmit={handleSubmit} className="space-y-3.5">
-        {/* Scrip Dropdown */}
+        {/* Stock Dropdown */}
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1">
             Target Company

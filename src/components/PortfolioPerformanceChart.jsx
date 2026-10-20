@@ -222,18 +222,6 @@ export default function PortfolioPerformanceChart({
 
   const handlePointerLeave = () => setHoverPoint(null);
 
-  // 5 Motorsport Sectors Breakdown
-  const sectorsList = [
-    "Powertrain & Electric Vehicles",
-    "Aerodynamics & Advanced Materials",
-    "Telemetry, AI & Autonomous Tech",
-    "Sustainable Fuels & Energy",
-    "Logistics & Precision Engineering"
-  ];
-
-  const sectorBreakdown = portfolioStats?.sectorBreakdown || {};
-  const totalInvested = portfolioStats?.invested || 0;
-
   return (
     <div className="w-full bg-[#0D121D] border border-[#1A2336] rounded-xl p-4 sm:p-5 flex flex-col justify-between">
       {/* Top Header */}

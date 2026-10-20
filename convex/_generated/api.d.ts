@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as historical from "../historical.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as market from "../market.js";
 import type * as teams from "../teams.js";
@@ -20,6 +21,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  historical: typeof historical;
   leaderboard: typeof leaderboard;
   market: typeof market;
   teams: typeof teams;
