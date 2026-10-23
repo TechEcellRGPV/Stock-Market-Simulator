@@ -12,7 +12,7 @@ import { useSEO } from "../hooks/useSEO";
 function Company() {
   useSEO({
     title: "Market Directory & 17 Equities",
-    description: "Browse the 17 motorsport and mobility equities across 5 sectors for Imprenditore 5.0. Analyze day highs, day lows, volatility, and scrip profiles."
+    description: "Browse 17 equities across 5 sectors for Imprenditore 5.0. Analyze day highs, day lows, volatility, and scrip profiles."
   });
 
   return (
