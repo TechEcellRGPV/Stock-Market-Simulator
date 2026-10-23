@@ -22,21 +22,21 @@ import { useSEO } from "../hooks/useSEO";
 
 // Exactly 15 Default Teams (Feature C)
 const DEFAULT_15_GRID = [
-  { teamNumber: 1, teamCode: "ALPHA-01", teamName: "Team Alpha", leaderUsername: "alpha_leader", memberUsername: "alpha_member", defaultPin: "1001" },
-  { teamNumber: 2, teamCode: "BRAVO-02", teamName: "Team Bravo", leaderUsername: "bravo_leader", memberUsername: "bravo_member", defaultPin: "1002" },
-  { teamNumber: 3, teamCode: "CHARLIE-03", teamName: "Team Charlie", leaderUsername: "charlie_leader", memberUsername: "charlie_member", defaultPin: "1003" },
-  { teamNumber: 4, teamCode: "DELTA-04", teamName: "Team Delta", leaderUsername: "delta_leader", memberUsername: "delta_member", defaultPin: "1004" },
-  { teamNumber: 5, teamCode: "ECHO-05", teamName: "Team Echo", leaderUsername: "echo_leader", memberUsername: "echo_member", defaultPin: "1005" },
-  { teamNumber: 6, teamCode: "FOXTROT-06", teamName: "Team Foxtrot", leaderUsername: "foxtrot_leader", memberUsername: "foxtrot_member", defaultPin: "1006" },
-  { teamNumber: 7, teamCode: "GALAXY-07", teamName: "Team Galaxy", leaderUsername: "galaxy_leader", memberUsername: "galaxy_member", defaultPin: "1007" },
-  { teamNumber: 8, teamCode: "HORIZON-08", teamName: "Team Horizon", leaderUsername: "horizon_leader", memberUsername: "horizon_member", defaultPin: "1008" },
-  { teamNumber: 9, teamCode: "INFINITY-09", teamName: "Team Infinity", leaderUsername: "infinity_leader", memberUsername: "infinity_member", defaultPin: "1009" },
-  { teamNumber: 10, teamCode: "JAGUAR-10", teamName: "Team Jaguar", leaderUsername: "jaguar_leader", memberUsername: "jaguar_member", defaultPin: "1010" },
-  { teamNumber: 11, teamCode: "KNIGHT-11", teamName: "Team Knight", leaderUsername: "knight_leader", memberUsername: "knight_member", defaultPin: "1011" },
-  { teamNumber: 12, teamCode: "LEGENDS-12", teamName: "Team Legends", leaderUsername: "legends_leader", memberUsername: "legends_member", defaultPin: "1012" },
-  { teamNumber: 13, teamCode: "MAVERICKS-13", teamName: "Team Mavericks", leaderUsername: "mavericks_leader", memberUsername: "mavericks_member", defaultPin: "1013" },
-  { teamNumber: 14, teamCode: "NOVA-14", teamName: "Team Nova", leaderUsername: "nova_leader", memberUsername: "nova_member", defaultPin: "1014" },
-  { teamNumber: 15, teamCode: "PHOENIX-15", teamName: "Team Phoenix", leaderUsername: "phoenix_leader", memberUsername: "phoenix_member", defaultPin: "1015" }
+  { teamNumber: 1, teamCode: "ALPHA-01", teamName: "Bull Titans", leaderUsername: "alpha_leader", memberUsername: "alpha_member", defaultPin: "1001" },
+  { teamNumber: 2, teamCode: "BRAVO-02", teamName: "Market Mavericks", leaderUsername: "bravo_leader", memberUsername: "bravo_member", defaultPin: "1002" },
+  { teamNumber: 3, teamCode: "CHARLIE-03", teamName: "The Alpha Traders", leaderUsername: "charlie_leader", memberUsername: "charlie_member", defaultPin: "1003" },
+  { teamNumber: 4, teamCode: "DELTA-04", teamName: "Bull Run Legends", leaderUsername: "delta_leader", memberUsername: "delta_member", defaultPin: "1004" },
+  { teamNumber: 5, teamCode: "ECHO-05", teamName: "Nifty Ninjas", leaderUsername: "echo_leader", memberUsername: "echo_member", defaultPin: "1005" },
+  { teamNumber: 6, teamCode: "FOXTROT-06", teamName: "Wall Street Wolves", leaderUsername: "foxtrot_leader", memberUsername: "foxtrot_member", defaultPin: "1006" },
+  { teamNumber: 7, teamCode: "GALAXY-07", teamName: "Profit Predators", leaderUsername: "galaxy_leader", memberUsername: "galaxy_member", defaultPin: "1007" },
+  { teamNumber: 8, teamCode: "HORIZON-08", teamName: "The Stock Sharks", leaderUsername: "horizon_leader", memberUsername: "horizon_member", defaultPin: "1008" },
+  { teamNumber: 9, teamCode: "INFINITY-09", teamName: "Capital Commanders", leaderUsername: "infinity_leader", memberUsername: "infinity_member", defaultPin: "1009" },
+  { teamNumber: 10, teamCode: "JAGUAR-10", teamName: "Portfolio Panthers", leaderUsername: "jaguar_leader", memberUsername: "jaguar_member", defaultPin: "1010" },
+  { teamNumber: 11, teamCode: "KNIGHT-11", teamName: "The Equity Eagles", leaderUsername: "knight_leader", memberUsername: "knight_member", defaultPin: "1011" },
+  { teamNumber: 12, teamCode: "LEGENDS-12", teamName: "Market Monarchs", leaderUsername: "legends_leader", memberUsername: "legends_member", defaultPin: "1012" },
+  { teamNumber: 13, teamCode: "MAVERICKS-13", teamName: "Bear & Bull Brigade", leaderUsername: "mavericks_leader", memberUsername: "mavericks_member", defaultPin: "1013" },
+  { teamNumber: 14, teamCode: "NOVA-14", teamName: "The Wealth Warriors", leaderUsername: "nova_leader", memberUsername: "nova_member", defaultPin: "1014" },
+  { teamNumber: 15, teamCode: "PHOENIX-15", teamName: "TradeStorm", leaderUsername: "phoenix_leader", memberUsername: "phoenix_member", defaultPin: "1015" }
 ];
 
 export default function Login() {

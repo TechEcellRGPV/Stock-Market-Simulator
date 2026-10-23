@@ -11,6 +11,7 @@ import { useQuery, useMutation, useConvexConnectionState } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { INITIAL_STOCKS as CANONICAL_INITIAL_STOCKS } from "../data/stocks";
 import { INITIAL_MARKET_NEWS } from "../data/news";
+import { CANONICAL_15_TEAMS } from "../data/teams";
 
 /**
  * @file SimulationContext.jsx
@@ -43,6 +44,50 @@ const INITIAL_STOCKS = CANONICAL_INITIAL_STOCKS;
 
 // Unique identifier for this specific browser tab session to prevent message echo loops
 const TAB_ID = typeof window !== "undefined" ? Math.random().toString(36).substring(2, 9) : "tab_default";
+
+/**
+ * Maps any team (legacy or cloud) reliably to its canonical 15 slot (1-15)
+ */
+export const getCanonicalTeamBySlot = (t, fallbackIndex = 0) => {
+  if (!t) return CANONICAL_15_TEAMS[fallbackIndex] || CANONICAL_15_TEAMS[0];
+
+  // 1. By explicit teamNumber (1..15)
+  if (typeof t.teamNumber === "number" && t.teamNumber >= 1 && t.teamNumber <= 15) {
+    const found = CANONICAL_15_TEAMS.find((c) => c.teamNumber === t.teamNumber);
+    if (found) return found;
+  }
+  // 2. By PIN: 1001 -> 1, 1002 -> 2, ..., 1015 -> 15
+  if (t.teamPin && /^\d{4}$/.test(String(t.teamPin).trim())) {
+    const pinVal = parseInt(String(t.teamPin).trim(), 10);
+    if (pinVal >= 1001 && pinVal <= 1015) {
+      const num = pinVal - 1000;
+      const found = CANONICAL_15_TEAMS.find((c) => c.teamNumber === num);
+      if (found) return found;
+    }
+  }
+  // 3. By code suffix number (e.g. KOE-15 -> 15, ALPHA-01 -> 1)
+  if (t.teamCode) {
+    const match = String(t.teamCode).match(/(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num >= 1 && num <= 15) {
+        const found = CANONICAL_15_TEAMS.find((c) => c.teamNumber === num);
+        if (found) return found;
+      }
+    }
+  }
+  // 4. By teamName match
+  if (t.teamName) {
+    const clean = String(t.teamName).trim().toLowerCase();
+    const found = CANONICAL_15_TEAMS.find((c) => c.teamName.toLowerCase() === clean);
+    if (found) return found;
+  }
+  // 5. Fallback index
+  if (typeof fallbackIndex === "number" && fallbackIndex >= 0 && fallbackIndex < CANONICAL_15_TEAMS.length) {
+    return CANONICAL_15_TEAMS[fallbackIndex];
+  }
+  return CANONICAL_15_TEAMS[0];
+};
 
 export function SimulationProvider({ children }) {
   const channelRef = useRef(null);
@@ -406,11 +451,30 @@ export function SimulationProvider({ children }) {
   // Synchronize with Convex Cloud Teams
   useEffect(() => {
     if (!Array.isArray(convexTeams)) return;
-    const mappedTeams = convexTeams.map((t) => ({
-      ...t,
-      id: t._id || t.id,
-      teamId: t._id || t.id
-    }));
+
+    // Sort in ascending canonical slot order 1 to 15
+    const sorted = [...convexTeams].sort((a, b) => {
+      const cA = getCanonicalTeamBySlot(a);
+      const cB = getCanonicalTeamBySlot(b);
+      return (cA?.teamNumber || 0) - (cB?.teamNumber || 0);
+    });
+
+    const mappedTeams = sorted.map((t, idx) => {
+      const canonical = getCanonicalTeamBySlot(t, idx);
+      const teamNum = canonical?.teamNumber || t.teamNumber || idx + 1;
+      const teamCode = canonical?.teamCode || t.teamCode || `TEAM-${teamNum.toString().padStart(2, "0")}`;
+      const teamName = canonical?.teamName || t.teamName;
+      const teamPin = canonical?.defaultPin || t.teamPin || `10${teamNum.toString().padStart(2, "0")}`;
+      return {
+        ...t,
+        id: t._id || t.id,
+        teamId: t._id || t.id,
+        teamNumber: teamNum,
+        teamCode,
+        teamName,
+        teamPin,
+      };
+    });
 
     queueMicrotask(() => {
       setTeams(mappedTeams);
@@ -2118,12 +2182,24 @@ export function SimulationProvider({ children }) {
 
   // Derive 15 canonical teams & 30 participant accounts with live presence
   const adminTeamsAndAccounts = useMemo(() => {
-    const activeTeams = (Array.isArray(convexTeams) && convexTeams.length > 0) ? convexTeams : teams;
+    const rawTeams = (Array.isArray(convexTeams) && convexTeams.length > 0) ? convexTeams : teams;
+    
+    // Sort in ascending canonical slot order 1 to 15
+    const activeTeams = [...rawTeams].sort((a, b) => {
+      const cA = getCanonicalTeamBySlot(a);
+      const cB = getCanonicalTeamBySlot(b);
+      return (cA?.teamNumber || 0) - (cB?.teamNumber || 0);
+    });
+
     return activeTeams.map((team, idx) => {
-      const teamNum = team.teamNumber || idx + 1;
-      const slug = (team.teamCode || "").split("-")[0].toLowerCase() || `team${teamNum}`;
-      const leaderUsername = `${slug}_leader`;
-      const memberUsername = `${slug}_member`;
+      const canonical = getCanonicalTeamBySlot(team, idx);
+      const teamNum = canonical?.teamNumber || team.teamNumber || idx + 1;
+      const teamCode = canonical?.teamCode || team.teamCode || `TEAM-${teamNum.toString().padStart(2, "0")}`;
+      const teamName = canonical?.teamName || team.teamName;
+      const teamPin = canonical?.defaultPin || team.teamPin || `10${teamNum.toString().padStart(2, "0")}`;
+      const slug = (teamCode || "").split("-")[0].toLowerCase() || `team${teamNum}`;
+      const leaderUsername = canonical?.leaderUser || `${slug}_leader`;
+      const memberUsername = canonical?.memberUser || `${slug}_member`;
 
       const leaderOverride = accountOverrides[leaderUsername] || {};
       const memberOverride = accountOverrides[memberUsername] || {};
@@ -2148,9 +2224,9 @@ export function SimulationProvider({ children }) {
         _id: team._id || team.id || `team_${teamNum}`,
         id: team._id || team.id || `team_${teamNum}`,
         teamNumber: teamNum,
-        teamCode: team.teamCode || `TEAM-${teamNum.toString().padStart(2, "0")}`,
-        teamName: team.teamName,
-        teamPin: team.teamPin || `10${teamNum.toString().padStart(2, "0")}`,
+        teamCode,
+        teamName,
+        teamPin,
         cashBalance: team.cashBalance || 100000,
         portfolioValue: portfolioVal,
         totalTrades: teamOrders.length,
@@ -2159,9 +2235,9 @@ export function SimulationProvider({ children }) {
         accounts: [
           {
             _id: `acc_${slug}_leader`,
-            accountId: `ACC-${team.teamCode || slug}-LEAD`,
+            accountId: `ACC-${teamCode || slug}-LEAD`,
             username: leaderUsername,
-            password: leaderOverride.customPassword || team.teamPin || `10${teamNum.toString().padStart(2, "0")}`,
+            password: leaderOverride.customPassword || teamPin,
             role: "LEADER",
             status: leaderOverride.status || "ACTIVE",
             isOnline: isLeaderOnline,
@@ -2170,9 +2246,9 @@ export function SimulationProvider({ children }) {
           },
           {
             _id: `acc_${slug}_member`,
-            accountId: `ACC-${team.teamCode || slug}-MEM`,
+            accountId: `ACC-${teamCode || slug}-MEM`,
             username: memberUsername,
-            password: memberOverride.customPassword || team.teamPin || `10${teamNum.toString().padStart(2, "0")}`,
+            password: memberOverride.customPassword || teamPin,
             role: "MEMBER",
             status: memberOverride.status || "ACTIVE",
             isOnline: Boolean(memberOverride.isOnline),
@@ -2360,12 +2436,71 @@ export function SimulationProvider({ children }) {
     return { cleared: true };
   }, [clearMarketNewsMutation, broadcastSync]);
 
+  // Sync canonical 15 team names (Bull Titans to TradeStorm) into Convex Cloud database
+  const syncCanonicalTeamNamesToCloud = useCallback(async () => {
+    const rawList = Array.isArray(convexTeams) && convexTeams.length > 0 ? convexTeams : teams;
+    let count = 0;
+    for (let i = 0; i < rawList.length; i++) {
+      const t = rawList[i];
+      const target = getCanonicalTeamBySlot(t, i);
+      if (!target) continue;
+      const tId = t._id || t.id;
+      if (!tId) continue;
+
+      if (t.teamName !== target.teamName || t.teamPin !== target.defaultPin) {
+        try {
+          await adminUpdateTeamMembersMutation({
+            teamId: tId,
+            teamName: target.teamName,
+            teamPin: target.defaultPin,
+            leaderName: t.leaderName && !t.leaderName.toLowerCase().includes("racing") ? t.leaderName : `${target.teamName} Leader`,
+            member2: t.member2 || "Member 2",
+            member3: t.member3 || "Member 3",
+          });
+          count++;
+        } catch (err) {
+          console.warn("Failed to patch team to canonical name in cloud:", tId, err);
+        }
+      }
+    }
+    return { success: true, count };
+  }, [convexTeams, teams, adminUpdateTeamMembersMutation]);
+
+  // Auto-detect and heal legacy motorsport team names in Convex Cloud
+  useEffect(() => {
+    if (!isAdmin || !Array.isArray(convexTeams) || convexTeams.length === 0) return;
+    const hasLegacy = convexTeams.some((t) => {
+      const lower = (t.teamName || "").toLowerCase();
+      return (
+        lower.includes("koenigsegg") ||
+        lower.includes("toyota") ||
+        lower.includes("bmw") ||
+        lower.includes("ferrari") ||
+        lower.includes("porsche") ||
+        lower.includes("mercedes") ||
+        lower.includes("red bull") ||
+        lower.includes("mclaren") ||
+        lower.includes("aston martin") ||
+        lower.includes("alpine") ||
+        lower.includes("williams") ||
+        lower.includes("sauber") ||
+        lower.includes("haas") ||
+        lower.includes("audi") ||
+        lower.includes("cadillac") ||
+        lower.includes("team alpha")
+      );
+    });
+    if (hasLegacy) {
+      syncCanonicalTeamNamesToCloud();
+    }
+  }, [isAdmin, convexTeams, syncCanonicalTeamNamesToCloud]);
+
   const value = {
     isConnected,
     isWebSocketConnected: isConnected,
     connectionState,
     stocks,
-    teams: (Array.isArray(convexTeams) && convexTeams.length > 0) ? convexTeams : teams,
+    teams: (Array.isArray(convexTeams) && convexTeams.length > 0) ? adminTeamsAndAccounts : teams,
     currentTeam,
     holdings: currentHoldings,
     currentHoldings,
@@ -2418,6 +2553,7 @@ export function SimulationProvider({ children }) {
     publishMarketNews,
     seedInitialMarketNews,
     adminClearAllNews,
+    syncCanonicalTeamNamesToCloud,
   };
 
   return (

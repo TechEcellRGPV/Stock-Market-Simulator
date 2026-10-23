@@ -107,7 +107,8 @@ export default function Admin() {
     marketNews,
     publishMarketNews,
     seedInitialMarketNews,
-    adminClearAllNews
+    adminClearAllNews,
+    syncCanonicalTeamNamesToCloud,
   } = useSimulation();
 
   // Login Gate State (for unauthenticated /admin visits)
@@ -459,6 +460,23 @@ export default function Admin() {
     setNewCashAmount("");
   };
 
+  const [isSyncingTeams, setIsSyncingTeams] = useState(false);
+  const [teamSyncMsg, setTeamSyncMsg] = useState("");
+
+  const handleSyncTeams = async () => {
+    setIsSyncingTeams(true);
+    setTeamSyncMsg("");
+    try {
+      const res = await syncCanonicalTeamNamesToCloud();
+      setTeamSyncMsg("Successfully synced all 15 team names (Bull Titans to TradeStorm) into Convex Cloud!");
+      setTimeout(() => setTeamSyncMsg(""), 4500);
+    } catch (err) {
+      alert("Failed to sync team names: " + err.message);
+    } finally {
+      setIsSyncingTeams(false);
+    }
+  };
+
   // Seed Canonical 15 Teams & 30 Participant Accounts Grid
   const handleSeedTeams = async (overwrite = false) => {
     if (overwrite && !window.confirm("Are you sure you want to reset and re-seed the 15 canonical teams and 30 participant accounts?")) {
@@ -466,6 +484,7 @@ export default function Admin() {
     }
     try {
       const res = await seedCanonical15Teams(overwrite);
+      await syncCanonicalTeamNamesToCloud();
       alert(res.seeded ? `Grid Ready: Provisioned ${res.count} canonical teams and 30 secure participant accounts!` : res.message);
     } catch (err) {
       alert(err.message || "Failed to initialize canonical teams.");
@@ -1903,6 +1922,17 @@ export default function Admin() {
 
               <button
                 type="button"
+                onClick={handleSyncTeams}
+                disabled={isSyncingTeams}
+                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-sm"
+                title="Synchronize database records to Bull Titans ... TradeStorm"
+              >
+                <Zap className={`w-3.5 h-3.5 ${isSyncingTeams ? "animate-spin" : ""}`} />
+                <span>{isSyncingTeams ? "Syncing..." : "Sync 15 Team Names"}</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => handleSeedTeams((adminTeamsAndAccounts.length > 0 ? adminTeamsAndAccounts : teams).length > 0)}
                 className="px-3 py-1.5 rounded-lg bg-[#E10600] hover:bg-[#C50500] text-white text-xs font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-sm"
               >
@@ -1912,12 +1942,19 @@ export default function Admin() {
             </div>
           </div>
 
+          {teamSyncMsg && (
+            <div className="p-3 bg-emerald-950/70 border border-emerald-500/50 rounded-xl text-emerald-300 text-xs font-bold flex items-center gap-2 shadow-lg">
+              <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{teamSyncMsg}</span>
+            </div>
+          )}
+
           {(adminTeamsAndAccounts.length > 0 ? adminTeamsAndAccounts : teams).length === 0 ? (
             <div className="py-12 text-center bg-[#0A0D12] rounded-lg border border-[#1A202C] text-slate-400 text-xs font-medium space-y-3">
               <Users className="w-8 h-8 text-slate-600 mx-auto" />
               <p className="text-white font-bold">No teams seeded on the competition grid yet.</p>
               <p className="text-slate-400 max-w-md mx-auto">
-                Click below to initialize the 15 canonical teams (Team Alpha to Team Phoenix) and pre-provision 30 Leader and Member participant credentials with salted PBKDF2/SHA-256 hashes.
+                Click below to initialize the 15 canonical teams (Bull Titans to TradeStorm) and pre-provision 30 Leader and Member participant credentials with salted PBKDF2/SHA-256 hashes.
               </p>
               <button
                 type="button"

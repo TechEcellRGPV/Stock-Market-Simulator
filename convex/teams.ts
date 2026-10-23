@@ -47,11 +47,11 @@ function sanitizeAndValidateName(name: string): {
   if (trimmed.length > 25) {
     return { valid: false, error: "Team name cannot exceed 25 characters." };
   }
-  if (!/^[a-zA-Z0-9\s\-]+$/.test(trimmed)) {
+  if (!/^[a-zA-Z0-9\s&\-]+$/.test(trimmed)) {
     return {
       valid: false,
       error:
-        "Team name can only contain letters, numbers, spaces, and hyphens.",
+        "Team name can only contain letters, numbers, spaces, ampersands, and hyphens.",
     };
   }
   for (const pattern of PROFANITY_PATTERNS) {
@@ -82,7 +82,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 1,
     teamCode: "ALPHA-01",
-    teamName: "Team Alpha",
+    teamName: "Bull Titans",
     defaultPin: "1001",
     leaderName: "Alpha Leader",
     member2: "Alpha Member",
@@ -93,7 +93,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 2,
     teamCode: "BRAVO-02",
-    teamName: "Team Bravo",
+    teamName: "Market Mavericks",
     defaultPin: "1002",
     leaderName: "Bravo Leader",
     member2: "Bravo Member",
@@ -104,7 +104,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 3,
     teamCode: "CHARLIE-03",
-    teamName: "Team Charlie",
+    teamName: "The Alpha Traders",
     defaultPin: "1003",
     leaderName: "Charlie Leader",
     member2: "Charlie Member",
@@ -115,7 +115,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 4,
     teamCode: "DELTA-04",
-    teamName: "Team Delta",
+    teamName: "Bull Run Legends",
     defaultPin: "1004",
     leaderName: "Delta Leader",
     member2: "Delta Member",
@@ -126,7 +126,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 5,
     teamCode: "ECHO-05",
-    teamName: "Team Echo",
+    teamName: "Nifty Ninjas",
     defaultPin: "1005",
     leaderName: "Echo Leader",
     member2: "Echo Member",
@@ -137,7 +137,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 6,
     teamCode: "FOXTROT-06",
-    teamName: "Team Foxtrot",
+    teamName: "Wall Street Wolves",
     defaultPin: "1006",
     leaderName: "Foxtrot Leader",
     member2: "Foxtrot Member",
@@ -148,7 +148,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 7,
     teamCode: "GALAXY-07",
-    teamName: "Team Galaxy",
+    teamName: "Profit Predators",
     defaultPin: "1007",
     leaderName: "Galaxy Leader",
     member2: "Galaxy Member",
@@ -159,7 +159,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 8,
     teamCode: "HORIZON-08",
-    teamName: "Team Horizon",
+    teamName: "The Stock Sharks",
     defaultPin: "1008",
     leaderName: "Horizon Leader",
     member2: "Horizon Member",
@@ -170,7 +170,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 9,
     teamCode: "INFINITY-09",
-    teamName: "Team Infinity",
+    teamName: "Capital Commanders",
     defaultPin: "1009",
     leaderName: "Infinity Leader",
     member2: "Infinity Member",
@@ -181,7 +181,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 10,
     teamCode: "JAGUAR-10",
-    teamName: "Team Jaguar",
+    teamName: "Portfolio Panthers",
     defaultPin: "1010",
     leaderName: "Jaguar Leader",
     member2: "Jaguar Member",
@@ -192,7 +192,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 11,
     teamCode: "KNIGHT-11",
-    teamName: "Team Knight",
+    teamName: "The Equity Eagles",
     defaultPin: "1011",
     leaderName: "Knight Leader",
     member2: "Knight Member",
@@ -203,7 +203,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 12,
     teamCode: "LEGENDS-12",
-    teamName: "Team Legends",
+    teamName: "Market Monarchs",
     defaultPin: "1012",
     leaderName: "Legends Leader",
     member2: "Legends Member",
@@ -214,7 +214,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 13,
     teamCode: "MAVERICKS-13",
-    teamName: "Team Mavericks",
+    teamName: "Bear & Bull Brigade",
     defaultPin: "1013",
     leaderName: "Mavericks Leader",
     member2: "Mavericks Member",
@@ -225,7 +225,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 14,
     teamCode: "NOVA-14",
-    teamName: "Team Nova",
+    teamName: "The Wealth Warriors",
     defaultPin: "1014",
     leaderName: "Nova Leader",
     member2: "Nova Member",
@@ -236,7 +236,7 @@ export const DEFAULT_15_TEAMS = [
   {
     teamNumber: 15,
     teamCode: "PHOENIX-15",
-    teamName: "Team Phoenix",
+    teamName: "TradeStorm",
     defaultPin: "1015",
     leaderName: "Phoenix Leader",
     member2: "Phoenix Member",

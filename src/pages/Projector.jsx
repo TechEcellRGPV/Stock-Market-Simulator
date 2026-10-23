@@ -175,7 +175,7 @@ export default function Projector() {
     const hasCanonicalCloud =
       Array.isArray(convexLeaderboard) &&
       convexLeaderboard.length >= 15 &&
-      convexLeaderboard.some((t) => t.teamCode?.includes("ALPHA") || t.teamName?.includes("Alpha"));
+      convexLeaderboard.some((t) => t.teamCode?.includes("ALPHA") || t.teamName?.includes("Alpha") || t.teamName?.includes("Bull Titans"));
     const base = hasCanonicalCloud ? convexLeaderboard : contextLeaderboard || [];
 
     const holdingsMap = new Map();

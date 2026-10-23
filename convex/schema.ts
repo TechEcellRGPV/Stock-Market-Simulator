@@ -33,7 +33,7 @@ export default defineSchema({
     teamId: v.id("teams"),
     teamNumber: v.number(), // 1 to 15
     teamCode: v.string(), // e.g. "ALPHA-01"
-    teamName: v.string(), // e.g. "Team Alpha"
+    teamName: v.string(), // e.g. "Bull Titans"
     username: v.string(),
     passwordHash: v.string(),
     passwordSalt: v.string(),
