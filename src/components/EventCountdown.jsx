@@ -42,7 +42,7 @@ export default function EventCountdown() {
       const d = new Date(raceState.targetEventDate);
       if (!isNaN(d.getTime())) {
         return d.toLocaleString("en-US", {
-          month: "long",
+          month: "short",
           day: "numeric",
           year: "numeric",
           hour: "numeric",
@@ -59,85 +59,53 @@ export default function EventCountdown() {
   }
 
   return (
-    <div className="w-full bg-[#121720] border border-[#232B3B] rounded-xl p-4 sm:p-5 shadow-lg">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 border-b border-[#232B3B] pb-3">
+    <div className="w-full bg-[#0D121D] border border-[#1A2336] rounded-xl p-4 space-y-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-[#1A2336]">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-[#EAB308]/15 text-[#EAB308] flex items-center justify-center border border-[#EAB308]/30">
-            <Clock className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#EAB308]">
-              Official Flag-Off Countdown
-            </div>
-            <div className="text-xs font-bold text-slate-200">
-              {displayScheduledTime}
-            </div>
-            <div className="text-[10px] text-slate-400 font-medium">
-              Venue: RGPV Conference Hall • Timing: 3:00 PM - 5:30 PM
-            </div>
-          </div>
+          <Clock className="w-4 h-4 text-emerald-400" />
+          <span className="text-xs font-semibold text-white">Event Flag-Off Target</span>
+          <span className="text-[11px] font-mono text-slate-400">({displayScheduledTime})</span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <span className={`px-2 sm:px-2.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase tracking-wider ${
-            raceState.isRegistrationOpen
-              ? "bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40"
-              : "bg-[#E10600]/20 text-[#FF8080] border border-[#E10600]/40"
-          }`}>
-            {raceState.isRegistrationOpen ? "Registration Open" : "Registration Locked"}
-          </span>
-
-          <span className={`px-2 sm:px-2.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase tracking-wider ${
-            raceState.isSimulationEntryOpen
-              ? "bg-[#06B6D4]/20 text-[#06B6D4] border border-[#06B6D4]/40"
-              : "bg-slate-800 text-slate-400 border border-slate-700"
-          }`}>
-            {raceState.isSimulationEntryOpen ? "Paddock Entry Open" : "Paddock Entry Locked"}
-          </span>
-        </div>
+        <span className={`self-start sm:self-auto px-2 py-0.5 rounded text-[10px] font-medium font-mono ${
+          raceState.isRegistrationOpen
+            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            : "bg-slate-800 text-slate-400"
+        }`}>
+          {raceState.isRegistrationOpen ? "Registration Open" : "Registration Locked"}
+        </span>
       </div>
 
       {timeLeft.isPassed ? (
-        <div className="text-center py-2 text-xs font-black uppercase tracking-wider text-[#10B981] flex items-center justify-center gap-2">
+        <div className="text-center py-2 text-xs font-semibold text-emerald-400 flex items-center justify-center gap-1.5">
           <Calendar className="w-4 h-4" />
-          <span>Scheduled Time Reached. Flag-Off Under Race Director Control.</span>
+          <span>Scheduled Time Reached • Ready for Flag-Off</span>
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-1.5 sm:gap-3 text-center">
-          <div className="bg-[#0A0D12] p-2 sm:p-3 rounded-lg border border-[#232B3B]">
-            <div className="text-base sm:text-2xl font-black font-mono text-white">
+        <div className="grid grid-cols-4 gap-2 text-center">
+          <div className="bg-[#090D14] p-2.5 rounded-lg border border-[#161F30]">
+            <div className="text-lg sm:text-xl font-bold font-mono text-white">
               {timeLeft.days.toString().padStart(2, "0")}
             </div>
-            <div className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400">
-              Days
-            </div>
+            <div className="text-[10px] text-slate-400 uppercase font-medium">Days</div>
           </div>
-
-          <div className="bg-[#0A0D12] p-2 sm:p-3 rounded-lg border border-[#232B3B]">
-            <div className="text-base sm:text-2xl font-black font-mono text-white">
+          <div className="bg-[#090D14] p-2.5 rounded-lg border border-[#161F30]">
+            <div className="text-lg sm:text-xl font-bold font-mono text-white">
               {timeLeft.hours.toString().padStart(2, "0")}
             </div>
-            <div className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400">
-              Hours
-            </div>
+            <div className="text-[10px] text-slate-400 uppercase font-medium">Hours</div>
           </div>
-
-          <div className="bg-[#0A0D12] p-2 sm:p-3 rounded-lg border border-[#232B3B]">
-            <div className="text-base sm:text-2xl font-black font-mono text-[#EAB308]">
+          <div className="bg-[#090D14] p-2.5 rounded-lg border border-[#161F30]">
+            <div className="text-lg sm:text-xl font-bold font-mono text-emerald-400">
               {timeLeft.minutes.toString().padStart(2, "0")}
             </div>
-            <div className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400">
-              Minutes
-            </div>
+            <div className="text-[10px] text-slate-400 uppercase font-medium">Mins</div>
           </div>
-
-          <div className="bg-[#0A0D12] p-2 sm:p-3 rounded-lg border border-[#232B3B]">
-            <div className="text-base sm:text-2xl font-black font-mono text-[#06B6D4]">
+          <div className="bg-[#090D14] p-2.5 rounded-lg border border-[#161F30]">
+            <div className="text-lg sm:text-xl font-bold font-mono text-cyan-400">
               {timeLeft.seconds.toString().padStart(2, "0")}
             </div>
-            <div className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400">
-              Seconds
-            </div>
+            <div className="text-[10px] text-slate-400 uppercase font-medium">Secs</div>
           </div>
         </div>
       )}

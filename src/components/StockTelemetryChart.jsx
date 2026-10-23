@@ -292,18 +292,18 @@ export default function StockTelemetryChart({
   return (
     <div
       ref={containerRef}
-      className="w-full bg-[#121720] border border-[#232B3B] rounded-xl p-4 flex flex-col justify-between select-none"
+      className="w-full bg-[#0D121D] border border-[#1A2336] rounded-xl p-4 sm:p-5 flex flex-col justify-between select-none"
     >
       {/* Chart Top Telemetry Strip */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 border-b border-[#1E2638] pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 border-b border-[#1A2336] pb-3">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-[#1A202C] border border-[#232B3B] flex items-center justify-center font-mono font-bold text-xs text-[#06B6D4]">
+          <div className="w-8 h-8 rounded-lg bg-[#141B29] border border-[#1F293D] flex items-center justify-center font-mono font-bold text-xs text-emerald-400">
             {stock.ticker.split("-")[0]}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-black text-white tracking-wide">{stock.name}</h3>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#0A0D12] text-slate-400 border border-[#232B3B]">
+              <h3 className="text-sm font-bold text-white tracking-tight">{stock.name}</h3>
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#090D14] text-slate-400 border border-[#1A2336]">
                 {stock.ticker}
               </span>
             </div>
@@ -315,12 +315,12 @@ export default function StockTelemetryChart({
         <div className="flex items-center gap-3">
           {hoverData ? (
             <div className="text-right">
-              <div className="text-base font-black font-mono text-white">
+              <div className="text-base font-bold font-mono text-white">
                 ₹{hoverData.price.toFixed(2)}
               </div>
               <div
-                className={`text-[10px] font-bold font-mono ${
-                  hoverData.diff >= 0 ? "text-[#10B981]" : "text-[#E10600]"
+                className={`text-[10px] font-semibold font-mono ${
+                  hoverData.diff >= 0 ? "text-emerald-400" : "text-rose-400"
                 }`}
               >
                 {hoverData.diff >= 0 ? "+" : ""}
@@ -330,12 +330,12 @@ export default function StockTelemetryChart({
             </div>
           ) : (
             <div className="text-right">
-              <div className="text-base font-black font-mono text-white">
+              <div className="text-base font-bold font-mono text-white">
                 ₹{stock.currentPrice.toFixed(2)}
               </div>
               <div
-                className={`text-[10px] font-bold font-mono inline-flex items-center gap-0.5 ${
-                  isUp ? "text-[#10B981]" : "text-[#E10600]"
+                className={`text-[10px] font-semibold font-mono inline-flex items-center gap-0.5 ${
+                  isUp ? "text-emerald-400" : "text-rose-400"
                 }`}
               >
                 {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -363,45 +363,45 @@ export default function StockTelemetryChart({
 
       {/* Chart Footer Controls & High/Low Telemetry */}
       {showControls && (
-        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-[#1E2638] mt-2 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-[#1A2336] mt-2 text-xs">
           {/* Day High / Low Stats */}
           <div className="flex items-center gap-3 text-[11px] font-mono">
             <span className="text-slate-400">
-              HIGH: <strong className="text-[#10B981]">₹{(stock.dayHigh || stock.currentPrice).toFixed(2)}</strong>
+              High: <strong className="text-emerald-400">₹{(stock.dayHigh || stock.currentPrice).toFixed(1)}</strong>
             </span>
             <span className="text-slate-600">•</span>
             <span className="text-slate-400">
-              LOW: <strong className="text-[#E10600]">₹{(stock.dayLow || stock.currentPrice).toFixed(2)}</strong>
+              Low: <strong className="text-rose-400">₹{(stock.dayLow || stock.currentPrice).toFixed(1)}</strong>
             </span>
             <span className="text-slate-600">•</span>
             <span className="text-slate-400">
-              OPEN: <strong className="text-white">₹{(stock.openingPrice || stock.currentPrice).toFixed(2)}</strong>
+              Open: <strong className="text-slate-200">₹{(stock.openingPrice || stock.currentPrice).toFixed(1)}</strong>
             </span>
           </div>
 
           {/* Timeframe & Display Buttons */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {["1M", "5M", "15M", "ALL"].map((tf) => (
               <button
                 key={tf}
                 type="button"
                 onClick={() => setTimeframe(tf)}
-                className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-colors ${
+                className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors ${
                   timeframe === tf
-                    ? "bg-[#E10600] text-white"
-                    : "bg-[#0A0D12] text-slate-400 hover:text-white border border-[#232B3B]"
+                    ? "bg-emerald-500 text-slate-950 font-bold"
+                    : "bg-[#090D14] text-slate-400 hover:text-white border border-[#1A2336]"
                 }`}
               >
                 {tf}
               </button>
             ))}
 
-            <div className="w-[1px] h-4 bg-[#232B3B] mx-1" />
+            <div className="w-[1px] h-3.5 bg-[#1A2336] mx-1" />
 
             <button
               type="button"
               onClick={() => setChartType((prev) => (prev === "area" ? "line" : "area"))}
-              className="p-1 rounded bg-[#0A0D12] text-slate-400 hover:text-white border border-[#232B3B] transition-colors"
+              className="p-1 rounded bg-[#090D14] text-slate-400 hover:text-white border border-[#1A2336] transition-colors"
               title="Toggle Area/Line Mode"
             >
               <Activity className="w-3 h-3" />

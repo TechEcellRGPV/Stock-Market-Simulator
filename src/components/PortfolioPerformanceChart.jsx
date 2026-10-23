@@ -235,26 +235,26 @@ export default function PortfolioPerformanceChart({
   const totalInvested = portfolioStats?.invested || 0;
 
   return (
-    <div className="w-full bg-[#121720] border border-[#232B3B] rounded-xl p-4 sm:p-5 flex flex-col justify-between">
+    <div className="w-full bg-[#0D121D] border border-[#1A2336] rounded-xl p-4 sm:p-5 flex flex-col justify-between">
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#1E2638] pb-3 mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#1A2336] pb-3 mb-3">
         <div>
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#06B6D4] flex items-center gap-1.5">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5" />
-            <span>Portfolio Valuation Telemetry</span>
+            <span>Valuation Telemetry</span>
           </div>
-          <h3 className="text-base font-black uppercase italic tracking-tight text-white mt-0.5">
-            {team?.teamName || "Scuderia Portfolio"}
+          <h3 className="text-base font-bold text-white tracking-tight mt-0.5">
+            {team?.teamName || "Portfolio"}
           </h3>
         </div>
 
         <div className="text-right">
-          <div className="text-lg font-black font-mono text-white">
+          <div className="text-lg font-bold font-mono text-white">
             ₹{hoverPoint ? hoverPoint.value.toLocaleString("en-IN") : currentTotalValue.toLocaleString("en-IN")}
           </div>
           <div
-            className={`text-[11px] font-bold font-mono inline-flex items-center gap-1 ${
-              (hoverPoint ? hoverPoint.diff : returnPercent) >= 0 ? "text-[#10B981]" : "text-[#E10600]"
+            className={`text-[11px] font-semibold font-mono inline-flex items-center gap-1 ${
+              (hoverPoint ? hoverPoint.diff : returnPercent) >= 0 ? "text-emerald-400" : "text-rose-400"
             }`}
           >
             {(hoverPoint ? hoverPoint.diff : returnPercent) >= 0 ? (
@@ -280,50 +280,6 @@ export default function PortfolioPerformanceChart({
           onTouchEnd={handlePointerLeave}
           className="w-full h-full cursor-crosshair block"
         />
-      </div>
-
-      {/* Sector Allocation Radar / Diversification Strip */}
-      <div className="pt-3 border-t border-[#1E2638] mt-3 space-y-2">
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-slate-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-[#EAB308]" />
-            <span>Sector Diversification Allocation (30% Score Weight)</span>
-          </span>
-          <span className="text-slate-400 font-mono text-[11px]">
-            {Object.keys(sectorBreakdown).filter((k) => sectorBreakdown[k] > 0).length} / 5 Sectors Active
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          {sectorsList.map((sec) => {
-            const secValue = sectorBreakdown[sec] || 0;
-            const secPct = totalInvested > 0 ? Math.round((secValue / totalInvested) * 100) : 0;
-            const hasInvestment = secValue > 0;
-
-            return (
-              <div
-                key={sec}
-                className={`p-2 rounded-lg border text-left transition-colors ${
-                  hasInvestment
-                    ? "bg-[#161B24] border-[#10B981]/40"
-                    : "bg-[#0A0D12] border-[#1A202C] opacity-70"
-                }`}
-              >
-                <div className="text-[10px] font-bold text-slate-300 truncate">
-                  {sec.split("&")[0].trim()}
-                </div>
-                <div className="flex items-baseline justify-between mt-1 font-mono">
-                  <span className="text-xs font-black text-white">
-                    ₹{secValue > 0 ? (secValue / 1000).toFixed(1) + "k" : "0"}
-                  </span>
-                  <span className={`text-[10px] font-bold ${hasInvestment ? "text-[#10B981]" : "text-slate-500"}`}>
-                    {secPct}%
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
     </div>
   );
