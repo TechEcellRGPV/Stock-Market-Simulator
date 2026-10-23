@@ -10,6 +10,7 @@ import {
 import { useQuery, useMutation, useConvexConnectionState } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { INITIAL_STOCKS as CANONICAL_INITIAL_STOCKS } from "../data/stocks";
+import { INITIAL_MARKET_NEWS } from "../data/news";
 
 /**
  * @file SimulationContext.jsx
@@ -80,6 +81,69 @@ export function SimulationProvider({ children }) {
   const executeTradeMutation = useMutation(api.trades.executeTrade);
   const adminUpdateStockMutation = useMutation(api.market.adminUpdateStock);
   const adminTriggerSectorShockMutation = useMutation(api.market.adminTriggerSectorShock);
+
+  // Feature D, E, G: Participant Accounts & Real-Time Presence
+  const loginParticipantMutation = useMutation(api.teams.loginParticipant);
+  const heartbeatParticipantMutation = useMutation(api.teams.heartbeatParticipant);
+  const logoutParticipantMutation = useMutation(api.teams.logoutParticipant);
+  const adminToggleAccountStatusMutation = useMutation(api.teams.adminToggleAccountStatus);
+  const adminResetAccountPasswordMutation = useMutation(api.teams.adminResetAccountPassword);
+
+  // Feature B: Market News
+  const publishMarketNewsMutation = useMutation(api.news.publishMarketNews);
+  const seedInitialMarketNewsMutation = useMutation(api.news.seedInitialMarketNews);
+  const clearMarketNewsMutation = useMutation(api.news.clearMarketNews);
+
+  // Local overrides & offline resilience for participant accounts
+  const [accountOverrides, setAccountOverrides] = useState(() => {
+    const saved = localStorage.getItem("imprenditore_account_overrides");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return {};
+  });
+
+  // Dedicated Market News State (starts empty until Admin publishes news)
+  const [marketNews, setMarketNews] = useState(() => {
+    // Clear legacy default initial news so feed starts empty
+    const isWiped = localStorage.getItem("imprenditore_news_empty_v1");
+    if (!isWiped) {
+      localStorage.setItem("imprenditore_news_empty_v1", "true");
+      localStorage.setItem("imprenditore_market_news", JSON.stringify([]));
+      return [];
+    }
+    const saved = localStorage.getItem("imprenditore_market_news");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
+    }
+    return [];
+  });
+
+  // Security & Operations Audit Logs State
+  const [auditLogs, setAuditLogs] = useState(() => {
+    const saved = localStorage.getItem("imprenditore_audit_logs");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
+    }
+    return [
+      {
+        _id: "log_init",
+        action: "SYSTEM_INITIALIZE",
+        actor: "SYSTEM",
+        target: "GRID",
+        details: "Imprenditore 5.0 operations command initialized.",
+        timestamp: Date.now() - 3600000,
+      }
+    ];
+  });
 
   // 1. Stocks State
   const [stocks, setStocks] = useState(() => {
@@ -169,6 +233,7 @@ export function SimulationProvider({ children }) {
   const [raceState, setRaceState] = useState(() => {
     const defaultState = {
       currentLap: 1,
+      totalLaps: 7,
       status: "GRID_WARMUP",
       isRegistrationOpen: false,
       isSimulationEntryOpen: false,
@@ -465,6 +530,9 @@ export function SimulationProvider({ children }) {
         } else if (type === "ORDERS_SYNC") {
           isRemoteUpdateRef.current = true;
           setOrders(payload);
+        } else if (type === "MARKET_NEWS_SYNC") {
+          isRemoteUpdateRef.current = true;
+          setMarketNews(payload);
         }
       };
     } catch {
@@ -498,6 +566,9 @@ export function SimulationProvider({ children }) {
         } else if (e.key === "imprenditore_orders") {
           isRemoteUpdateRef.current = true;
           setOrders(JSON.parse(e.newValue));
+        } else if (e.key === "imprenditore_market_news") {
+          isRemoteUpdateRef.current = true;
+          setMarketNews(JSON.parse(e.newValue));
         }
       } catch {
         // ignore parse error
@@ -587,8 +658,8 @@ export function SimulationProvider({ children }) {
 
         // When lap expires
         if (remaining <= 0) {
-          if (prev.currentLap >= 5) {
-            // Lap 5 Checkered Flag: Conclude Race
+          if (prev.currentLap >= (prev.totalLaps || 7)) {
+            // Lap 7 / Final Round Checkered Flag: Conclude Race
             const finishedState = {
               ...prev,
               lapStartedAt: null,
@@ -886,14 +957,54 @@ export function SimulationProvider({ children }) {
         throw new Error("Member / Driver name is required.");
       }
 
+      const allTeamsList = (Array.isArray(convexTeams) && convexTeams.length > 0)
+        ? convexTeams
+        : (Array.isArray(teams) && teams.length > 0 ? teams : []);
+
+      const cleanId = teamIdentifier.trim().toLowerCase();
+      const matched = (allTeamsList || []).find(
+        (t) =>
+          t.teamCode?.toLowerCase() === cleanId ||
+          t.teamName?.toLowerCase() === cleanId ||
+          String(t.teamNumber) === cleanId ||
+          t._id === teamIdentifier.trim() ||
+          t.id === teamIdentifier.trim()
+      ) || allTeamsList[0];
+
+      // Validate PIN against matched team
+      const expectedPin = String(matched?.teamPin || matched?.defaultPin || "").trim();
+      if (expectedPin && expectedPin !== teamPin.trim()) {
+        throw new Error(`Invalid 4-digit PIN for ${matched?.teamName || "the selected team"}. Please enter the correct Team PIN.`);
+      }
+
       const sessionId = "sess_" + Math.random().toString(36).substring(2, 12);
-      const result = await joinTeamMutation({
-        teamIdentifier: teamIdentifier.trim(),
-        teamPin: teamPin.trim(),
-        memberName: memberName.trim(),
-        role,
-        sessionId
-      });
+      let result;
+      try {
+        result = await joinTeamMutation({
+          teamIdentifier: matched?.teamCode || teamIdentifier.trim(),
+          teamPin: teamPin.trim(),
+          memberName: memberName.trim(),
+          role,
+          sessionId
+        });
+      } catch (convexErr) {
+        console.warn("Convex joinTeam mutation error, falling back to verified local session:", convexErr);
+        if (!matched) throw convexErr;
+
+        result = {
+          teamId: matched._id || matched.id,
+          teamCode: matched.teamCode,
+          teamName: matched.teamName,
+          leaderName: role === "LEADER" ? memberName.trim() : (matched.leaderName || memberName.trim()),
+          member2: matched.member2 || "Member 2",
+          member3: matched.member3 || "Member 3",
+          cashBalance: matched.cashBalance || 100000,
+          status: matched.status || "ACTIVE",
+          members: matched.members || [memberName.trim()],
+          userRole: role,
+          sessionId
+        };
+      }
 
       const activeTeam = {
         id: result.teamId,
@@ -919,15 +1030,152 @@ export function SimulationProvider({ children }) {
     [joinTeamMutation]
   );
 
-  // Auth: Logout
+  // Auth: Participant Account Login (Feature D & E)
+  const loginParticipantAccount = useCallback(
+    async ({ teamIdentifier, role, username, password }) => {
+      const sessionId = "sess_" + Math.random().toString(36).substring(2, 12);
+
+      // Try Convex mutation first
+      try {
+        const res = await loginParticipantMutation({
+          teamIdentifier: String(teamIdentifier),
+          role,
+          username,
+          password,
+          sessionId,
+        });
+
+        const activeTeam = {
+          id: res.teamId,
+          _id: res.teamId,
+          accountId: res.accountId,
+          username: res.username,
+          teamNumber: res.teamNumber,
+          teamCode: res.teamCode,
+          teamName: res.teamName,
+          cashBalance: res.cashBalance,
+          status: res.status,
+          userRole: res.role,
+          currentMemberName: res.username,
+          leaderName: `${res.teamName} Leader`,
+          sessionId,
+        };
+
+        setCurrentTeam(activeTeam);
+        localStorage.setItem("imprenditore_active_team", JSON.stringify(activeTeam));
+        return activeTeam;
+      } catch {
+        // Fallback: Validate credentials against canonical teams & local account state
+        const identifier = String(teamIdentifier).trim().toLowerCase();
+        const activeTeams = (Array.isArray(convexTeams) && convexTeams.length > 0) ? convexTeams : teams;
+        const team = activeTeams.find(
+          (t) =>
+            t.teamCode?.toLowerCase() === identifier ||
+            t.teamName?.toLowerCase() === identifier ||
+            t.teamNumber?.toString() === identifier
+        ) || activeTeams[0];
+
+        if (!team) {
+          throw new Error("Team not found on the competition grid.");
+        }
+
+        const teamPin = team.teamPin || `10${String(team.teamNumber || 1).padStart(2, "0")}`;
+        const expectedPass = teamPin;
+
+        const enteredUser = (username || "").trim().toLowerCase();
+        const enteredPass = (password || "").trim();
+
+        const customOverride = accountOverrides[enteredUser] || {};
+        if (customOverride.status === "DISABLED") {
+          throw new Error("This participant account has been disabled by Race Control.");
+        }
+
+        const validPass = customOverride.customPassword || expectedPass;
+        const isPinMatch = enteredPass === team.teamPin;
+        const isPassMatch = enteredPass === validPass || enteredPass.toLowerCase() === validPass.toLowerCase();
+
+        if (!isPassMatch && !isPinMatch) {
+          throw new Error("Invalid username or password credentials. Please verify your assigned team account.");
+        }
+
+        // Lock leader session on Convex cloud using joinTeamMutation
+        try {
+          await joinTeamMutation({
+            teamIdentifier: team.teamCode,
+            teamPin: team.teamPin,
+            memberName: enteredUser,
+            role,
+            sessionId,
+          });
+        } catch {}
+
+        const activeTeam = {
+          id: team._id || team.id,
+          _id: team._id || team.id,
+          accountId: `acc_${enteredUser}`,
+          username: enteredUser,
+          teamNumber: team.teamNumber || 1,
+          teamCode: team.teamCode,
+          teamName: team.teamName,
+          cashBalance: team.cashBalance || 100000,
+          status: team.status || "ACTIVE",
+          userRole: role,
+          currentMemberName: enteredUser,
+          leaderName: team.leaderName || `${team.teamName} Leader`,
+          sessionId,
+        };
+
+        // Record in audit log
+        setAuditLogs((prev) => [
+          {
+            _id: `log_${Date.now()}`,
+            action: "PARTICIPANT_LOGIN",
+            actor: enteredUser,
+            target: team.teamName,
+            details: `${role} authenticated successfully into ${team.teamName}.`,
+            timestamp: Date.now(),
+          },
+          ...prev.slice(0, 49)
+        ]);
+
+        setCurrentTeam(activeTeam);
+        localStorage.setItem("imprenditore_active_team", JSON.stringify(activeTeam));
+        return activeTeam;
+      }
+    },
+    [loginParticipantMutation, convexTeams, teams, accountOverrides, joinTeamMutation]
+  );
+
+  // Active Session Heartbeat (Presence Monitoring)
+  useEffect(() => {
+    if (!currentTeam?.accountId) return;
+    const interval = setInterval(() => {
+      heartbeatParticipantMutation({
+        accountId: currentTeam.accountId,
+        sessionId: currentTeam.sessionId,
+      }).catch(() => {});
+    }, 25000);
+    return () => clearInterval(interval);
+  }, [currentTeam?.accountId, currentTeam?.sessionId, heartbeatParticipantMutation]);
+
+  // Auth: Logout (Releases session and sets presence offline)
   const logout = useCallback(async () => {
-    if (currentTeam) {
+    if (currentTeam?.accountId) {
+      try {
+        await logoutParticipantMutation({
+          accountId: currentTeam.accountId,
+          sessionId: currentTeam.sessionId,
+        });
+      } catch (err) {
+        console.warn("Participant logout error:", err);
+      }
+    } else if (currentTeam) {
       try {
         const teamConvexId = currentTeam._id || currentTeam.id;
         if (teamConvexId && currentTeam.sessionId) {
           await logoutTeamLeaderMutation({
             teamId: teamConvexId,
-            sessionId: currentTeam.sessionId
+            sessionId: currentTeam.sessionId,
           });
         }
       } catch (err) {
@@ -936,7 +1184,7 @@ export function SimulationProvider({ children }) {
     }
     setCurrentTeam(null);
     localStorage.removeItem("imprenditore_active_team");
-  }, [currentTeam, logoutTeamLeaderMutation]);
+  }, [currentTeam, logoutParticipantMutation, logoutTeamLeaderMutation]);
 
   // Admin Auth (3-Hour Persistent Session)
   const adminLogin = useCallback((passcode) => {
@@ -1351,7 +1599,7 @@ export function SimulationProvider({ children }) {
         type: "CHECKERED_FLAG",
         affectedSectors: [],
         priceImpactPercent: 0,
-        lap: 5,
+        lap: raceState.currentLap || 7,
         timestamp: now
       },
       ...prev
@@ -1801,6 +2049,7 @@ export function SimulationProvider({ children }) {
     setStocks(INITIAL_STOCKS);
     setRaceState(freshRaceState);
     setTrackEvents(initialEvents);
+    setMarketNews([]);
 
     // Hard Wipe in LocalStorage
     localStorage.setItem("imprenditore_teams", JSON.stringify([]));
@@ -1809,6 +2058,7 @@ export function SimulationProvider({ children }) {
     localStorage.setItem("imprenditore_stocks", JSON.stringify(INITIAL_STOCKS));
     localStorage.setItem("imprenditore_race_state", JSON.stringify(freshRaceState));
     localStorage.setItem("imprenditore_events", JSON.stringify(initialEvents));
+    localStorage.setItem("imprenditore_market_news", JSON.stringify([]));
     localStorage.removeItem("imprenditore_active_team");
 
     broadcastSync("RACE_STATE_SYNC", freshRaceState);
@@ -1817,6 +2067,7 @@ export function SimulationProvider({ children }) {
     broadcastSync("ORDERS_SYNC", []);
     broadcastSync("STOCKS_SYNC", INITIAL_STOCKS);
     broadcastSync("EVENTS_SYNC", initialEvents);
+    broadcastSync("MARKET_NEWS_SYNC", []);
 
     try {
       await resetGridMutation({});
@@ -1865,12 +2116,256 @@ export function SimulationProvider({ children }) {
     [adminTriggerSectorShockMutation]
   );
 
+  // Derive 15 canonical teams & 30 participant accounts with live presence
+  const adminTeamsAndAccounts = useMemo(() => {
+    const activeTeams = (Array.isArray(convexTeams) && convexTeams.length > 0) ? convexTeams : teams;
+    return activeTeams.map((team, idx) => {
+      const teamNum = team.teamNumber || idx + 1;
+      const slug = (team.teamCode || "").split("-")[0].toLowerCase() || `team${teamNum}`;
+      const leaderUsername = `${slug}_leader`;
+      const memberUsername = `${slug}_member`;
+
+      const leaderOverride = accountOverrides[leaderUsername] || {};
+      const memberOverride = accountOverrides[memberUsername] || {};
+
+      const teamKey = team._id || team.id;
+      const rawTeamHoldings = Array.isArray(allHoldings)
+        ? allHoldings.filter((h) => h.teamId === teamKey)
+        : (allHoldings && typeof allHoldings === "object" ? (allHoldings[teamKey] || allHoldings[team.id] || []) : []);
+      const teamHoldings = Array.isArray(rawTeamHoldings) ? rawTeamHoldings : [];
+
+      const holdingsValue = teamHoldings.reduce((sum, h) => {
+        const stock = stocks.find((s) => s.ticker === h.ticker);
+        const price = stock ? stock.currentPrice : (h.avgBuyPrice || 0);
+        return sum + (h.shares || 0) * price;
+      }, 0);
+      const portfolioVal = (team.cashBalance || 100000) + holdingsValue;
+      const teamOrders = Array.isArray(orders) ? orders.filter((o) => o.teamId === (team._id || team.id)) : [];
+
+      const isLeaderOnline = Boolean(team.activeLeaderSessionId);
+
+      return {
+        _id: team._id || team.id || `team_${teamNum}`,
+        id: team._id || team.id || `team_${teamNum}`,
+        teamNumber: teamNum,
+        teamCode: team.teamCode || `TEAM-${teamNum.toString().padStart(2, "0")}`,
+        teamName: team.teamName,
+        teamPin: team.teamPin || `10${teamNum.toString().padStart(2, "0")}`,
+        cashBalance: team.cashBalance || 100000,
+        portfolioValue: portfolioVal,
+        totalTrades: teamOrders.length,
+        status: team.status || "ACTIVE",
+        activeLeaderSessionId: team.activeLeaderSessionId,
+        accounts: [
+          {
+            _id: `acc_${slug}_leader`,
+            accountId: `ACC-${team.teamCode || slug}-LEAD`,
+            username: leaderUsername,
+            password: leaderOverride.customPassword || team.teamPin || `10${teamNum.toString().padStart(2, "0")}`,
+            role: "LEADER",
+            status: leaderOverride.status || "ACTIVE",
+            isOnline: isLeaderOnline,
+            lastLoginAt: leaderOverride.lastLoginAt || team.lastLeaderLoginAt || null,
+            lastHeartbeatAt: leaderOverride.lastHeartbeatAt || (isLeaderOnline ? Date.now() : null),
+          },
+          {
+            _id: `acc_${slug}_member`,
+            accountId: `ACC-${team.teamCode || slug}-MEM`,
+            username: memberUsername,
+            password: memberOverride.customPassword || team.teamPin || `10${teamNum.toString().padStart(2, "0")}`,
+            role: "MEMBER",
+            status: memberOverride.status || "ACTIVE",
+            isOnline: Boolean(memberOverride.isOnline),
+            lastLoginAt: memberOverride.lastLoginAt || null,
+            lastHeartbeatAt: memberOverride.lastHeartbeatAt || null,
+          }
+        ]
+      };
+    });
+  }, [convexTeams, teams, accountOverrides, allHoldings, stocks, orders]);
+
+  // Derive initial credentials mapping
+  const adminInitialCredentials = useMemo(() => {
+    return (adminTeamsAndAccounts || []).map((t) => {
+      const slug = (t.teamCode || "").split("-")[0].toLowerCase();
+      const teamPin = t.teamPin || `10${String(t.teamNumber || 1).padStart(2, "0")}`;
+      return {
+        teamNumber: t.teamNumber,
+        teamCode: t.teamCode,
+        teamName: t.teamName,
+        leaderUsername: `${slug}_leader`,
+        leaderInitialPasswordPattern: teamPin,
+        memberUsername: `${slug}_member`,
+        memberInitialPasswordPattern: teamPin,
+      };
+    });
+  }, [adminTeamsAndAccounts]);
+
+  // Feature D, E, G: Account Management Callbacks
+  const adminToggleAccountStatus = useCallback(
+    async (accountId, status) => {
+      let targetUsername = accountId;
+      for (const t of adminTeamsAndAccounts) {
+        const found = t.accounts?.find((a) => a._id === accountId || a.accountId === accountId);
+        if (found) {
+          targetUsername = found.username;
+          break;
+        }
+      }
+
+      setAccountOverrides((prev) => {
+        const next = {
+          ...prev,
+          [targetUsername]: {
+            ...(prev[targetUsername] || {}),
+            status,
+          }
+        };
+        localStorage.setItem("imprenditore_account_overrides", JSON.stringify(next));
+        return next;
+      });
+
+      setAuditLogs((prev) => [
+        {
+          _id: `log_${Date.now()}`,
+          action: "STATUS_CHANGE",
+          actor: "ADMIN",
+          target: targetUsername,
+          details: `Account ${targetUsername} status changed to ${status}.`,
+          timestamp: Date.now(),
+        },
+        ...prev.slice(0, 49)
+      ]);
+
+      try {
+        await adminToggleAccountStatusMutation({ accountId, status });
+      } catch {}
+
+      return { success: true, status };
+    },
+    [adminTeamsAndAccounts, adminToggleAccountStatusMutation]
+  );
+
+  const adminResetAccountPassword = useCallback(
+    async (accountId, newPassword) => {
+      let targetUsername = accountId;
+      for (const t of adminTeamsAndAccounts) {
+        const found = t.accounts?.find((a) => a._id === accountId || a.accountId === accountId);
+        if (found) {
+          targetUsername = found.username;
+          break;
+        }
+      }
+
+      setAccountOverrides((prev) => {
+        const next = {
+          ...prev,
+          [targetUsername]: {
+            ...(prev[targetUsername] || {}),
+            customPassword: newPassword,
+          }
+        };
+        localStorage.setItem("imprenditore_account_overrides", JSON.stringify(next));
+        return next;
+      });
+
+      setAuditLogs((prev) => [
+        {
+          _id: `log_${Date.now()}`,
+          action: "PASSWORD_RESET",
+          actor: "ADMIN",
+          target: targetUsername,
+          details: `Password reset for user ${targetUsername}.`,
+          timestamp: Date.now(),
+        },
+        ...prev.slice(0, 49)
+      ]);
+
+      try {
+        await adminResetAccountPasswordMutation({ accountId, newPassword });
+      } catch {}
+
+      return { success: true, username: targetUsername };
+    },
+    [adminTeamsAndAccounts, adminResetAccountPasswordMutation]
+  );
+
+  // Feature B: Market News Callbacks
+  const publishMarketNews = useCallback(
+    async (article) => {
+      const newArticle = {
+        id: `news_${Date.now()}`,
+        _id: `news_${Date.now()}`,
+        title: article.title.trim(),
+        summary: article.summary.trim(),
+        source: article.source || "Race Director Operations",
+        category: (article.category || "ANNOUNCEMENT").toUpperCase(),
+        sentiment: article.sentiment || "NEUTRAL",
+        isOfficialAnnouncement: Boolean(article.isOfficialAnnouncement),
+        ticker: article.ticker ? article.ticker.trim().toUpperCase() : undefined,
+        url: article.url,
+        timestamp: Date.now(),
+      };
+
+      setMarketNews((prev) => {
+        const next = [newArticle, ...prev];
+        localStorage.setItem("imprenditore_market_news", JSON.stringify(next));
+        broadcastSync("MARKET_NEWS_SYNC", next);
+        return next;
+      });
+
+      setAuditLogs((prev) => [
+        {
+          _id: `log_${Date.now()}`,
+          action: "PUBLISH_MARKET_NEWS",
+          actor: "ADMIN",
+          target: article.title,
+          details: `Published news article in ${article.category}: "${article.title}"`,
+          timestamp: Date.now(),
+        },
+        ...prev.slice(0, 49)
+      ]);
+
+      try {
+        await publishMarketNewsMutation(article);
+      } catch {}
+
+      return newArticle;
+    },
+    [publishMarketNewsMutation, broadcastSync]
+  );
+
+  const seedInitialMarketNews = useCallback(
+    async (overwrite = false) => {
+      if (overwrite || marketNews.length === 0) {
+        setMarketNews(INITIAL_MARKET_NEWS);
+        localStorage.setItem("imprenditore_market_news", JSON.stringify(INITIAL_MARKET_NEWS));
+        try {
+          await seedInitialMarketNewsMutation({ overwrite });
+        } catch {}
+        return { seeded: true, count: INITIAL_MARKET_NEWS.length };
+      }
+      return { seeded: false, count: marketNews.length };
+    },
+    [marketNews.length, seedInitialMarketNewsMutation]
+  );
+
+  const adminClearAllNews = useCallback(async () => {
+    setMarketNews([]);
+    localStorage.setItem("imprenditore_market_news", JSON.stringify([]));
+    broadcastSync("MARKET_NEWS_SYNC", []);
+    try {
+      await clearMarketNewsMutation({});
+    } catch {}
+    return { cleared: true };
+  }, [clearMarketNewsMutation, broadcastSync]);
+
   const value = {
     isConnected,
     isWebSocketConnected: isConnected,
     connectionState,
     stocks,
-    teams,
+    teams: (Array.isArray(convexTeams) && convexTeams.length > 0) ? convexTeams : teams,
     currentTeam,
     holdings: currentHoldings,
     currentHoldings,
@@ -1885,6 +2380,7 @@ export function SimulationProvider({ children }) {
     createTeam,
     registerTeamSlot,
     joinTeam,
+    loginParticipantAccount,
     logout,
     adminLogin,
     adminLogout,
@@ -1910,7 +2406,18 @@ export function SimulationProvider({ children }) {
     adminUpdateTeamCash,
     adminDeleteTeam,
     adminSetScheduledStartTime,
-    resetGrid
+    resetGrid,
+    // Feature D, E, G additions
+    adminTeamsAndAccounts,
+    adminToggleAccountStatus,
+    adminResetAccountPassword,
+    adminInitialCredentials,
+    adminAuditLogs: auditLogs,
+    // Feature B additions
+    marketNews,
+    publishMarketNews,
+    seedInitialMarketNews,
+    adminClearAllNews,
   };
 
   return (

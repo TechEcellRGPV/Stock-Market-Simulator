@@ -134,6 +134,12 @@ export default function Home() {
             Companies
           </Link>
           <Link
+            to="/news"
+            className="hidden sm:inline-flex px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#161B24] transition-colors border border-transparent hover:border-[#232B3B]"
+          >
+            News
+          </Link>
+          <Link
             to="/leaderboard"
             className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-[#EAB308] hover:bg-[#EAB308]/10 transition-colors border border-[#EAB308]/30 flex items-center gap-1.5 shrink-0"
             title="Competition Leaderboard"

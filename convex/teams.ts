@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+import { hashPassword, verifyPassword } from "./auth_crypto";
 
 // Profanity / Inappropriate words blocklist
 const PROFANITY_PATTERNS = [
@@ -76,146 +77,189 @@ function generateTeamCode(teamName: string): string {
   return `${prefix}-${randomSuffix}`;
 }
 
-// Canonical 15 Motorsport Teams Grid
-export const CANONICAL_15_TEAMS = [
+// Exactly 15 Default Teams (Feature C)
+export const DEFAULT_15_TEAMS = [
   {
-    teamCode: "RBR-01",
-    teamName: "Oracle Red Bull Racing",
-    teamPin: "1001",
-    leaderName: "Team Leader 01",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 1,
+    teamCode: "ALPHA-01",
+    teamName: "Team Alpha",
+    defaultPin: "1001",
+    leaderName: "Alpha Leader",
+    member2: "Alpha Member",
+    member3: "Strategist",
+    leaderUsername: "alpha_leader",
+    memberUsername: "alpha_member",
   },
   {
-    teamCode: "FER-02",
-    teamName: "Scuderia Ferrari HP",
-    teamPin: "1002",
-    leaderName: "Team Leader 02",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 2,
+    teamCode: "BRAVO-02",
+    teamName: "Team Bravo",
+    defaultPin: "1002",
+    leaderName: "Bravo Leader",
+    member2: "Bravo Member",
+    member3: "Strategist",
+    leaderUsername: "bravo_leader",
+    memberUsername: "bravo_member",
   },
   {
-    teamCode: "MER-03",
-    teamName: "Mercedes-AMG Petronas",
-    teamPin: "1003",
-    leaderName: "Team Leader 03",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 3,
+    teamCode: "CHARLIE-03",
+    teamName: "Team Charlie",
+    defaultPin: "1003",
+    leaderName: "Charlie Leader",
+    member2: "Charlie Member",
+    member3: "Strategist",
+    leaderUsername: "charlie_leader",
+    memberUsername: "charlie_member",
   },
   {
-    teamCode: "MCL-04",
-    teamName: "McLaren Formula 1 Team",
-    teamPin: "1004",
-    leaderName: "Team Leader 04",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 4,
+    teamCode: "DELTA-04",
+    teamName: "Team Delta",
+    defaultPin: "1004",
+    leaderName: "Delta Leader",
+    member2: "Delta Member",
+    member3: "Strategist",
+    leaderUsername: "delta_leader",
+    memberUsername: "delta_member",
   },
   {
-    teamCode: "AST-05",
-    teamName: "Aston Martin Aramco",
-    teamPin: "1005",
-    leaderName: "Team Leader 05",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 5,
+    teamCode: "ECHO-05",
+    teamName: "Team Echo",
+    defaultPin: "1005",
+    leaderName: "Echo Leader",
+    member2: "Echo Member",
+    member3: "Strategist",
+    leaderUsername: "echo_leader",
+    memberUsername: "echo_member",
   },
   {
-    teamCode: "ALP-06",
-    teamName: "BWT Alpine Motorsport",
-    teamPin: "1006",
-    leaderName: "Team Leader 06",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 6,
+    teamCode: "FOXTROT-06",
+    teamName: "Team Foxtrot",
+    defaultPin: "1006",
+    leaderName: "Foxtrot Leader",
+    member2: "Foxtrot Member",
+    member3: "Strategist",
+    leaderUsername: "foxtrot_leader",
+    memberUsername: "foxtrot_member",
   },
   {
-    teamCode: "WIL-07",
-    teamName: "Williams Racing",
-    teamPin: "1007",
-    leaderName: "Team Leader 07",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 7,
+    teamCode: "GALAXY-07",
+    teamName: "Team Galaxy",
+    defaultPin: "1007",
+    leaderName: "Galaxy Leader",
+    member2: "Galaxy Member",
+    member3: "Strategist",
+    leaderUsername: "galaxy_leader",
+    memberUsername: "galaxy_member",
   },
   {
-    teamCode: "SAU-08",
-    teamName: "Stake F1 Kick Sauber",
-    teamPin: "1008",
-    leaderName: "Team Leader 08",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 8,
+    teamCode: "HORIZON-08",
+    teamName: "Team Horizon",
+    defaultPin: "1008",
+    leaderName: "Horizon Leader",
+    member2: "Horizon Member",
+    member3: "Strategist",
+    leaderUsername: "horizon_leader",
+    memberUsername: "horizon_member",
   },
   {
-    teamCode: "VCB-09",
-    teamName: "Visa Cash App RB",
-    teamPin: "1009",
-    leaderName: "Team Leader 09",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 9,
+    teamCode: "INFINITY-09",
+    teamName: "Team Infinity",
+    defaultPin: "1009",
+    leaderName: "Infinity Leader",
+    member2: "Infinity Member",
+    member3: "Strategist",
+    leaderUsername: "infinity_leader",
+    memberUsername: "infinity_member",
   },
   {
-    teamCode: "HAA-10",
-    teamName: "MoneyGram Haas F1 Team",
-    teamPin: "1010",
-    leaderName: "Team Leader 10",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 10,
+    teamCode: "JAGUAR-10",
+    teamName: "Team Jaguar",
+    defaultPin: "1010",
+    leaderName: "Jaguar Leader",
+    member2: "Jaguar Member",
+    member3: "Strategist",
+    leaderUsername: "jaguar_leader",
+    memberUsername: "jaguar_member",
   },
   {
-    teamCode: "POR-11",
-    teamName: "Porsche Motorsport Formula",
-    teamPin: "1011",
-    leaderName: "Team Leader 11",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 11,
+    teamCode: "KNIGHT-11",
+    teamName: "Team Knight",
+    defaultPin: "1011",
+    leaderName: "Knight Leader",
+    member2: "Knight Member",
+    member3: "Strategist",
+    leaderUsername: "knight_leader",
+    memberUsername: "knight_member",
   },
   {
-    teamCode: "AUD-12",
-    teamName: "Audi Sport Racing",
-    teamPin: "1012",
-    leaderName: "Team Leader 12",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 12,
+    teamCode: "LEGENDS-12",
+    teamName: "Team Legends",
+    defaultPin: "1012",
+    leaderName: "Legends Leader",
+    member2: "Legends Member",
+    member3: "Strategist",
+    leaderUsername: "legends_leader",
+    memberUsername: "legends_member",
   },
   {
-    teamCode: "BMW-13",
-    teamName: "BMW M Motorsport",
-    teamPin: "1013",
-    leaderName: "Team Leader 13",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 13,
+    teamCode: "MAVERICKS-13",
+    teamName: "Team Mavericks",
+    defaultPin: "1013",
+    leaderName: "Mavericks Leader",
+    member2: "Mavericks Member",
+    member3: "Strategist",
+    leaderUsername: "mavericks_leader",
+    memberUsername: "mavericks_member",
   },
   {
-    teamCode: "TOY-14",
-    teamName: "Toyota Gazoo Racing",
-    teamPin: "1014",
-    leaderName: "Team Leader 14",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 14,
+    teamCode: "NOVA-14",
+    teamName: "Team Nova",
+    defaultPin: "1014",
+    leaderName: "Nova Leader",
+    member2: "Nova Member",
+    member3: "Strategist",
+    leaderUsername: "nova_leader",
+    memberUsername: "nova_member",
   },
   {
-    teamCode: "KOE-15",
-    teamName: "Koenigsegg Racing Dynamics",
-    teamPin: "1015",
-    leaderName: "Team Leader 15",
-    member2: "Member 2",
-    member3: "Member 3",
+    teamNumber: 15,
+    teamCode: "PHOENIX-15",
+    teamName: "Team Phoenix",
+    defaultPin: "1015",
+    leaderName: "Phoenix Leader",
+    member2: "Phoenix Member",
+    member3: "Strategist",
+    leaderUsername: "phoenix_leader",
+    memberUsername: "phoenix_member",
   },
 ];
 
-// Mutation: Seed the 15 Pre-Decided Teams
+// Alias for backwards compatibility
+export const CANONICAL_15_TEAMS = DEFAULT_15_TEAMS;
+
+// Mutation: Idempotent Seeding of 15 Default Teams & 30 Participant Accounts (Features C, D, E)
 export const seedCanonical15Teams = mutation({
   args: {
     overwrite: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const existingTeams = await ctx.db.query("teams").collect();
-    if (existingTeams.length > 0 && !args.overwrite) {
-      return {
-        seeded: false,
-        count: existingTeams.length,
-        message: "Teams already seeded on the grid.",
-      };
-    }
+    const existingAccounts = await ctx.db.query("accounts").collect();
 
     if (args.overwrite) {
+      for (const a of existingAccounts) await ctx.db.delete(a._id);
       for (const t of existingTeams) {
         const holdings = await ctx.db
           .query("holdings")
@@ -237,27 +281,144 @@ export const seedCanonical15Teams = mutation({
     const initialCapital = raceState?.defaultStartingCapital || 100000;
     const now = Date.now();
 
-    for (const team of CANONICAL_15_TEAMS) {
-      await ctx.db.insert("teams", {
-        teamCode: team.teamCode,
-        teamName: team.teamName,
-        teamPin: team.teamPin,
-        leaderName: team.leaderName,
-        member2: team.member2,
-        member3: team.member3,
-        members: [team.leaderName, team.member2, team.member3],
-        cashBalance: initialCapital,
-        totalScore: 0,
-        portfolioScore: 0,
-        strategyScore: 0,
-        executionScore: 0,
-        tradeCount: 0,
-        status: "ACTIVE",
-        createdAt: now,
-      });
+    let teamsCreated = 0;
+    let accountsCreated = 0;
+
+    for (const def of DEFAULT_15_TEAMS) {
+      const currentTeams = await ctx.db.query("teams").collect();
+      let team = currentTeams.find(
+        (t) =>
+          t.teamNumber === def.teamNumber ||
+          t.teamName.toLowerCase() === def.teamName.toLowerCase() ||
+          t.teamCode.toUpperCase() === def.teamCode.toUpperCase(),
+      );
+
+      if (!team) {
+        const teamId = await ctx.db.insert("teams", {
+          teamNumber: def.teamNumber,
+          teamCode: def.teamCode,
+          teamName: def.teamName,
+          teamPin: def.defaultPin,
+          leaderName: def.leaderName,
+          member2: def.member2,
+          member3: def.member3,
+          members: [def.leaderName, def.member2, def.member3],
+          cashBalance: initialCapital,
+          totalScore: 0,
+          portfolioScore: 0,
+          strategyScore: 0,
+          executionScore: 0,
+          tradeCount: 0,
+          status: "ACTIVE",
+          createdAt: now,
+        });
+        team = (await ctx.db.get(teamId))!;
+        teamsCreated++;
+      } else {
+        const patch: Record<string, unknown> = {};
+        if (team.teamNumber !== def.teamNumber) patch.teamNumber = def.teamNumber;
+        if (team.teamName !== def.teamName) patch.teamName = def.teamName;
+        if (team.teamCode !== def.teamCode) patch.teamCode = def.teamCode;
+        if (Object.keys(patch).length > 0) {
+          await ctx.db.patch(team._id, patch);
+        }
+      }
+
+      // Provision Leader Account
+      const slug = def.teamCode.split("-")[0].toLowerCase();
+      const currentAccounts = await ctx.db.query("accounts").collect();
+
+      let leaderAcc = currentAccounts.find(
+        (a) =>
+          a.username === def.leaderUsername ||
+          (a.teamId === team!._id && a.role === "LEADER"),
+      );
+
+      if (!leaderAcc) {
+        const defaultLeaderPass = def.defaultPin || (team.teamPin ? team.teamPin : `10${String(def.teamNumber).padStart(2, "0")}`);
+        const { hashHex, saltHex } = await hashPassword(defaultLeaderPass);
+        await ctx.db.insert("accounts", {
+          accountId: `ACC-${slug.toUpperCase()}-LEAD`,
+          teamId: team._id,
+          teamNumber: def.teamNumber,
+          teamCode: def.teamCode,
+          teamName: def.teamName,
+          username: def.leaderUsername,
+          passwordHash: hashHex,
+          passwordSalt: saltHex,
+          role: "LEADER",
+          status: "ACTIVE",
+          isOnline: false,
+          createdAt: now,
+          updatedAt: now,
+        });
+        accountsCreated++;
+      } else {
+        await ctx.db.patch(leaderAcc._id, {
+          teamId: team._id,
+          teamNumber: def.teamNumber,
+          teamCode: def.teamCode,
+          teamName: def.teamName,
+          username: def.leaderUsername,
+          role: "LEADER",
+          updatedAt: now,
+        });
+      }
+
+      // Provision Member Account
+      let memberAcc = currentAccounts.find(
+        (a) =>
+          a.username === def.memberUsername ||
+          (a.teamId === team!._id && a.role === "MEMBER"),
+      );
+
+      if (!memberAcc) {
+        const defaultMemberPass = def.defaultPin || (team.teamPin ? team.teamPin : `10${String(def.teamNumber).padStart(2, "0")}`);
+        const { hashHex, saltHex } = await hashPassword(defaultMemberPass);
+        await ctx.db.insert("accounts", {
+          accountId: `ACC-${slug.toUpperCase()}-MEM`,
+          teamId: team._id,
+          teamNumber: def.teamNumber,
+          teamCode: def.teamCode,
+          teamName: def.teamName,
+          username: def.memberUsername,
+          passwordHash: hashHex,
+          passwordSalt: saltHex,
+          role: "MEMBER",
+          status: "ACTIVE",
+          isOnline: false,
+          createdAt: now,
+          updatedAt: now,
+        });
+        accountsCreated++;
+      } else {
+        await ctx.db.patch(memberAcc._id, {
+          teamId: team._id,
+          teamNumber: def.teamNumber,
+          teamCode: def.teamCode,
+          teamName: def.teamName,
+          username: def.memberUsername,
+          role: "MEMBER",
+          updatedAt: now,
+        });
+      }
     }
 
-    return { seeded: true, count: CANONICAL_15_TEAMS.length };
+    await ctx.db.insert("auditLogs", {
+      action: "SEED_DEFAULT_15_TEAMS_AND_ACCOUNTS",
+      actor: "ADMIN",
+      target: "SYSTEM",
+      details: `Initialized 15 Teams & 30 Participant Accounts (${teamsCreated} new teams, ${accountsCreated} new accounts).`,
+      timestamp: now,
+    });
+
+    return {
+      seeded: true,
+      count: DEFAULT_15_TEAMS.length,
+      teamsCreated,
+      accountsCreated,
+      message: `Grid Ready: 15 default teams and 30 participant accounts verified.`,
+    };
   },
 });
 
@@ -273,7 +434,7 @@ export const registerTeamSlot = mutation({
   handler: async (ctx, args) => {
     const raceState = await ctx.db.query("raceState").first();
     if (raceState && raceState.isRegistrationOpen === false) {
-      throw new Error(
+      throw new ConvexError(
         "Team registration is currently locked by Race Control. Registration will open on event day.",
       );
     }
@@ -285,7 +446,7 @@ export const registerTeamSlot = mutation({
     const m3 = args.member3.trim();
 
     if (!leader || !m2 || !m3) {
-      throw new Error(
+      throw new ConvexError(
         "Each team requires exactly 3 members: Team Leader, Member 2 (Strategist), and Member 3 (Telemetry Analyst).",
       );
     }
@@ -295,30 +456,61 @@ export const registerTeamSlot = mutation({
       leader.toLowerCase() === m3.toLowerCase() ||
       m2.toLowerCase() === m3.toLowerCase()
     ) {
-      throw new Error("All 3 team members must have distinct names.");
+      throw new ConvexError("All 3 team members must have distinct names.");
     }
 
     if (!/^\d{4}$/.test(pin)) {
-      throw new Error("Team PIN must be a 4-digit numeric code.");
+      throw new ConvexError("Team PIN must be a 4-digit numeric code.");
     }
 
-    const team = await ctx.db
+    let team = await ctx.db
       .query("teams")
       .withIndex("by_code", (q) => q.eq("teamCode", code))
       .first();
 
+    const initialCapital = raceState?.defaultStartingCapital || 100000;
+    const members = [leader, m2, m3];
+
     if (!team) {
-      throw new Error(`Team ${code} not found on the 15-team grid.`);
+      // Auto-provision canonical slot if not pre-seeded on the grid
+      const canonicalMatch = CANONICAL_15_TEAMS.find(
+        (t) => t.teamCode.toUpperCase() === code,
+      );
+      if (canonicalMatch) {
+        const teamId = await ctx.db.insert("teams", {
+          teamCode: canonicalMatch.teamCode,
+          teamName: canonicalMatch.teamName,
+          teamPin: pin,
+          leaderName: leader,
+          member2: m2,
+          member3: m3,
+          members,
+          cashBalance: initialCapital,
+          totalScore: 0,
+          portfolioScore: 0,
+          strategyScore: 0,
+          executionScore: 0,
+          tradeCount: 0,
+          status: "ACTIVE",
+          createdAt: Date.now(),
+        });
+        team = await ctx.db.get(teamId);
+      } else {
+        throw new ConvexError(`Team ${code} not found on the 15-team grid.`);
+      }
+    } else {
+      await ctx.db.patch(team._id, {
+        leaderName: leader,
+        member2: m2,
+        member3: m3,
+        members,
+        teamPin: pin,
+      });
     }
 
-    const members = [leader, m2, m3];
-    await ctx.db.patch(team._id, {
-      leaderName: leader,
-      member2: m2,
-      member3: m3,
-      members,
-      teamPin: pin,
-    });
+    if (!team) {
+      throw new ConvexError(`Failed to initialize team ${code}.`);
+    }
 
     return {
       teamId: team._id,
@@ -347,7 +539,7 @@ export const createTeam = mutation({
     // 0. Check Registration Gate
     const raceState = await ctx.db.query("raceState").first();
     if (raceState && raceState.isRegistrationOpen === false) {
-      throw new Error(
+      throw new ConvexError(
         "Team registration is currently locked by Race Control. Registration will open on event day.",
       );
     }
@@ -356,7 +548,7 @@ export const createTeam = mutation({
     // 1. Grid capacity check (Strictly 15 teams maximum)
     const allTeams = await ctx.db.query("teams").collect();
     if (allTeams.length >= 15) {
-      throw new Error(
+      throw new ConvexError(
         "Grid capacity limit reached. Maximum 15 teams permitted on the competition grid.",
       );
     }
@@ -364,13 +556,13 @@ export const createTeam = mutation({
     // 2. Validate name
     const validation = sanitizeAndValidateName(args.teamName);
     if (!validation.valid) {
-      throw new Error(validation.error);
+      throw new ConvexError(validation.error || "Invalid team name.");
     }
     const cleanTeamName = validation.cleanName!;
 
     // 3. Validate PIN
     if (!/^\d{4}$/.test(args.teamPin.trim())) {
-      throw new Error("Team PIN must be a 4-digit numeric code.");
+      throw new ConvexError("Team PIN must be a 4-digit numeric code.");
     }
 
     // 4. Check for duplicate team name
@@ -378,7 +570,7 @@ export const createTeam = mutation({
       (t) => t.teamName.toLowerCase() === cleanTeamName.toLowerCase(),
     );
     if (existing) {
-      throw new Error(
+      throw new ConvexError(
         "A team with this name is already registered. Please choose a different name or use Join Team.",
       );
     }
@@ -394,7 +586,7 @@ export const createTeam = mutation({
       "Telemetry Lead";
 
     if (!leader) {
-      throw new Error("Team Leader name is required.");
+      throw new ConvexError("Team Leader name is required.");
     }
 
     const teamCode = generateTeamCode(cleanTeamName);
@@ -449,7 +641,7 @@ export const joinTeam = mutation({
       args.sessionId || Math.random().toString(36).substring(2, 12);
 
     if (!memberName) {
-      throw new Error("Please enter your name to authenticate.");
+      throw new ConvexError("Please enter your name to authenticate.");
     }
 
     const allTeams = await ctx.db.query("teams").collect();
@@ -460,60 +652,40 @@ export const joinTeam = mutation({
     );
 
     if (!team) {
-      throw new Error(
+      throw new ConvexError(
         "Team not found. Please verify the Team Name or Grid Code.",
       );
     }
 
     if (team.teamPin !== pin) {
-      throw new Error("Invalid 4-digit Team PIN.");
+      throw new ConvexError("Invalid 4-digit Team PIN.");
     }
 
     if (team.status === "DISQUALIFIED") {
-      throw new Error("This team has been disqualified from the simulation.");
+      throw new ConvexError("This team has been disqualified from the simulation.");
     }
 
     const now = Date.now();
     let finalRole = "MEMBER";
 
     if (requestedRole === "LEADER") {
-      const cleanMember = memberName.toLowerCase();
-      const cleanLeader = team.leaderName.toLowerCase();
+      finalRole = "LEADER";
 
-      // If the team has an explicit leader name that is not a placeholder, verify match
-      if (
-        cleanLeader &&
-        !cleanLeader.startsWith("driver lead") &&
-        !cleanLeader.startsWith("team leader") &&
-        cleanMember !== cleanLeader
-      ) {
-        throw new Error(
-          `Only ${team.leaderName} can log in as Team Leader. If you are a teammate, please select 'Team Member (View Only)'.`,
-        );
-      }
-
-      // Strict Single Leader Login Check:
-      // If a leader is already active on another device within the last 30 minutes, block this login!
-      const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
-      const isAnotherLeaderActive =
-        team.activeLeaderSessionId &&
-        team.lastLeaderLoginAt &&
-        now - team.lastLeaderLoginAt < SESSION_TIMEOUT_MS &&
-        team.activeLeaderSessionId !== sessionId;
-
-      if (isAnotherLeaderActive) {
-        throw new Error(
-          `A Team Leader is already logged in for ${team.teamName} on another device. Only one leader can be logged in at a time. Please login as 'Team Member (View Only)', or ask your leader to log out.`,
-        );
-      }
-
-      // Record active leader session
-      await ctx.db.patch(team._id, {
+      const patchData: Record<string, unknown> = {
         activeLeaderSessionId: sessionId,
         lastLeaderLoginAt: now,
-      });
+      };
 
-      finalRole = "LEADER";
+      // If leaderName is not set or is a default placeholder, bind to this authenticated leader
+      if (
+        !team.leaderName ||
+        team.leaderName.toLowerCase().includes("leader") ||
+        team.leaderName.toLowerCase().startsWith("driver")
+      ) {
+        patchData.leaderName = memberName;
+      }
+
+      await ctx.db.patch(team._id, patchData);
     }
 
     // Ensure member is in members list
@@ -694,5 +866,370 @@ export const adminDeleteTeam = mutation({
     // Delete team
     await ctx.db.delete(args.teamId);
     return { success: true };
+  },
+});
+
+// Mutation: Authenticate participant account (Leader or Member) using username & password
+export const loginParticipant = mutation({
+  args: {
+    teamIdentifier: v.string(), // teamNumber, teamCode, or teamName
+    role: v.string(), // "LEADER" | "MEMBER"
+    username: v.string(),
+    password: v.string(),
+    sessionId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const rawUsername = args.username.trim().toLowerCase();
+    const cleanPassword = args.password;
+    const requestedRole = args.role.toUpperCase() === "LEADER" ? "LEADER" : "MEMBER";
+    const sessionId = args.sessionId || "sess_" + Math.random().toString(36).substring(2, 12);
+    const now = Date.now();
+
+    if (!rawUsername || !cleanPassword) {
+      throw new ConvexError("Username and password are required.");
+    }
+
+    // Lookup account by username
+    const account = await ctx.db
+      .query("accounts")
+      .withIndex("by_username", (q) => q.eq("username", rawUsername))
+      .first();
+
+    if (!account) {
+      throw new ConvexError("Invalid username or password.");
+    }
+
+    if (account.role !== requestedRole) {
+      throw new ConvexError(
+        `This account is registered as a ${account.role}. Please select the ${account.role} role.`,
+      );
+    }
+
+    if (account.status === "DISABLED") {
+      throw new ConvexError(
+        "This account has been disabled by the event administrator.",
+      );
+    }
+
+    // Verify Password Hash
+    const isPasswordValid = await verifyPassword(
+      cleanPassword,
+      account.passwordHash,
+      account.passwordSalt,
+    );
+    if (!isPasswordValid) {
+      throw new ConvexError("Invalid username or password.");
+    }
+
+    // Verify Team
+    const team = await ctx.db.get(account.teamId);
+    if (!team) {
+      throw new ConvexError("Assigned team record not found on the competition grid.");
+    }
+
+    if (team.status === "DISQUALIFIED") {
+      throw new ConvexError("This team has been disqualified from the competition.");
+    }
+
+    // Verify team identifier matches teamNumber, teamCode, or teamName
+    const cleanIdent = args.teamIdentifier.trim().toLowerCase();
+    const matchesCode = team.teamCode.toLowerCase() === cleanIdent;
+    const matchesName = team.teamName.toLowerCase() === cleanIdent;
+    const matchesNum = String(team.teamNumber || "") === cleanIdent;
+
+    if (!matchesCode && !matchesName && !matchesNum && cleanIdent !== "") {
+      throw new ConvexError(
+        `This account belongs to ${team.teamName} (#${team.teamNumber || ""}). Please select the correct team.`,
+      );
+    }
+
+    // If Leader: Manage single-active session check
+    if (requestedRole === "LEADER") {
+      const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+      const isAnotherLeaderActive =
+        team.activeLeaderSessionId &&
+        team.lastLeaderLoginAt &&
+        now - team.lastLeaderLoginAt < SESSION_TIMEOUT_MS &&
+        team.activeLeaderSessionId !== sessionId;
+
+      if (isAnotherLeaderActive) {
+        throw new ConvexError(
+          `A Team Leader is already active for ${team.teamName} on another device. Only one active leader session is permitted at a time.`,
+        );
+      }
+
+      await ctx.db.patch(team._id, {
+        activeLeaderSessionId: sessionId,
+        lastLeaderLoginAt: now,
+      });
+    }
+
+    // Update account presence and login timestamps
+    await ctx.db.patch(account._id, {
+      lastLoginAt: now,
+      lastHeartbeatAt: now,
+      isOnline: true,
+      updatedAt: now,
+    });
+
+    // Record Audit Log
+    await ctx.db.insert("auditLogs", {
+      action: "PARTICIPANT_LOGIN",
+      actor: account.username,
+      target: team.teamName,
+      details: `${account.role} logged in for Team #${team.teamNumber || 1} (${team.teamName}).`,
+      timestamp: now,
+    });
+
+    return {
+      accountId: account._id,
+      username: account.username,
+      role: account.role,
+      teamId: team._id,
+      teamNumber: team.teamNumber || 1,
+      teamCode: team.teamCode,
+      teamName: team.teamName,
+      cashBalance: team.cashBalance,
+      status: team.status,
+      sessionId,
+    };
+  },
+});
+
+// Mutation: Active session heartbeat (called periodically to maintain online status)
+export const heartbeatParticipant = mutation({
+  args: {
+    accountId: v.id("accounts"),
+    sessionId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const acc = await ctx.db.get(args.accountId);
+    if (!acc) return { ok: false };
+    const now = Date.now();
+    await ctx.db.patch(args.accountId, {
+      lastHeartbeatAt: now,
+      isOnline: true,
+    });
+    return { ok: true, timestamp: now };
+  },
+});
+
+// Mutation: Participant Logout (sets presence offline and releases leader session)
+export const logoutParticipant = mutation({
+  args: {
+    accountId: v.id("accounts"),
+    sessionId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const acc = await ctx.db.get(args.accountId);
+    if (!acc) return { ok: false };
+    const now = Date.now();
+
+    await ctx.db.patch(args.accountId, {
+      isOnline: false,
+      lastHeartbeatAt: now - 120000,
+    });
+
+    const team = await ctx.db.get(acc.teamId);
+    if (
+      team &&
+      acc.role === "LEADER" &&
+      (!args.sessionId || team.activeLeaderSessionId === args.sessionId)
+    ) {
+      await ctx.db.patch(team._id, {
+        activeLeaderSessionId: undefined,
+      });
+    }
+
+    await ctx.db.insert("auditLogs", {
+      action: "PARTICIPANT_LOGOUT",
+      actor: acc.username,
+      target: team ? team.teamName : acc.teamName,
+      details: `${acc.role} logged out.`,
+      timestamp: now,
+    });
+
+    return { ok: true };
+  },
+});
+
+// Query: Admin list of all 15 teams and their 30 participant accounts with presence
+export const adminListTeamsAndAccounts = query({
+  args: {},
+  handler: async (ctx) => {
+    const teams = await ctx.db.query("teams").collect();
+    const accounts = await ctx.db.query("accounts").collect();
+    const stocks = await ctx.db.query("stocks").collect();
+    const holdings = await ctx.db.query("holdings").collect();
+    const orders = await ctx.db.query("orders").collect();
+
+    const stockPriceMap = new Map(stocks.map((s) => [s.ticker, s.currentPrice]));
+    const now = Date.now();
+
+    // Sort teams by teamNumber ascending
+    teams.sort((a, b) => (a.teamNumber || 99) - (b.teamNumber || 99));
+
+    return teams.map((team) => {
+      const teamAccounts = accounts.filter((a) => a.teamId === team._id);
+      const leaderAcc = teamAccounts.find((a) => a.role === "LEADER");
+      const memberAcc = teamAccounts.find((a) => a.role === "MEMBER");
+
+      // Compute total portfolio value
+      const teamHoldings = holdings.filter((h) => h.teamId === team._id);
+      const holdingsValue = teamHoldings.reduce((sum, h) => {
+        const currPrice = stockPriceMap.get(h.ticker) || h.avgBuyPrice;
+        return sum + h.shares * currPrice;
+      }, 0);
+      const totalPortfolioValue = team.cashBalance + holdingsValue;
+
+      // Compute trade count
+      const teamOrders = orders.filter((o) => o.teamId === team._id);
+
+      const formatAccountInfo = (acc?: (typeof accounts)[0]) => {
+        if (!acc) return null;
+        // Expire presence after 60s without heartbeat
+        const isActuallyOnline = Boolean(
+          acc.isOnline &&
+            acc.lastHeartbeatAt &&
+            now - acc.lastHeartbeatAt < 60000,
+        );
+
+        let presenceLabel = "Offline";
+        if (acc.status === "DISABLED") {
+          presenceLabel = "Account disabled";
+        } else if (!acc.lastLoginAt) {
+          presenceLabel = "Never logged in";
+        } else if (isActuallyOnline) {
+          presenceLabel = "Online";
+        } else {
+          presenceLabel = "Offline";
+        }
+
+        return {
+          id: acc._id,
+          accountId: acc.accountId,
+          username: acc.username,
+          role: acc.role,
+          status: acc.status,
+          isOnline: isActuallyOnline,
+          presenceLabel,
+          lastLoginAt: acc.lastLoginAt || null,
+          lastHeartbeatAt: acc.lastHeartbeatAt || null,
+          createdAt: acc.createdAt,
+        };
+      };
+
+      return {
+        id: team._id,
+        teamNumber: team.teamNumber || 1,
+        teamCode: team.teamCode,
+        teamName: team.teamName,
+        teamPin: team.teamPin,
+        cashBalance: team.cashBalance,
+        totalPortfolioValue,
+        totalScore: team.totalScore,
+        tradeCount: teamOrders.length,
+        status: team.status,
+        leaderAccount: formatAccountInfo(leaderAcc),
+        memberAccount: formatAccountInfo(memberAcc),
+      };
+    });
+  },
+});
+
+// Mutation: Admin toggle account status (Active <-> Disabled)
+export const adminToggleAccountStatus = mutation({
+  args: {
+    accountId: v.id("accounts"),
+    status: v.string(), // "ACTIVE" | "DISABLED"
+  },
+  handler: async (ctx, args) => {
+    const acc = await ctx.db.get(args.accountId);
+    if (!acc) throw new ConvexError("Account not found.");
+
+    await ctx.db.patch(args.accountId, {
+      status: args.status,
+      updatedAt: Date.now(),
+    });
+
+    await ctx.db.insert("auditLogs", {
+      action: "ADMIN_TOGGLE_ACCOUNT_STATUS",
+      actor: "ADMIN",
+      target: acc.username,
+      details: `Account ${acc.username} status changed to ${args.status}.`,
+      timestamp: Date.now(),
+    });
+
+    return { success: true, status: args.status };
+  },
+});
+
+// Mutation: Admin reset account password
+export const adminResetAccountPassword = mutation({
+  args: {
+    accountId: v.id("accounts"),
+    newPassword: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (!args.newPassword || !/^\d{4}$/.test(args.newPassword.trim())) {
+      throw new ConvexError("Password must be exactly 4 digits (numbers only).");
+    }
+    const acc = await ctx.db.get(args.accountId);
+    if (!acc) throw new ConvexError("Account not found.");
+
+    const { hashHex, saltHex } = await hashPassword(args.newPassword.trim());
+
+    await ctx.db.patch(args.accountId, {
+      passwordHash: hashHex,
+      passwordSalt: saltHex,
+      updatedAt: Date.now(),
+    });
+
+    await ctx.db.insert("auditLogs", {
+      action: "ADMIN_PASSWORD_RESET",
+      actor: "ADMIN",
+      target: acc.username,
+      details: `Password reset for user ${acc.username} (${acc.role}).`,
+      timestamp: Date.now(),
+    });
+
+    return { success: true, username: acc.username };
+  },
+});
+
+// Query: Admin review initial credentials mapping for the 30 participant accounts
+export const adminGetInitialCredentials = query({
+  args: {},
+  handler: async (ctx) => {
+    const teams = await ctx.db.query("teams").collect();
+    const accounts = await ctx.db.query("accounts").collect();
+
+    teams.sort((a, b) => (a.teamNumber || 99) - (b.teamNumber || 99));
+
+    return teams.map((team) => {
+      const teamAccounts = accounts.filter((a) => a.teamId === team._id);
+      const leader = teamAccounts.find((a) => a.role === "LEADER");
+      const member = teamAccounts.find((a) => a.role === "MEMBER");
+      const slug = (team.teamCode || "").split("-")[0].toLowerCase();
+
+      const teamPin = team.teamPin || `10${String(team.teamNumber || 1).padStart(2, "0")}`;
+      return {
+        teamNumber: team.teamNumber || 1,
+        teamCode: team.teamCode,
+        teamName: team.teamName,
+        leaderUsername: leader ? leader.username : `${slug}_leader`,
+        leaderInitialPasswordPattern: teamPin,
+        memberUsername: member ? member.username : `${slug}_member`,
+        memberInitialPasswordPattern: teamPin,
+      };
+    });
+  },
+});
+
+// Query: Admin audit logs
+export const adminGetAuditLogs = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("auditLogs").order("desc").take(50);
   },
 });

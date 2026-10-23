@@ -10,6 +10,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Trade = lazy(() => import("./pages/Trade"));
 const Company = lazy(() => import("./pages/Company"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const News = lazy(() => import("./pages/News"));
 const Admin = lazy(() => import("./pages/Admin/Admin"));
 
 /**
@@ -39,6 +40,7 @@ function App() {
             <Route path="/trade" element={<Trade />} />
             <Route path="/companies" element={<Company />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/news" element={<News />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>
         </Suspense>

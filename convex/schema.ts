@@ -6,6 +6,7 @@ export default defineSchema({
   teams: defineTable({
     teamCode: v.string(),
     teamName: v.string(),
+    teamNumber: v.optional(v.number()), // 1 to 15
     teamPin: v.string(),
     leaderName: v.string(),
     member2: v.optional(v.string()),
@@ -23,7 +24,31 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_code", ["teamCode"])
+    .index("by_number", ["teamNumber"])
     .index("by_score", ["totalScore"]),
+
+  // 30 Participant Accounts (1 Leader & 1 Member for each of 15 Teams)
+  accounts: defineTable({
+    accountId: v.string(), // e.g. "ACC-ALPHA-LEAD"
+    teamId: v.id("teams"),
+    teamNumber: v.number(), // 1 to 15
+    teamCode: v.string(), // e.g. "ALPHA-01"
+    teamName: v.string(), // e.g. "Team Alpha"
+    username: v.string(),
+    passwordHash: v.string(),
+    passwordSalt: v.string(),
+    role: v.string(), // "LEADER" | "MEMBER"
+    status: v.string(), // "ACTIVE" | "DISABLED"
+    lastLoginAt: v.optional(v.number()),
+    lastHeartbeatAt: v.optional(v.number()),
+    isOnline: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_username", ["username"])
+    .index("by_team", ["teamId"])
+    .index("by_team_number", ["teamNumber"])
+    .index("by_role", ["role"]),
 
   // Stocks Table
   stocks: defineTable({
@@ -100,4 +125,30 @@ export default defineSchema({
     activeNews: v.optional(v.string()),
     updatedAt: v.number(),
   }),
+
+  // Market News & Competition Announcements
+  marketNews: defineTable({
+    title: v.string(),
+    summary: v.string(),
+    source: v.string(),
+    category: v.string(), // "EQUITIES" | "TECH" | "ENERGY" | "MACRO" | "ANNOUNCEMENT"
+    ticker: v.optional(v.string()),
+    sentiment: v.optional(v.string()), // "BULLISH" | "BEARISH" | "NEUTRAL"
+    url: v.optional(v.string()),
+    isOfficialAnnouncement: v.boolean(),
+    publishedBy: v.optional(v.string()),
+    timestamp: v.number(),
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_category", ["category"])
+    .index("by_ticker", ["ticker"]),
+
+  // Administrative Audit Events
+  auditLogs: defineTable({
+    action: v.string(),
+    actor: v.string(),
+    target: v.string(),
+    details: v.string(),
+    timestamp: v.number(),
+  }).index("by_timestamp", ["timestamp"]),
 });

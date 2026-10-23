@@ -44,7 +44,7 @@ function getServerSnapshot() {
  * @returns {JSX.Element} Animated marquee banner with manual navigation controls
  */
 export default function CirculatingBanner() {
-  const { raceState, stocks, trackEvents } = useSimulation();
+  const { raceState, stocks, trackEvents, marketNews } = useSimulation();
   const [index, setIndex] = useState(0);
   const now = useSyncExternalStore(subscribeToSeconds, getNowSnapshot, getServerSnapshot);
 
@@ -168,7 +168,7 @@ export default function CirculatingBanner() {
       items.push({
         id: "live_race",
         icon: Flame,
-        tag: `LAP ${raceState.currentLap}/5 LIVE`,
+        tag: `ROUND ${raceState.currentLap}/7 LIVE`,
         tagColor: "bg-[#10B981] text-slate-950 font-black",
         content: raceState.activeNews || "Green Flag: Order matching is active! Execute trades on the trading screen.",
         linkText: "Trade Now",
@@ -242,8 +242,29 @@ export default function CirculatingBanner() {
       });
     }
 
+    // Latest Market News articles
+    if (Array.isArray(marketNews) && marketNews.length > 0) {
+      marketNews.slice(0, 3).forEach((news) => {
+        const isBullish = news.sentiment === "BULLISH";
+        const isBearish = news.sentiment === "BEARISH";
+        items.push({
+          id: `news_${news._id || news.id || news.title}`,
+          icon: isBullish ? TrendingUp : isBearish ? TrendingDown : Radio,
+          tag: news.isOfficialAnnouncement ? "RACE CONTROL NEWS" : `NEWS: ${news.category}`,
+          tagColor: news.isOfficialAnnouncement
+            ? "bg-[#E10600] text-white font-bold"
+            : isBullish
+            ? "bg-[#10B981] text-slate-950 font-bold"
+            : "bg-[#06B6D4] text-slate-950 font-bold",
+          content: `${news.title}: ${news.summary}`,
+          linkText: "Read Wire",
+          linkTo: "/news"
+        });
+      });
+    }
+
     return items;
-  }, [raceState, topGainer, formattedEventDate, countdownText, trackEvents]);
+  }, [raceState, topGainer, formattedEventDate, countdownText, trackEvents, marketNews]);
 
   // Auto-circulate every 4 seconds
   useEffect(() => {

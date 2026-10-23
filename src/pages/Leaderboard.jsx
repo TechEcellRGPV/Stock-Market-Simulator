@@ -91,7 +91,7 @@ export default function Leaderboard() {
                   : "text-[#06B6D4]"
               }`}>
               {raceState.status === "GREEN_FLAG"
-                ? `ROUND ${raceState.currentLap}/5`
+                ? `ROUND ${raceState.currentLap}/7`
                 : raceState.status === "SAFETY_CAR"
                   ? "PAUSED"
                   : raceState.status === "CHECKERED_FLAG"
